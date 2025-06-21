@@ -1977,17 +1977,62 @@
         async function testFirebaseWrite() {
             console.log('🧪 开始测试Firebase写入...');
 
-            if (!window.firebaseSync || !window.firebaseSync.isConnected()) {
-                console.log('❌ Firebase未连接');
-                if (window.dataManager) {
-                    window.dataManager.showNotification('❌ Firebase未连接，无法测试', 'error');
-                }
+            // 检查Firebase状态
+            console.log('🔍 Firebase状态检查:');
+            console.log('- firebaseSync存在:', !!window.firebaseSync);
+            console.log('- 已初始化:', window.firebaseSync?.isInitialized);
+            console.log('- 已连接:', window.firebaseSync?.isConnected());
+            console.log('- 当前用户:', window.firebaseSync?.currentUser?.uid);
+
+            if (!window.firebaseSync) {
+                console.log('❌ FirebaseSync未加载');
                 return;
             }
 
+            if (!window.firebaseSync.isConnected()) {
+                console.log('❌ Firebase未连接，尝试重新初始化...');
+
+                // 尝试重新初始化
+                try {
+                    await window.firebaseSync.initialize();
+                    console.log('✅ Firebase重新初始化成功');
+                } catch (initError) {
+                    console.error('❌ Firebase重新初始化失败:', initError);
+                    if (window.dataManager) {
+                        window.dataManager.showNotification('❌ Firebase未连接，无法测试', 'error');
+                    }
+                    return;
+                }
+            }
+
             try {
-                // 创建测试数据
-                const testData = [{
+                // 使用最简单的方式测试写入
+                console.log('📝 开始简单写入测试...');
+
+                if (!window.collection || !window.doc || !window.setDoc) {
+                    console.error('❌ Firebase函数未加载');
+                    return;
+                }
+
+                const testData = {
+                    message: '简单测试',
+                    timestamp: Date.now(),
+                    testId: Math.random().toString(36).substr(2, 9)
+                };
+
+                console.log('📝 测试数据:', testData);
+
+                const docRef = window.doc(window.collection(window.firebaseSync.db, 'test'), 'simple_test_' + Date.now());
+                await window.setDoc(docRef, testData);
+
+                console.log('✅ 简单写入测试成功！');
+                if (window.dataManager) {
+                    window.dataManager.showNotification('✅ Firebase写入测试成功！', 'success');
+                }
+
+                // 现在测试复杂的同步
+                console.log('📝 开始复杂同步测试...');
+                const complexData = [{
                     id: 'test_' + Date.now(),
                     specification: 'H80-6000',
                     quantity: 100,
@@ -1996,25 +2041,28 @@
                     testFlag: true
                 }];
 
-                console.log('📝 测试数据:', testData);
-
-                // 尝试写入
-                const success = await window.firebaseSync.syncToCloud('productionData', testData, 'update');
+                const success = await window.firebaseSync.syncToCloud('productionData', complexData, 'update');
 
                 if (success) {
-                    console.log('✅ Firebase写入测试成功！');
+                    console.log('✅ 复杂同步测试成功！');
                     if (window.dataManager) {
-                        window.dataManager.showNotification('✅ Firebase写入测试成功！', 'success');
+                        window.dataManager.showNotification('✅ 完整同步测试成功！', 'success');
                     }
                 } else {
-                    console.log('❌ Firebase写入测试失败');
+                    console.log('❌ 复杂同步测试失败');
                     if (window.dataManager) {
-                        window.dataManager.showNotification('❌ Firebase写入测试失败', 'error');
+                        window.dataManager.showNotification('⚠️ 简单写入成功，但复杂同步失败', 'warning');
                     }
                 }
 
             } catch (error) {
                 console.error('❌ Firebase写入测试出错:', error);
+                console.error('错误详情:', {
+                    name: error.name,
+                    message: error.message,
+                    code: error.code,
+                    stack: error.stack
+                });
                 if (window.dataManager) {
                     window.dataManager.showNotification('❌ Firebase写入测试出错: ' + error.message, 'error');
                 }
