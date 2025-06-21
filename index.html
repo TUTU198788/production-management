@@ -1428,12 +1428,21 @@
 
                 <div class="sync-help-card" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
                     <h5 style="color: #374151; margin: 0 0 8px 0;">💡 使用说明</h5>
-                    <ul style="color: #6b7280; font-size: 13px; margin: 0; padding-left: 16px; line-height: 1.5;">
+                    <ul style="color: #6b7280; font-size: 13px; margin: 0 0 12px 0; padding-left: 16px; line-height: 1.5;">
                         <li>系统已自动配置Firebase实时同步</li>
                         <li>如果状态显示"已连接"，表示同步正常工作</li>
                         <li>如果显示"未连接"，请检查网络连接</li>
                         <li>所有数据变更会自动保存到云端</li>
                     </ul>
+
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <button type="button" class="btn info" id="refreshFirebaseStatusBtn" style="font-size: 12px; padding: 6px 12px;">
+                            <i class="fas fa-refresh"></i> 刷新状态
+                        </button>
+                        <button type="button" class="btn secondary" id="testFirebaseConnectionBtn" style="font-size: 12px; padding: 6px 12px;">
+                            <i class="fas fa-vial"></i> 测试连接
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

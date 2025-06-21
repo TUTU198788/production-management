@@ -5,38 +5,67 @@
 
 // Firebase 项目配置
 const firebaseConfig = {
-    apiKey: "AIzaSyDAtk4_l58OAfAQYh0aGeykavDYfnflbKc",
+    apiKey: "AIzaSyDAtk4_l580AfAQYh0aGeykavDYfnflbKc",
     authDomain: "zhlscglxt.firebaseapp.com",
     projectId: "zhlscglxt",
     storageBucket: "zhlscglxt.firebasestorage.app",
-    messagingSenderId: "364959896544",
-    appId: "1:364959896544:web:3ad7266c9832ff25569185"
+    messagingSenderId: "36495989654",
+    appId: "1:36495989654:web:3ad7266c9832ff25569185"
 };
 
 // 初始化 Firebase 同步
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('开始初始化Firebase...');
+
     // 检查配置是否已设置
     if (firebaseConfig.apiKey === "YOUR_API_KEY") {
         console.warn('⚠️ Firebase 配置未设置，请在 firebase-config.js 中配置您的 Firebase 项目信息');
-        
+
         // 显示配置提示
         showFirebaseConfigModal();
         return;
     }
-    
-    // 初始化 Firebase 同步
-    if (window.firebaseSync) {
-        const success = await window.firebaseSync.initialize(firebaseConfig);
-        if (success) {
-            console.log('✅ Firebase 实时同步已启用');
-            
-            // 显示成功提示
-            if (window.dashboard) {
-                window.dashboard.showNotification('云端实时同步已启用', 'success');
+
+    // 等待一段时间确保所有脚本加载完成
+    setTimeout(async () => {
+        try {
+            // 检查Firebase SDK是否加载
+            if (typeof firebase === 'undefined') {
+                console.error('Firebase SDK未加载，将使用本地存储模式');
+                showNotification('Firebase SDK加载失败，将使用本地存储', 'warning');
+                return;
             }
+
+            // 初始化 Firebase 同步
+            if (window.firebaseSync) {
+                console.log('正在初始化Firebase同步...');
+                const success = await window.firebaseSync.initialize(firebaseConfig);
+                if (success) {
+                    console.log('✅ Firebase 实时同步已启用');
+                    showNotification('云端实时同步已启用', 'success');
+                } else {
+                    console.log('❌ Firebase 初始化失败，使用本地存储');
+                    showNotification('云端同步初始化失败，将使用本地存储', 'warning');
+                }
+            } else {
+                console.error('FirebaseSync实例未找到');
+                showNotification('Firebase同步模块未加载', 'error');
+            }
+        } catch (error) {
+            console.error('Firebase初始化过程中发生错误:', error);
+            showNotification('Firebase初始化失败: ' + error.message, 'error');
         }
-    }
+    }, 2000); // 延迟2秒确保所有脚本加载完成
 });
+
+// 通用通知函数
+function showNotification(message, type = 'info') {
+    if (window.dataManager && window.dataManager.showNotification) {
+        window.dataManager.showNotification(message, type);
+    } else {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+}
 
 // 显示 Firebase 配置模态框
 function showFirebaseConfigModal() {
