@@ -3,25 +3,44 @@
  * 请替换为您自己的 Firebase 项目配置
  */
 
-// Firebase 项目配置
+// Firebase 项目配置 - 如果连接失败，系统会自动使用本地存储
 const firebaseConfig = {
-  apiKey: "AIzaSyDAtk4_l58OAfAQYh0aGeykavDYfnflbKc",
-  authDomain: "zhlscglxt.firebaseapp.com",
-  projectId: "zhlscglxt",
-  storageBucket: "zhlscglxt.firebasestorage.app",
-  messagingSenderId: "364959896544",
-  appId: "1:364959896544:web:3ad7266c9832ff25569185"
+    apiKey: "AIzaSyDAtk4_l580AfAQYh0aGeykavDYfnflbKc",
+    authDomain: "zhlscglxt.firebaseapp.com",
+    projectId: "zhlscglxt",
+    storageBucket: "zhlscglxt.firebasestorage.app",
+    messagingSenderId: "36495989654",
+    appId: "1:36495989654:web:3ad7266c9832ff25569185"
+};
+
+// 系统配置选项
+const systemConfig = {
+    // 设置为 true 禁用Firebase，只使用本地存储
+    // 设置为 false 尝试连接Firebase
+    disableFirebase: false,
+
+    // Firebase连接超时时间（毫秒）
+    firebaseTimeout: 8000,
+
+    // 是否显示详细的连接日志
+    enableDebugLogs: true
 };
 
 // 初始化 Firebase 同步
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('开始初始化Firebase...');
+    console.log('🚀 开始初始化Firebase...');
+
+    // 检查用户是否禁用了Firebase
+    const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
+    if (systemConfig.disableFirebase || userDisabledFirebase) {
+        console.log('📱 Firebase已禁用，使用本地存储模式');
+        showNotification('系统使用本地存储模式，数据保存在浏览器中', 'info');
+        return;
+    }
 
     // 检查配置是否已设置
     if (firebaseConfig.apiKey === "YOUR_API_KEY") {
         console.warn('⚠️ Firebase 配置未设置，请在 firebase-config.js 中配置您的 Firebase 项目信息');
-
-        // 显示配置提示
         showFirebaseConfigModal();
         return;
     }
@@ -29,33 +48,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 等待一段时间确保所有脚本加载完成
     setTimeout(async () => {
         try {
-            // 检查Firebase SDK是否加载
-            if (typeof firebase === 'undefined') {
-                console.error('Firebase SDK未加载，将使用本地存储模式');
-                showNotification('Firebase SDK加载失败，将使用本地存储', 'warning');
+            // 检查网络连接
+            if (!navigator.onLine) {
+                console.log('🔌 网络未连接，使用本地存储模式');
+                showNotification('网络未连接，使用本地存储模式', 'warning');
                 return;
             }
 
+            // 检查Firebase SDK是否加载
+            if (typeof firebase === 'undefined') {
+                console.error('❌ Firebase SDK未加载，将使用本地存储模式');
+                showNotification('Firebase SDK加载失败，使用本地存储模式', 'warning');
+                return;
+            }
+
+            console.log('📦 Firebase SDK已加载，版本:', firebase.SDK_VERSION || 'unknown');
+
             // 初始化 Firebase 同步
             if (window.firebaseSync) {
-                console.log('正在初始化Firebase同步...');
-                const success = await window.firebaseSync.initialize(firebaseConfig);
+                console.log('🔄 正在初始化Firebase同步...');
+
+                // 设置超时，如果指定时间内无法连接就放弃
+                const initPromise = window.firebaseSync.initialize(firebaseConfig);
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Firebase连接超时')), systemConfig.firebaseTimeout);
+                });
+
+                const success = await Promise.race([initPromise, timeoutPromise]);
+
                 if (success) {
                     console.log('✅ Firebase 实时同步已启用');
-                    showNotification('云端实时同步已启用', 'success');
+                    showNotification('云端实时同步已启用，支持多用户协作', 'success');
                 } else {
                     console.log('❌ Firebase 初始化失败，使用本地存储');
-                    showNotification('云端同步初始化失败，将使用本地存储', 'warning');
+                    showNotification('云端同步不可用，使用本地存储模式', 'warning');
                 }
             } else {
-                console.error('FirebaseSync实例未找到');
-                showNotification('Firebase同步模块未加载', 'error');
+                console.error('❌ FirebaseSync实例未找到');
+                showNotification('Firebase同步模块未加载，使用本地存储', 'warning');
             }
         } catch (error) {
-            console.error('Firebase初始化过程中发生错误:', error);
-            showNotification('Firebase初始化失败: ' + error.message, 'error');
+            console.error('❌ Firebase初始化过程中发生错误:', error);
+
+            // 根据错误类型给出不同的提示
+            let message = '云端同步不可用，使用本地存储模式';
+            if (error.message.includes('timeout') || error.message.includes('超时')) {
+                message = '网络连接超时，使用本地存储模式';
+            } else if (error.message.includes('permission') || error.message.includes('权限')) {
+                message = 'Firebase权限配置问题，使用本地存储模式';
+            } else if (error.message.includes('network') || error.message.includes('网络')) {
+                message = '网络连接问题，使用本地存储模式';
+            }
+
+            showNotification(message, 'warning');
         }
-    }, 2000); // 延迟2秒确保所有脚本加载完成
+    }, 1000); // 减少延迟到1秒
 });
 
 // 通用通知函数
