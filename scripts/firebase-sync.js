@@ -34,38 +34,59 @@ class FirebaseSyncManager {
     // 初始化 Firebase
     async initialize(config) {
         try {
+            console.log('开始初始化Firebase，配置:', config);
+
             // 检查 Firebase SDK 是否已加载
             if (typeof firebase === 'undefined') {
                 throw new Error('Firebase SDK 未加载，请确保已引入 Firebase 脚本');
             }
-            
+
+            console.log('Firebase SDK已加载，版本:', firebase.SDK_VERSION || 'unknown');
+
             // 初始化 Firebase
             if (!firebase.apps.length) {
+                console.log('正在初始化Firebase应用...');
                 firebase.initializeApp(config);
+                console.log('Firebase应用初始化完成');
+            } else {
+                console.log('Firebase应用已存在，跳过初始化');
             }
-            
+
             this.db = firebase.firestore();
             this.auth = firebase.auth();
-            
+            console.log('Firebase服务获取成功');
+
             // 启用离线持久化
-            this.db.enablePersistence({ synchronizeTabs: true })
-                .catch(err => {
-                    console.warn('Firebase 离线持久化启用失败:', err);
-                });
-            
+            try {
+                await this.db.enablePersistence({ synchronizeTabs: true });
+                console.log('Firebase离线持久化已启用');
+            } catch (err) {
+                console.warn('Firebase 离线持久化启用失败:', err);
+                // 持久化失败不影响基本功能
+            }
+
             // 匿名登录
+            console.log('正在进行匿名登录...');
             await this.auth.signInAnonymously();
             this.currentUser = this.auth.currentUser;
-            
+            console.log('匿名登录成功，用户ID:', this.currentUser.uid);
+
             this.isInitialized = true;
-            console.log('Firebase 初始化成功');
-            
+            console.log('✅ Firebase 初始化完全成功');
+
             // 开始监听数据变化
             this.startRealtimeSync();
-            
+
             return true;
         } catch (error) {
-            console.error('Firebase 初始化失败:', error);
+            console.error('❌ Firebase 初始化失败:', error);
+            console.error('错误详情:', {
+                name: error.name,
+                message: error.message,
+                code: error.code,
+                stack: error.stack
+            });
+
             this.showNotification('云端同步初始化失败，将使用本地存储', 'warning');
             return false;
         }
@@ -330,6 +351,22 @@ class FirebaseSyncManager {
     // 检查是否已配置
     isConfigured() {
         return this.isInitialized;
+    }
+
+    // 检查是否已连接
+    isConnected() {
+        return this.isInitialized && this.currentUser && this.db;
+    }
+
+    // 获取连接状态
+    getConnectionStatus() {
+        return {
+            initialized: this.isInitialized,
+            hasUser: !!this.currentUser,
+            hasDatabase: !!this.db,
+            isOnline: this.isOnline,
+            userConfig: this.userConfig
+        };
     }
 }
 

@@ -6354,6 +6354,23 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                 });
             }
 
+            // 刷新Firebase状态按钮
+            const refreshFirebaseStatusBtn = document.getElementById('refreshFirebaseStatusBtn');
+            if (refreshFirebaseStatusBtn) {
+                refreshFirebaseStatusBtn.addEventListener('click', () => {
+                    this.updateFirebaseSyncStatus();
+                    this.showNotification('Firebase状态已刷新', 'info');
+                });
+            }
+
+            // 测试Firebase连接按钮
+            const testFirebaseConnectionBtn = document.getElementById('testFirebaseConnectionBtn');
+            if (testFirebaseConnectionBtn) {
+                testFirebaseConnectionBtn.addEventListener('click', () => {
+                    this.testFirebaseConnection();
+                });
+            }
+
             // 点击背景关闭模态框
             const modalOverlay = document.getElementById('modalOverlay');
             if (modalOverlay) {
@@ -6395,19 +6412,45 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
         if (!statusDot || !statusText || !syncInfo) return;
 
-        if (window.firebaseSync && window.firebaseSync.isConnected()) {
-            statusDot.className = 'sync-status-dot connected';
-            statusText.textContent = '已连接';
-            syncInfo.innerHTML = `
-                <p>🚀 Firebase 实时同步已启用</p>
-                <p>👥 支持多用户协作</p>
-                <p>📱 跨设备数据同步</p>
-                <p>⚡ 实时数据更新</p>
-            `;
+        if (window.firebaseSync) {
+            const status = window.firebaseSync.getConnectionStatus();
+            console.log('Firebase连接状态:', status);
+
+            if (window.firebaseSync.isConnected()) {
+                statusDot.className = 'status-dot active';
+                statusText.textContent = '已连接';
+                syncInfo.innerHTML = `
+                    <p>🚀 Firebase 实时同步已启用</p>
+                    <p>👥 支持多用户协作</p>
+                    <p>📱 跨设备数据同步</p>
+                    <p>⚡ 实时数据更新</p>
+                    <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">用户: ${status.userConfig.name}</p>
+                `;
+            } else if (status.initialized) {
+                statusDot.className = 'status-dot warning';
+                statusText.textContent = '连接中';
+                syncInfo.innerHTML = `
+                    <p>🔄 Firebase 正在连接中...</p>
+                    <p>📡 请稍等片刻</p>
+                `;
+            } else {
+                statusDot.className = 'status-dot error';
+                statusText.textContent = '未连接';
+                syncInfo.innerHTML = `
+                    <p>❌ Firebase连接失败</p>
+                    <p>🔧 可能的原因：</p>
+                    <ul style="margin: 8px 0; padding-left: 20px; font-size: 13px;">
+                        <li>网络连接问题</li>
+                        <li>Firebase配置错误</li>
+                        <li>防火墙阻止连接</li>
+                    </ul>
+                    <p>💾 系统将使用本地存储模式</p>
+                `;
+            }
         } else {
-            statusDot.className = 'sync-status-dot error';
-            statusText.textContent = '未连接';
-            syncInfo.innerHTML = '<p>❌ Firebase连接失败，请检查网络连接</p>';
+            statusDot.className = 'status-dot error';
+            statusText.textContent = '未加载';
+            syncInfo.innerHTML = '<p>❌ Firebase同步模块未加载</p>';
         }
     }
 
@@ -6422,6 +6465,47 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
             modal.classList.add('active');
             overlay.classList.add('active');
+        }
+    }
+
+    // 测试Firebase连接
+    async testFirebaseConnection() {
+        this.showNotification('正在测试Firebase连接...', 'info');
+
+        try {
+            if (!window.firebaseSync) {
+                throw new Error('Firebase同步模块未加载');
+            }
+
+            const status = window.firebaseSync.getConnectionStatus();
+            console.log('Firebase连接测试 - 当前状态:', status);
+
+            if (window.firebaseSync.isConnected()) {
+                // 尝试写入测试数据
+                const testData = {
+                    id: 'connection_test_' + Date.now(),
+                    message: 'Firebase连接测试',
+                    timestamp: Date.now(),
+                    user: status.userConfig.name
+                };
+
+                const success = await window.firebaseSync.syncToCloud('connectionTest', [testData], 'update');
+
+                if (success) {
+                    this.showNotification('✅ Firebase连接测试成功！数据读写正常', 'success');
+                } else {
+                    this.showNotification('⚠️ Firebase连接正常，但数据写入失败', 'warning');
+                }
+            } else {
+                this.showNotification('❌ Firebase未连接，请检查网络和配置', 'error');
+            }
+
+            // 刷新状态显示
+            this.updateFirebaseSyncStatus();
+
+        } catch (error) {
+            console.error('Firebase连接测试失败:', error);
+            this.showNotification('❌ Firebase连接测试失败: ' + error.message, 'error');
         }
     }
 
