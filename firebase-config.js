@@ -4,17 +4,23 @@
  */
 
 // Firebase 项目配置
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    // 请在 Firebase 控制台获取您的配置信息
-    // https://console.firebase.google.com/
-    
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDAtk4_l58OAfAQYh0aGeykavDYfnflbKc",
+  authDomain: "zhlscglxt.firebaseapp.com",
+  projectId: "zhlscglxt",
+  storageBucket: "zhlscglxt.firebasestorage.app",
+  messagingSenderId: "364959896544",
+  appId: "1:364959896544:web:3ad7266c9832ff25569185"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
 // 初始化 Firebase 同步
 document.addEventListener('DOMContentLoaded', async () => {
