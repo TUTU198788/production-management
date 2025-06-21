@@ -82,6 +82,12 @@ class FirebaseSyncManager {
 
                     // 开始监听数据变化
                     this.startRealtimeSync();
+
+                    // 初始化完成后，执行数据同步
+                    setTimeout(() => {
+                        this.performInitialSync();
+                    }, 1000);
+
                     this.showNotification('云端同步已启用，支持多用户协作', 'success');
                 } else {
                     throw new Error('signInAnonymously 函数未找到');
@@ -265,6 +271,131 @@ class FirebaseSyncManager {
         }
     }
     
+    // 执行初始数据同步
+    async performInitialSync() {
+        if (!this.isInitialized) return;
+
+        console.log('🔄 开始执行初始数据同步...');
+
+        try {
+            // 等待DataManager加载完成
+            let retries = 0;
+            while (!window.dataManager && retries < 30) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+
+            if (!window.dataManager) {
+                console.warn('DataManager未加载，跳过初始同步');
+                return;
+            }
+
+            // 1. 首先从云端拉取现有数据
+            await this.loadDataFromCloud();
+
+            // 2. 然后将本地数据上传到云端（如果本地有数据的话）
+            await this.uploadLocalDataToCloud();
+
+            console.log('✅ 初始数据同步完成');
+
+        } catch (error) {
+            console.error('❌ 初始数据同步失败:', error);
+        }
+    }
+
+    // 从云端加载数据
+    async loadDataFromCloud() {
+        if (!this.isInitialized) return;
+
+        console.log('📥 从云端加载数据...');
+
+        try {
+            // 加载生产数据
+            await this.loadCollectionFromCloud('productionData');
+
+            // 加载发货历史
+            await this.loadCollectionFromCloud('shippingHistory');
+
+            // 加载原材料采购
+            await this.loadCollectionFromCloud('materialPurchases');
+
+        } catch (error) {
+            console.error('从云端加载数据失败:', error);
+        }
+    }
+
+    // 从云端加载指定集合的数据
+    async loadCollectionFromCloud(collectionName) {
+        if (!this.isInitialized) return;
+
+        try {
+            if (!window.collection || !window.query || !window.getDocs) {
+                console.error('Firebase Firestore 函数未加载');
+                return;
+            }
+
+            const q = window.query(
+                window.collection(this.db, collectionName),
+                window.orderBy('timestamp', 'desc'),
+                window.limit(1000)
+            );
+
+            const snapshot = await window.getDocs(q);
+            const data = [];
+            snapshot.forEach(doc => {
+                data.push({ id: doc.id, ...doc.data() });
+            });
+
+            console.log(`从云端加载 ${collectionName}:`, data.length, '条记录');
+
+            // 通知DataManager处理远程数据
+            if (window.dataManager && data.length > 0) {
+                if (collectionName === 'productionData') {
+                    window.dataManager.handleRemoteDataUpdate(data);
+                } else if (collectionName === 'shippingHistory') {
+                    window.dataManager.handleRemoteShippingUpdate(data);
+                } else if (collectionName === 'materialPurchases') {
+                    window.dataManager.handleRemoteMaterialUpdate(data);
+                }
+            }
+
+        } catch (error) {
+            console.error(`从云端加载 ${collectionName} 失败:`, error);
+        }
+    }
+
+    // 将本地数据上传到云端
+    async uploadLocalDataToCloud() {
+        if (!this.isInitialized || !window.dataManager) return;
+
+        console.log('📤 上传本地数据到云端...');
+
+        try {
+            // 上传生产数据
+            if (window.dataManager.data && window.dataManager.data.length > 0) {
+                console.log('上传生产数据:', window.dataManager.data.length, '条');
+                await this.syncToCloud('productionData', window.dataManager.data);
+            }
+
+            // 上传发货历史
+            if (window.dataManager.shippingHistory && window.dataManager.shippingHistory.length > 0) {
+                console.log('上传发货历史:', window.dataManager.shippingHistory.length, '条');
+                await this.syncToCloud('shippingHistory', window.dataManager.shippingHistory);
+            }
+
+            // 上传原材料采购
+            if (window.dataManager.materialPurchases && window.dataManager.materialPurchases.length > 0) {
+                console.log('上传原材料采购:', window.dataManager.materialPurchases.length, '条');
+                await this.syncToCloud('materialPurchases', window.dataManager.materialPurchases);
+            }
+
+            console.log('✅ 本地数据上传完成');
+
+        } catch (error) {
+            console.error('❌ 上传本地数据失败:', error);
+        }
+    }
+
     // 监听在线用户
     async listenToOnlineUsers() {
         if (!this.isInitialized) return;

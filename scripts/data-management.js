@@ -1239,13 +1239,78 @@ class DataManager {
         localStorage.setItem('shippingHistory', JSON.stringify(this.shippingHistory));
 
         // 触发云端同步（优先使用 Firebase）
-        if (window.firebaseSync && window.firebaseSync.isConfigured()) {
-            // Firebase 实时同步
-            setTimeout(() => {
-                window.firebaseSync.syncToCloud('productionData', this.data);
-                window.firebaseSync.syncToCloud('shippingHistory', this.shippingHistory);
-                window.firebaseSync.syncToCloud('materialPurchases', this.materialPurchases);
-            }, 500); // 延迟0.5秒同步
+        this.syncToCloud();
+    }
+
+    // 同步数据到云端
+    async syncToCloud() {
+        if (window.firebaseSync && window.firebaseSync.isConnected()) {
+            console.log('🔄 开始同步数据到云端...');
+
+            try {
+                // 同步生产数据
+                if (this.data && this.data.length > 0) {
+                    await window.firebaseSync.syncToCloud('productionData', this.data);
+                    console.log('✅ 生产数据同步成功');
+                }
+
+                // 同步发货历史
+                if (this.shippingHistory && this.shippingHistory.length > 0) {
+                    await window.firebaseSync.syncToCloud('shippingHistory', this.shippingHistory);
+                    console.log('✅ 发货历史同步成功');
+                }
+
+                // 同步原材料采购
+                if (this.materialPurchases && this.materialPurchases.length > 0) {
+                    await window.firebaseSync.syncToCloud('materialPurchases', this.materialPurchases);
+                    console.log('✅ 原材料数据同步成功');
+                }
+
+                console.log('✅ 所有数据同步完成');
+
+            } catch (error) {
+                console.error('❌ 数据同步失败:', error);
+            }
+        } else {
+            console.log('⚠️ Firebase未连接，跳过云端同步');
+        }
+    }
+
+    // 执行手动同步
+    async performManualSync() {
+        if (!window.firebaseSync || !window.firebaseSync.isConnected()) {
+            this.showNotification('❌ Firebase未连接，无法执行同步', 'error');
+            return;
+        }
+
+        this.showNotification('🔄 开始手动同步数据...', 'info');
+
+        try {
+            // 1. 先从云端拉取最新数据
+            console.log('📥 从云端拉取最新数据...');
+            await window.firebaseSync.loadDataFromCloud();
+
+            // 2. 然后上传本地数据
+            console.log('📤 上传本地数据到云端...');
+            await this.syncToCloud();
+
+            // 3. 触发Firebase的初始同步
+            if (window.firebaseSync.performInitialSync) {
+                await window.firebaseSync.performInitialSync();
+            }
+
+            this.showNotification('✅ 手动同步完成！数据已更新', 'success');
+
+            // 刷新界面
+            this.renderTable();
+            this.updateStats();
+            this.renderAreaStats();
+            this.renderUnproducedStats();
+            this.renderCustomerStats();
+
+        } catch (error) {
+            console.error('❌ 手动同步失败:', error);
+            this.showNotification('❌ 手动同步失败: ' + error.message, 'error');
         }
     }
     
@@ -6371,6 +6436,14 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                 });
             }
 
+            // 手动同步按钮
+            const manualSyncBtn = document.getElementById('manualSyncBtn');
+            if (manualSyncBtn) {
+                manualSyncBtn.addEventListener('click', async () => {
+                    await this.performManualSync();
+                });
+            }
+
             // Firebase禁用开关
             const disableFirebaseCheckbox = document.getElementById('disableFirebaseCheckbox');
             if (disableFirebaseCheckbox) {
@@ -6436,16 +6509,21 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
         if (!statusDot || !statusText || !syncInfo) return;
 
+        // 检查是否在代码中临时禁用了Firebase（检查index.html中的设置）
+        const codeDisabledFirebase = false; // Firebase已重新启用
+
         // 检查用户是否禁用了Firebase
         const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
 
-        if (userDisabledFirebase) {
+        if (codeDisabledFirebase || userDisabledFirebase) {
             statusDot.className = 'status-dot warning';
-            statusText.textContent = '已禁用';
+            statusText.textContent = '本地模式';
             syncInfo.innerHTML = `
-                <p>📱 Firebase已被用户禁用</p>
                 <p>💾 系统使用本地存储模式</p>
-                <p>🔧 如需启用云端同步，请取消下方的禁用选项并刷新页面</p>
+                <p>📱 数据保存在本地浏览器中</p>
+                <p>✅ 所有功能正常可用</p>
+                ${codeDisabledFirebase ? '<p>🔧 Firebase已临时禁用（配置问题）</p>' : ''}
+                ${userDisabledFirebase ? '<p>🔧 如需启用云端同步，请取消下方的禁用选项并刷新页面</p>' : ''}
             `;
             return;
         }
@@ -6556,29 +6634,7 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
 
 
-    // 更新Firebase同步状态显示
-    updateFirebaseSyncStatus() {
-        const statusDot = document.getElementById('syncStatusDot');
-        const statusText = document.getElementById('syncStatusText');
-        const syncInfo = document.getElementById('syncInfo');
 
-        if (!statusDot || !statusText || !syncInfo) return;
-
-        if (window.firebaseSync && window.firebaseSync.isConnected()) {
-            statusDot.className = 'sync-status-dot connected';
-            statusText.textContent = '已连接';
-            syncInfo.innerHTML = `
-                <p>🚀 Firebase 实时同步已启用</p>
-                <p>👥 支持多用户协作</p>
-                <p>📱 跨设备数据同步</p>
-                <p>⚡ 实时数据更新</p>
-            `;
-        } else {
-            statusDot.className = 'sync-status-dot error';
-            statusText.textContent = '未连接';
-            syncInfo.innerHTML = '<p>❌ Firebase连接失败，请检查网络连接</p>';
-        }
-    }
 
     // 渲染未生产规格统计
     renderUnproducedStats() {
@@ -7509,11 +7565,32 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         if (!remoteData || !Array.isArray(remoteData)) return;
 
         console.log('收到远程生产数据更新:', remoteData.length, '条记录');
+        console.log('当前本地数据:', this.data.length, '条记录');
+
+        // 如果本地没有数据，直接使用远程数据
+        if (this.data.length === 0 && remoteData.length > 0) {
+            console.log('本地无数据，直接使用远程数据');
+            this.data = [...remoteData];
+            this.filteredData = [...this.data];
+
+            // 更新本地存储（不触发云端同步，避免循环）
+            localStorage.setItem('productionData', JSON.stringify(this.data));
+
+            // 更新界面
+            this.renderTable();
+            this.updateStats();
+            this.renderAreaStats();
+            this.renderUnproducedStats();
+
+            this.showNotification(`已从云端加载 ${remoteData.length} 条生产数据`, 'success');
+            return;
+        }
 
         // 合并远程数据和本地数据
         const mergedData = this.mergeDataWithRemote(this.data, remoteData);
 
         if (this.hasDataChanged(this.data, mergedData)) {
+            console.log('数据有变化，更新本地数据');
             this.data = mergedData;
             this.filteredData = [...this.data];
 
@@ -7527,6 +7604,8 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             this.renderUnproducedStats();
 
             this.showNotification('数据已从云端同步更新', 'info');
+        } else {
+            console.log('数据无变化，跳过更新');
         }
     }
 
@@ -7535,6 +7614,17 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         if (!remoteData || !Array.isArray(remoteData)) return;
 
         console.log('收到远程发货历史更新:', remoteData.length, '条记录');
+        console.log('当前本地发货历史:', this.shippingHistory.length, '条记录');
+
+        // 如果本地没有数据，直接使用远程数据
+        if (this.shippingHistory.length === 0 && remoteData.length > 0) {
+            console.log('本地无发货历史，直接使用远程数据');
+            this.shippingHistory = [...remoteData];
+            localStorage.setItem('shippingHistory', JSON.stringify(this.shippingHistory));
+            this.renderCustomerStats();
+            this.showNotification(`已从云端加载 ${remoteData.length} 条发货记录`, 'success');
+            return;
+        }
 
         const mergedData = this.mergeDataWithRemote(this.shippingHistory, remoteData);
 
@@ -7554,6 +7644,16 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         if (!remoteData || !Array.isArray(remoteData)) return;
 
         console.log('收到远程原材料采购更新:', remoteData.length, '条记录');
+        console.log('当前本地原材料采购:', this.materialPurchases.length, '条记录');
+
+        // 如果本地没有数据，直接使用远程数据
+        if (this.materialPurchases.length === 0 && remoteData.length > 0) {
+            console.log('本地无原材料数据，直接使用远程数据');
+            this.materialPurchases = [...remoteData];
+            localStorage.setItem('materialPurchases', JSON.stringify(this.materialPurchases));
+            this.showNotification(`已从云端加载 ${remoteData.length} 条原材料记录`, 'success');
+            return;
+        }
 
         const mergedData = this.mergeDataWithRemote(this.materialPurchases, remoteData);
 
