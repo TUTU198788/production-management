@@ -1670,7 +1670,7 @@
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyDAtk4_l580AfAQYh0aGeykavDYfnflbKc",
+            apiKey: "AIzaSyDAtk4_1580AfAQYh0aGeykavDYfnflbKc",
             authDomain: "zhlscglxt.firebaseapp.com",
             projectId: "zhlscglxt",
             storageBucket: "zhlscglxt.firebasestorage.app",
@@ -1708,7 +1708,8 @@
             console.log('=== 开始初始化Firebase ===');
 
             // 检查用户是否禁用了Firebase
-            const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
+            // 临时禁用Firebase直到解决API密钥问题
+            const userDisabledFirebase = true; // localStorage.getItem('disableFirebase') === 'true';
 
             if (userDisabledFirebase) {
                 console.log('⚠️ 用户已禁用Firebase，跳过初始化');
