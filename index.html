@@ -1446,6 +1446,9 @@
                             <button type="button" class="btn secondary" id="testFirebaseConnectionBtn" style="font-size: 12px; padding: 6px 12px;">
                                 <i class="fas fa-vial"></i> 测试连接
                             </button>
+                            <button type="button" class="btn primary" id="manualSyncBtn" style="font-size: 12px; padding: 6px 12px;">
+                                <i class="fas fa-sync-alt"></i> 手动同步
+                            </button>
                         </div>
 
                         <div style="padding: 8px; background: #f3f4f6; border-radius: 4px; font-size: 11px; color: #6b7280;">
@@ -1674,6 +1677,7 @@
             collection,
             doc,
             getDoc,
+            getDocs,
             setDoc,
             deleteDoc,
             query,
@@ -1716,6 +1720,7 @@
         window.collection = collection;
         window.doc = doc;
         window.getDoc = getDoc;
+        window.getDocs = getDocs;
         window.setDoc = setDoc;
         window.deleteDoc = deleteDoc;
         window.query = query;
