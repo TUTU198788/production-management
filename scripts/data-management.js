@@ -1247,32 +1247,66 @@ class DataManager {
         if (window.firebaseSync && window.firebaseSync.isConnected()) {
             console.log('🔄 开始同步数据到云端...');
 
+            // 显示当前数据状态
+            console.log('📊 当前本地数据状态:', {
+                生产数据: this.data?.length || 0,
+                发货历史: this.shippingHistory?.length || 0,
+                原材料采购: this.materialPurchases?.length || 0,
+                操作日志: this.operationLogs?.length || 0
+            });
+
             try {
+                let syncCount = 0;
+
                 // 同步生产数据
                 if (this.data && this.data.length > 0) {
+                    console.log(`📤 正在同步 ${this.data.length} 条生产数据...`);
                     await window.firebaseSync.syncToCloud('productionData', this.data);
                     console.log('✅ 生产数据同步成功');
+                    syncCount++;
+                } else {
+                    console.log('⚠️ 没有生产数据需要同步');
                 }
 
                 // 同步发货历史
                 if (this.shippingHistory && this.shippingHistory.length > 0) {
+                    console.log(`📤 正在同步 ${this.shippingHistory.length} 条发货历史...`);
                     await window.firebaseSync.syncToCloud('shippingHistory', this.shippingHistory);
                     console.log('✅ 发货历史同步成功');
+                    syncCount++;
+                } else {
+                    console.log('⚠️ 没有发货历史需要同步');
                 }
 
                 // 同步原材料采购
                 if (this.materialPurchases && this.materialPurchases.length > 0) {
+                    console.log(`📤 正在同步 ${this.materialPurchases.length} 条原材料数据...`);
                     await window.firebaseSync.syncToCloud('materialPurchases', this.materialPurchases);
                     console.log('✅ 原材料数据同步成功');
+                    syncCount++;
+                } else {
+                    console.log('⚠️ 没有原材料数据需要同步');
                 }
 
-                console.log('✅ 所有数据同步完成');
+                // 同步操作日志
+                if (this.operationLogs && this.operationLogs.length > 0) {
+                    console.log(`📤 正在同步 ${this.operationLogs.length} 条操作日志...`);
+                    await window.firebaseSync.syncToCloud('operationLogs', this.operationLogs);
+                    console.log('✅ 操作日志同步成功');
+                    syncCount++;
+                } else {
+                    console.log('⚠️ 没有操作日志需要同步');
+                }
+
+                console.log(`✅ 数据同步完成，共同步了 ${syncCount} 个数据集合`);
 
             } catch (error) {
                 console.error('❌ 数据同步失败:', error);
+                throw error; // 重新抛出错误以便上层处理
             }
         } else {
             console.log('⚠️ Firebase未连接，跳过云端同步');
+            throw new Error('Firebase未连接');
         }
     }
 
