@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase 连接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        #log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥 Firebase 连接测试</h1>
+    
+    <div class="test-card">
+        <h3>连接状态</h3>
+        <div id="connectionStatus" class="status info">检查中...</div>
+        
+        <button onclick="testConnection()">测试连接</button>
+        <button onclick="testWrite()">测试写入</button>
+        <button onclick="testRead()">测试读取</button>
+        <button onclick="clearLog()">清空日志</button>
+    </div>
+    
+    <div class="test-card">
+        <h3>测试日志</h3>
+        <div id="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            getDoc, 
+            getDocs,
+            setDoc, 
+            query, 
+            orderBy, 
+            limit,
+            serverTimestamp 
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { 
+            getAuth, 
+            signInAnonymously 
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Firebase配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyDAtk4_l58OAfAQYh0aGeykavDYfnflbKc",
+            authDomain: "zhlscglxt.firebaseapp.com",
+            projectId: "zhlscglxt",
+            storageBucket: "zhlscglxt.firebasestorage.app",
+            messagingSenderId: "364959896544",
+            appId: "1:364959896544:web:3ad7266c9832ff25569185"
+        };
+
+        // 初始化Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // 全局变量
+        window.db = db;
+        window.auth = auth;
+        window.collection = collection;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.getDocs = getDocs;
+        window.setDoc = setDoc;
+        window.query = query;
+        window.orderBy = orderBy;
+        window.limit = limit;
+        window.serverTimestamp = serverTimestamp;
+        window.signInAnonymously = signInAnonymously;
+
+        log('✅ Firebase SDK 已加载');
+        
+        // 自动登录
+        signInAnonymously(auth).then(() => {
+            log('✅ 匿名登录成功');
+            updateStatus('已连接', 'success');
+        }).catch(error => {
+            log('❌ 匿名登录失败: ' + error.message);
+            updateStatus('登录失败', 'error');
+        });
+    </script>
+
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(text, type) {
+            const status = document.getElementById('connectionStatus');
+            status.textContent = text;
+            status.className = `status ${type}`;
+        }
+
+        async function testConnection() {
+            log('🧪 开始测试连接...');
+            try {
+                const testDoc = window.doc(window.collection(window.db, 'test'), 'connection');
+                await window.getDoc(testDoc);
+                log('✅ 连接测试成功');
+                updateStatus('连接正常', 'success');
+            } catch (error) {
+                log('❌ 连接测试失败: ' + error.message);
+                updateStatus('连接失败', 'error');
+            }
+        }
+
+        async function testWrite() {
+            log('📝 开始测试写入...');
+            try {
+                const testData = {
+                    message: 'Firebase写入测试',
+                    timestamp: Date.now(),
+                    serverTimestamp: window.serverTimestamp(),
+                    testId: Math.random().toString(36).substr(2, 9)
+                };
+                
+                const docRef = window.doc(window.collection(window.db, 'test'), 'write_test_' + Date.now());
+                await window.setDoc(docRef, testData);
+                
+                log('✅ 写入测试成功，文档ID: ' + docRef.id);
+                log('📄 写入数据: ' + JSON.stringify(testData, null, 2));
+            } catch (error) {
+                log('❌ 写入测试失败: ' + error.message);
+            }
+        }
+
+        async function testRead() {
+            log('📖 开始测试读取...');
+            try {
+                const q = window.query(
+                    window.collection(window.db, 'test'),
+                    window.orderBy('timestamp', 'desc'),
+                    window.limit(5)
+                );
+                
+                const snapshot = await window.getDocs(q);
+                log(`✅ 读取测试成功，找到 ${snapshot.size} 个文档`);
+                
+                snapshot.forEach(doc => {
+                    log(`📄 文档 ${doc.id}: ${JSON.stringify(doc.data())}`);
+                });
+                
+                if (snapshot.empty) {
+                    log('ℹ️ 集合为空，没有找到任何文档');
+                }
+            } catch (error) {
+                log('❌ 读取测试失败: ' + error.message);
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
