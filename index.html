@@ -28,6 +28,9 @@
                     <i class="fas fa-sync-alt"></i>
                     刷新数据
                 </button>
+                <div class="connection-status info" id="connectionStatus">
+                    检查中...
+                </div>
                 <button class="cloud-sync-btn" id="cloudSyncBtn" title="云端同步设置">
                     <i class="fas fa-cloud"></i>
                     云端同步
@@ -1665,17 +1668,37 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-        import { getAuth, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import {
+            getFirestore,
+            connectFirestoreEmulator,
+            collection,
+            doc,
+            getDoc,
+            setDoc,
+            deleteDoc,
+            query,
+            where,
+            orderBy,
+            limit,
+            onSnapshot,
+            writeBatch,
+            serverTimestamp,
+            enablePersistentCacheIndexAutoCreation
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import {
+            getAuth,
+            connectAuthEmulator,
+            signInAnonymously
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyDAtk4_1580AfAQYh0aGeykavDYfnflbKc",
+            apiKey: "AIzaSyDAtk4_l58OAfAQYh0aGeykavDYfnflbKc",
             authDomain: "zhlscglxt.firebaseapp.com",
             projectId: "zhlscglxt",
             storageBucket: "zhlscglxt.firebasestorage.app",
-            messagingSenderId: "36495989654",
-            appId: "1:36495989654:web:3ad7266c9832ff25569185"
+            messagingSenderId: "364959896544",
+            appId: "1:364959896544:web:3ad7266c9832ff25569185"
         };
 
         // Initialize Firebase
@@ -1689,7 +1712,23 @@
         window.firebaseAuth = auth;
         window.firebaseConfig = firebaseConfig;
 
-        console.log('✅ Firebase v10 SDK 已加载');
+        // Export Firebase functions globally for sync manager
+        window.collection = collection;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+        window.deleteDoc = deleteDoc;
+        window.query = query;
+        window.where = where;
+        window.orderBy = orderBy;
+        window.limit = limit;
+        window.onSnapshot = onSnapshot;
+        window.writeBatch = writeBatch;
+        window.serverTimestamp = serverTimestamp;
+        window.signInAnonymously = signInAnonymously;
+        window.enablePersistentCacheIndexAutoCreation = enablePersistentCacheIndexAutoCreation;
+
+        console.log('✅ Firebase v10 SDK 已加载，所有函数已导出到全局作用域');
     </script>
 
     <!-- Firebase 实时同步 -->
@@ -1707,29 +1746,101 @@
         window.addEventListener('load', async function() {
             console.log('=== 开始初始化Firebase ===');
 
+            // 等待Firebase同步管理器加载
+            let retries = 0;
+            while (!window.firebaseSync && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+
+            console.log('Firebase同步管理器检查:', {
+                firebaseSync: !!window.firebaseSync,
+                firebaseConfig: !!window.firebaseConfig,
+                firebaseDB: !!window.firebaseDB,
+                firebaseAuth: !!window.firebaseAuth
+            });
+
             // 检查用户是否禁用了Firebase
-            // 临时禁用Firebase直到解决API密钥问题
-            const userDisabledFirebase = true; // localStorage.getItem('disableFirebase') === 'true';
+            const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
 
             if (userDisabledFirebase) {
                 console.log('⚠️ 用户已禁用Firebase，跳过初始化');
+                updateConnectionStatus('本地模式', 'warning');
             } else if (window.firebaseSync && window.firebaseConfig) {
                 try {
                     console.log('🚀 开始初始化Firebase同步...');
+                    updateConnectionStatus('连接中...', 'info');
+
                     const success = await window.firebaseSync.initialize(window.firebaseConfig);
 
                     if (success) {
                         console.log('✅ Firebase初始化成功');
+                        updateConnectionStatus('已连接', 'success');
                     } else {
                         console.log('⚠️ Firebase初始化失败，将使用本地存储模式');
+                        updateConnectionStatus('本地模式', 'warning');
                     }
                 } catch (error) {
                     console.error('❌ Firebase初始化异常:', error);
+                    updateConnectionStatus('连接失败', 'error');
                 }
             } else {
                 console.log('⚠️ Firebase模块或配置未找到，跳过初始化');
+                console.log('调试信息:', {
+                    firebaseSync: window.firebaseSync,
+                    firebaseConfig: window.firebaseConfig,
+                    scripts: Array.from(document.scripts).map(s => s.src || s.innerHTML.substring(0, 50))
+                });
+                updateConnectionStatus('模块未加载', 'error');
             }
         });
+
+        // 更新连接状态显示
+        function updateConnectionStatus(status, type) {
+            console.log('更新连接状态:', status, type);
+
+            // 更新头部连接状态
+            const statusElement = document.querySelector('.connection-status');
+            if (statusElement) {
+                statusElement.textContent = status;
+                statusElement.className = `connection-status ${type}`;
+                console.log('头部状态已更新');
+            } else {
+                console.warn('未找到连接状态元素');
+            }
+
+            // 更新同步状态弹窗
+            const syncStatusText = document.getElementById('syncStatusText');
+            const syncStatusDot = document.getElementById('syncStatusDot');
+            const syncIndicator = document.getElementById('syncIndicator');
+
+            if (syncStatusText) {
+                syncStatusText.textContent = status;
+                console.log('同步状态文本已更新');
+            }
+
+            if (syncStatusDot && syncIndicator) {
+                // 移除所有状态类
+                syncStatusDot.className = 'status-dot';
+                syncIndicator.className = 'sync-indicator';
+
+                // 添加新的状态类
+                if (type === 'success') {
+                    syncStatusDot.classList.add('connected');
+                    syncIndicator.classList.add('connected');
+                } else if (type === 'warning') {
+                    syncStatusDot.classList.add('warning');
+                    syncIndicator.classList.add('warning');
+                } else if (type === 'error') {
+                    syncStatusDot.classList.add('error');
+                    syncIndicator.classList.add('error');
+                } else {
+                    syncStatusDot.classList.add('checking');
+                    syncIndicator.classList.add('checking');
+                }
+                console.log('同步状态指示器已更新');
+            }
+        }
     </script>
 
     <!-- 数据恢复脚本 -->
