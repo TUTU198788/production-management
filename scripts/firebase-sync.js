@@ -36,38 +36,38 @@ class FirebaseSyncManager {
         try {
             console.log('开始初始化Firebase，配置:', config);
 
-            // 检查 Firebase SDK 是否已加载
-            if (typeof firebase === 'undefined') {
+            // 等待Firebase SDK加载
+            let retries = 0;
+            while (!window.firebaseDB && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+
+            if (!window.firebaseDB) {
                 throw new Error('Firebase SDK 未加载，请确保已引入 Firebase 脚本');
             }
 
-            console.log('Firebase SDK已加载，版本:', firebase.SDK_VERSION || 'unknown');
+            console.log('Firebase SDK v10已加载');
 
-            // 初始化 Firebase
-            if (!firebase.apps.length) {
-                console.log('正在初始化Firebase应用...');
-                firebase.initializeApp(config);
-                console.log('Firebase应用初始化完成');
-            } else {
-                console.log('Firebase应用已存在，跳过初始化');
-            }
-
-            this.db = firebase.firestore();
-            this.auth = firebase.auth();
+            // 使用全局Firebase实例
+            this.db = window.firebaseDB;
+            this.auth = window.firebaseAuth;
             console.log('Firebase服务获取成功');
 
-            // 启用离线持久化
+            // 启用离线持久化 (v10语法)
             try {
-                await this.db.enablePersistence({ synchronizeTabs: true });
+                const { enablePersistentCacheIndexAutoCreation } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                await enablePersistentCacheIndexAutoCreation(this.db);
                 console.log('Firebase离线持久化已启用');
             } catch (err) {
                 console.warn('Firebase 离线持久化启用失败:', err);
                 // 持久化失败不影响基本功能
             }
 
-            // 匿名登录
+            // 匿名登录 (v10语法)
             console.log('正在进行匿名登录...');
-            await this.auth.signInAnonymously();
+            const { signInAnonymously } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+            await signInAnonymously(this.auth);
             this.currentUser = this.auth.currentUser;
             console.log('匿名登录成功，用户ID:', this.currentUser.uid);
 
@@ -149,13 +149,19 @@ class FirebaseSyncManager {
     }
     
     // 监听集合变化
-    listenToCollection(collectionName, callback) {
+    async listenToCollection(collectionName, callback) {
         if (!this.isInitialized) return;
-        
-        const unsubscribe = this.db.collection(collectionName)
-            .orderBy('timestamp', 'desc')
-            .limit(1000)
-            .onSnapshot((snapshot) => {
+
+        try {
+            const { collection, query, orderBy, limit, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+            const q = query(
+                collection(this.db, collectionName),
+                orderBy('timestamp', 'desc'),
+                limit(1000)
+            );
+
+            const unsubscribe = onSnapshot(q, (snapshot) => {
                 const data = [];
                 snapshot.forEach(doc => {
                     data.push({ id: doc.id, ...doc.data() });
@@ -164,21 +170,29 @@ class FirebaseSyncManager {
             }, (error) => {
                 console.error(`监听 ${collectionName} 失败:`, error);
             });
-        
-        this.listeners.set(collectionName, unsubscribe);
+
+            this.listeners.set(collectionName, unsubscribe);
+        } catch (error) {
+            console.error(`设置 ${collectionName} 监听失败:`, error);
+        }
     }
     
     // 监听在线用户
-    listenToOnlineUsers() {
+    async listenToOnlineUsers() {
         if (!this.isInitialized) return;
-        
+
         // 更新自己的在线状态
         this.updateUserPresence();
-        
-        // 监听所有在线用户
-        const unsubscribe = this.db.collection('onlineUsers')
-            .where('lastSeen', '>', Date.now() - 60000) // 1分钟内活跃
-            .onSnapshot((snapshot) => {
+
+        try {
+            const { collection, query, where, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+            const q = query(
+                collection(this.db, 'onlineUsers'),
+                where('lastSeen', '>', Date.now() - 60000) // 1分钟内活跃
+            );
+
+            const unsubscribe = onSnapshot(q, (snapshot) => {
                 const onlineUsers = [];
                 snapshot.forEach(doc => {
                     const userData = doc.data();
@@ -188,9 +202,12 @@ class FirebaseSyncManager {
                 });
                 this.showOnlineUsers(onlineUsers);
             });
-        
-        this.listeners.set('onlineUsers', unsubscribe);
-        
+
+            this.listeners.set('onlineUsers', unsubscribe);
+        } catch (error) {
+            console.error('设置在线用户监听失败:', error);
+        }
+
         // 定期更新在线状态
         setInterval(() => {
             this.updateUserPresence();
@@ -200,14 +217,16 @@ class FirebaseSyncManager {
     // 更新用户在线状态
     async updateUserPresence() {
         if (!this.isInitialized) return;
-        
+
         try {
-            await this.db.collection('onlineUsers').doc(this.userConfig.id).set({
+            const { collection, doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+            await setDoc(doc(collection(this.db, 'onlineUsers'), this.userConfig.id), {
                 userId: this.userConfig.id,
                 name: this.userConfig.name,
                 color: this.userConfig.color,
                 lastSeen: Date.now(),
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                timestamp: serverTimestamp()
             });
         } catch (error) {
             console.error('更新用户在线状态失败:', error);
@@ -221,15 +240,17 @@ class FirebaseSyncManager {
             this.syncQueue.push({ collectionName, data, operation });
             return false;
         }
-        
+
         try {
-            const batch = this.db.batch();
-            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-            
+            const { collection, doc, writeBatch, setDoc, deleteDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+            const batch = writeBatch(this.db);
+            const timestamp = serverTimestamp();
+
             if (operation === 'update' && Array.isArray(data)) {
                 // 批量更新
                 data.forEach(item => {
-                    const docRef = this.db.collection(collectionName).doc(item.id || this.generateDocId());
+                    const docRef = doc(collection(this.db, collectionName), item.id || this.generateDocId());
                     batch.set(docRef, {
                         ...item,
                         timestamp,
@@ -239,10 +260,10 @@ class FirebaseSyncManager {
                 });
             } else if (operation === 'delete') {
                 // 删除操作
-                const docRef = this.db.collection(collectionName).doc(data.id);
+                const docRef = doc(collection(this.db, collectionName), data.id);
                 batch.delete(docRef);
             }
-            
+
             await batch.commit();
             console.log(`${collectionName} 同步到云端成功`);
             return true;
