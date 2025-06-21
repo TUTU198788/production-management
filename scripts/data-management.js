@@ -6371,6 +6371,30 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                 });
             }
 
+            // Firebase禁用开关
+            const disableFirebaseCheckbox = document.getElementById('disableFirebaseCheckbox');
+            if (disableFirebaseCheckbox) {
+                // 加载保存的设置
+                const isDisabled = localStorage.getItem('disableFirebase') === 'true';
+                disableFirebaseCheckbox.checked = isDisabled;
+
+                disableFirebaseCheckbox.addEventListener('change', (e) => {
+                    const disabled = e.target.checked;
+                    localStorage.setItem('disableFirebase', disabled.toString());
+
+                    if (disabled) {
+                        this.showNotification('Firebase已禁用，系统将使用本地存储模式', 'info');
+                    } else {
+                        this.showNotification('Firebase已启用，页面刷新后生效', 'info');
+                    }
+
+                    // 更新状态显示
+                    setTimeout(() => {
+                        this.updateFirebaseSyncStatus();
+                    }, 100);
+                });
+            }
+
             // 点击背景关闭模态框
             const modalOverlay = document.getElementById('modalOverlay');
             if (modalOverlay) {
@@ -6412,6 +6436,20 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
         if (!statusDot || !statusText || !syncInfo) return;
 
+        // 检查用户是否禁用了Firebase
+        const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
+
+        if (userDisabledFirebase) {
+            statusDot.className = 'status-dot warning';
+            statusText.textContent = '已禁用';
+            syncInfo.innerHTML = `
+                <p>📱 Firebase已被用户禁用</p>
+                <p>💾 系统使用本地存储模式</p>
+                <p>🔧 如需启用云端同步，请取消下方的禁用选项并刷新页面</p>
+            `;
+            return;
+        }
+
         if (window.firebaseSync) {
             const status = window.firebaseSync.getConnectionStatus();
             console.log('Firebase连接状态:', status);
@@ -6444,13 +6482,16 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                         <li>Firebase配置错误</li>
                         <li>防火墙阻止连接</li>
                     </ul>
-                    <p>💾 系统将使用本地存储模式</p>
+                    <p>💡 建议：勾选下方"禁用Firebase"选项使用本地存储</p>
                 `;
             }
         } else {
             statusDot.className = 'status-dot error';
             statusText.textContent = '未加载';
-            syncInfo.innerHTML = '<p>❌ Firebase同步模块未加载</p>';
+            syncInfo.innerHTML = `
+                <p>❌ Firebase同步模块未加载</p>
+                <p>💡 建议：勾选下方"禁用Firebase"选项使用本地存储</p>
+            `;
         }
     }
 
