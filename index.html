@@ -1449,6 +1449,12 @@
                             <button type="button" class="btn primary" id="manualSyncBtn" style="font-size: 12px; padding: 6px 12px;">
                                 <i class="fas fa-sync-alt"></i> 手动同步
                             </button>
+                            <button type="button" class="btn secondary" onclick="debugDataStatus()" style="font-size: 12px; padding: 6px 12px; background: #6c757d;">
+                                <i class="fas fa-bug"></i> 调试数据
+                            </button>
+                            <button type="button" class="btn secondary" onclick="testFirebaseWrite()" style="font-size: 12px; padding: 6px 12px; background: #28a745;">
+                                <i class="fas fa-vial"></i> 测试写入
+                            </button>
                         </div>
 
                         <div style="padding: 8px; background: #f3f4f6; border-radius: 4px; font-size: 11px; color: #6b7280;">
@@ -1912,6 +1918,108 @@
                 }
             }, 1000);
         });
+
+        // 调试数据状态
+        function debugDataStatus() {
+            console.log('🔍 ===== 数据状态调试 =====');
+
+            // 检查DataManager
+            if (window.dataManager) {
+                console.log('✅ DataManager已加载');
+                console.log('📊 本地数据状态:', {
+                    生产数据: window.dataManager.data?.length || 0,
+                    发货历史: window.dataManager.shippingHistory?.length || 0,
+                    原材料采购: window.dataManager.materialPurchases?.length || 0,
+                    操作日志: window.dataManager.operationLogs?.length || 0,
+                    自定义区域: window.dataManager.customAreas?.size || 0
+                });
+
+                // 显示前几条生产数据
+                if (window.dataManager.data && window.dataManager.data.length > 0) {
+                    console.log('📄 前3条生产数据:', window.dataManager.data.slice(0, 3));
+                }
+            } else {
+                console.log('❌ DataManager未加载');
+            }
+
+            // 检查Firebase
+            if (window.firebaseSync) {
+                console.log('✅ FirebaseSync已加载');
+                console.log('🔗 Firebase状态:', {
+                    已初始化: window.firebaseSync.isInitialized,
+                    已连接: window.firebaseSync.isConnected(),
+                    用户配置: window.firebaseSync.userConfig
+                });
+            } else {
+                console.log('❌ FirebaseSync未加载');
+            }
+
+            // 检查localStorage
+            const localData = localStorage.getItem('productionData');
+            const localShipping = localStorage.getItem('shippingHistory');
+            const localMaterials = localStorage.getItem('materialPurchases');
+
+            console.log('💾 localStorage状态:', {
+                生产数据: localData ? JSON.parse(localData).length : 0,
+                发货历史: localShipping ? JSON.parse(localShipping).length : 0,
+                原材料: localMaterials ? JSON.parse(localMaterials).length : 0
+            });
+
+            console.log('🔍 ===== 调试完成 =====');
+
+            // 显示通知
+            if (window.dataManager) {
+                window.dataManager.showNotification('调试信息已输出到控制台，请按F12查看', 'info');
+            }
+        }
+
+        // 测试Firebase写入
+        async function testFirebaseWrite() {
+            console.log('🧪 开始测试Firebase写入...');
+
+            if (!window.firebaseSync || !window.firebaseSync.isConnected()) {
+                console.log('❌ Firebase未连接');
+                if (window.dataManager) {
+                    window.dataManager.showNotification('❌ Firebase未连接，无法测试', 'error');
+                }
+                return;
+            }
+
+            try {
+                // 创建测试数据
+                const testData = [{
+                    id: 'test_' + Date.now(),
+                    specification: 'H80-6000',
+                    quantity: 100,
+                    area: '测试区域',
+                    timestamp: Date.now(),
+                    testFlag: true
+                }];
+
+                console.log('📝 测试数据:', testData);
+
+                // 尝试写入
+                const success = await window.firebaseSync.syncToCloud('productionData', testData, 'update');
+
+                if (success) {
+                    console.log('✅ Firebase写入测试成功！');
+                    if (window.dataManager) {
+                        window.dataManager.showNotification('✅ Firebase写入测试成功！', 'success');
+                    }
+                } else {
+                    console.log('❌ Firebase写入测试失败');
+                    if (window.dataManager) {
+                        window.dataManager.showNotification('❌ Firebase写入测试失败', 'error');
+                    }
+                }
+
+            } catch (error) {
+                console.error('❌ Firebase写入测试出错:', error);
+                if (window.dataManager) {
+                    window.dataManager.showNotification('❌ Firebase写入测试出错: ' + error.message, 'error');
+                }
+            }
+        }
     </script>
 </body>
 </html>

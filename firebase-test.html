@@ -59,6 +59,7 @@
         <button onclick="testConnection()">测试连接</button>
         <button onclick="testWrite()">测试写入</button>
         <button onclick="testRead()">测试读取</button>
+        <button onclick="testProductionData()">测试生产数据</button>
         <button onclick="clearLog()">清空日志</button>
     </div>
     
@@ -164,14 +165,34 @@
                     serverTimestamp: window.serverTimestamp(),
                     testId: Math.random().toString(36).substr(2, 9)
                 };
-                
+
+                log('🔐 当前用户认证状态: ' + (window.auth.currentUser ? '已登录' : '未登录'));
+                if (window.auth.currentUser) {
+                    log('👤 用户ID: ' + window.auth.currentUser.uid);
+                    log('🔑 是否匿名: ' + window.auth.currentUser.isAnonymous);
+                }
+
                 const docRef = window.doc(window.collection(window.db, 'test'), 'write_test_' + Date.now());
                 await window.setDoc(docRef, testData);
-                
+
                 log('✅ 写入测试成功，文档ID: ' + docRef.id);
                 log('📄 写入数据: ' + JSON.stringify(testData, null, 2));
+
+                // 测试生产数据集合
+                log('📝 测试写入生产数据集合...');
+                const prodDocRef = window.doc(window.collection(window.db, 'productionData'), 'test_' + Date.now());
+                await window.setDoc(prodDocRef, {
+                    ...testData,
+                    collection: 'productionData'
+                });
+                log('✅ 生产数据集合写入成功');
+
             } catch (error) {
                 log('❌ 写入测试失败: ' + error.message);
+                log('🔍 错误代码: ' + error.code);
+                if (error.code === 'permission-denied') {
+                    log('🚫 权限被拒绝！请检查Firebase安全规则');
+                }
             }
         }
 
@@ -196,6 +217,50 @@
                 }
             } catch (error) {
                 log('❌ 读取测试失败: ' + error.message);
+            }
+        }
+
+        async function testProductionData() {
+            log('🏭 开始测试生产数据集合...');
+            try {
+                // 测试读取生产数据
+                log('📖 读取生产数据...');
+                const q = window.query(
+                    window.collection(window.db, 'productionData'),
+                    window.limit(10)
+                );
+
+                const snapshot = await window.getDocs(q);
+                log(`✅ 生产数据读取成功，找到 ${snapshot.size} 条记录`);
+
+                if (snapshot.size > 0) {
+                    snapshot.forEach((doc, index) => {
+                        if (index < 3) { // 只显示前3条
+                            log(`📄 生产数据 ${doc.id}: ${JSON.stringify(doc.data(), null, 2)}`);
+                        }
+                    });
+                } else {
+                    log('ℹ️ 生产数据集合为空');
+                }
+
+                // 测试其他集合
+                const collections = ['shippingHistory', 'materialPurchases', 'operationLogs'];
+                for (const collectionName of collections) {
+                    try {
+                        const q2 = window.query(
+                            window.collection(window.db, collectionName),
+                            window.limit(5)
+                        );
+                        const snapshot2 = await window.getDocs(q2);
+                        log(`📊 ${collectionName}: ${snapshot2.size} 条记录`);
+                    } catch (error) {
+                        log(`❌ 读取 ${collectionName} 失败: ${error.message}`);
+                    }
+                }
+
+            } catch (error) {
+                log('❌ 生产数据测试失败: ' + error.message);
+                log('🔍 错误代码: ' + error.code);
             }
         }
 

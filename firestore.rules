@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 允许所有认证用户（包括匿名用户）读写所有文档
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // 特别允许生产管理系统的集合
+    match /productionData/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /shippingHistory/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /materialPurchases/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /operationLogs/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /connectionTest/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /test/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /onlineUsers/{document} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
