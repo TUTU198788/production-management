@@ -275,11 +275,17 @@ class FirebaseSyncManager {
                 return;
             }
 
-            const q = window.query(
-                window.collection(this.db, collectionName),
-                window.orderBy('timestamp', 'desc'),
-                window.limit(1000)
-            );
+            // 创建查询，处理可能的错误
+            let q;
+            try {
+                q = window.query(
+                    window.collection(this.db, collectionName),
+                    window.limit(1000)
+                );
+            } catch (queryError) {
+                console.warn(`创建 ${collectionName} 查询失败:`, queryError);
+                return;
+            }
 
             const unsubscribe = window.onSnapshot(q, (snapshot) => {
                 const data = [];
@@ -382,11 +388,17 @@ class FirebaseSyncManager {
 
             console.log(`正在从云端加载 ${collectionName}...`);
 
-            const q = window.query(
-                window.collection(this.db, collectionName),
-                window.orderBy('timestamp', 'desc'),
-                window.limit(1000)
-            );
+            // 创建查询，但要处理可能没有timestamp字段的情况
+            let q;
+            try {
+                q = window.query(
+                    window.collection(this.db, collectionName),
+                    window.limit(1000)
+                );
+            } catch (queryError) {
+                console.warn(`创建查询失败，使用简单查询:`, queryError);
+                q = window.collection(this.db, collectionName);
+            }
 
             const snapshot = await window.getDocs(q);
             const data = [];
@@ -526,7 +538,15 @@ class FirebaseSyncManager {
             console.log(`开始同步 ${collectionName} 到云端，数据量:`, Array.isArray(data) ? data.length : 1);
 
             const batch = window.writeBatch(this.db);
-            const timestamp = window.serverTimestamp();
+
+            // 安全地获取服务器时间戳
+            let timestamp;
+            try {
+                timestamp = window.serverTimestamp ? window.serverTimestamp() : Date.now();
+            } catch (timestampError) {
+                console.warn('获取服务器时间戳失败，使用本地时间:', timestampError);
+                timestamp = Date.now();
+            }
 
             if (operation === 'update' && Array.isArray(data)) {
                 // 批量更新
@@ -537,9 +557,16 @@ class FirebaseSyncManager {
 
                 data.forEach((item, index) => {
                     try {
+                        // 确保item是对象
+                        if (!item || typeof item !== 'object') {
+                            console.warn(`跳过无效数据项 ${index}:`, item);
+                            return;
+                        }
+
                         const docId = item.id || this.generateDocId();
                         const docRef = window.doc(window.collection(this.db, collectionName), docId);
 
+                        // 创建文档数据，确保所有字段都是有效的
                         const docData = {
                             ...item,
                             timestamp,
@@ -547,6 +574,13 @@ class FirebaseSyncManager {
                             lastModifiedByName: this.userConfig.name,
                             syncedAt: Date.now()
                         };
+
+                        // 清理可能导致问题的字段
+                        Object.keys(docData).forEach(key => {
+                            if (docData[key] === undefined) {
+                                delete docData[key];
+                            }
+                        });
 
                         batch.set(docRef, docData, { merge: true });
 
