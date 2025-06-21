@@ -10,8 +10,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SheetJS for Excel reading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- 云端同步功能 -->
-    <script src="scripts/cloud-sync.js"></script>
 </head>
 <body>
     <!-- 顶部导航栏 -->
@@ -1395,7 +1393,7 @@
     <div class="modal" id="cloudSyncModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>云端同步配置</h3>
+                <h3>Firebase 实时同步状态</h3>
                 <button class="modal-close" id="closeCloudSyncModal">
                     <i class="fas fa-times"></i>
                 </button>
@@ -1414,74 +1412,32 @@
                     </div>
                 </div>
 
-                <div class="firebase-info-card" style="margin-bottom: 20px; padding: 16px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                    <h4 style="margin: 0 0 8px 0; color: #1e40af;">🚀 Firebase 实时同步</h4>
-                    <p style="margin: 0; color: #1e40af; font-size: 14px;">
-                        系统已配置 Firebase 实时同步，支持多用户协作和跨设备数据同步。
-                        如果同步状态显示"已连接"，则无需额外配置。
-                    </p>
+                <div class="firebase-info-card" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 1px solid #93c5fd; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <h4 style="color: #1e40af; margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-rocket"></i>
+                        Firebase 实时同步
+                    </h4>
+                    <div style="color: #1e40af; font-size: 14px; line-height: 1.6;">
+                        <p style="margin: 0 0 8px 0;">✅ <strong>多用户协作</strong>：支持多人同时操作，数据实时同步</p>
+                        <p style="margin: 0 0 8px 0;">📱 <strong>跨设备同步</strong>：手机、电脑、平板数据自动同步</p>
+                        <p style="margin: 0 0 8px 0;">⚡ <strong>实时更新</strong>：数据变更立即推送到所有设备</p>
+                        <p style="margin: 0 0 8px 0;">🔒 <strong>数据安全</strong>：云端备份，永不丢失</p>
+                        <p style="margin: 0; font-weight: 500;">🌐 <strong>在线访问</strong>：随时随地访问最新数据</p>
+                    </div>
                 </div>
 
-                <details style="margin-bottom: 20px;">
-                    <summary style="cursor: pointer; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-                        <strong>🔧 备用同步选项（GitHub）</strong>
-                    </summary>
-
-                    <div style="padding: 16px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px;">
-                        <p style="color: #6b7280; font-size: 14px; margin-bottom: 16px;">
-                            如果 Firebase 同步不可用，可以配置 GitHub 作为备用同步方案：
-                        </p>
-
-                        <form id="cloudSyncForm">
-                            <div class="form-group">
-                                <label for="githubUsername">GitHub 用户名</label>
-                                <input type="text" id="githubUsername" placeholder="例如: zhangsan">
-                                <small>您的GitHub用户名</small>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="githubRepo">数据仓库名</label>
-                                <input type="text" id="githubRepo" placeholder="例如: production-data">
-                                <small>用于存储数据的GitHub仓库名（会自动创建）</small>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="githubToken">GitHub Token（可选）</label>
-                                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
-                                <small>
-                                    用于写入数据。<a href="https://github.com/settings/tokens" target="_blank">点击获取Token</a>
-                                    <br>权限需要：repo（完整仓库访问权限）
-                                </small>
-                            </div>
-
-                            <div class="sync-options">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="autoSync" checked>
-                                    启用自动同步（每30秒）
-                                </label>
-                            </div>
-                        </form>
-                    </div>
-                </details>
-
-                <div class="sync-actions">
-                    <button type="button" class="btn secondary" id="testSyncBtn">
-                        <i class="fas fa-vial"></i>
-                        测试连接
-                    </button>
-                    <button type="button" class="btn primary" id="manualSyncBtn">
-                        <i class="fas fa-sync-alt"></i>
-                        立即同步
-                    </button>
-                    <button type="button" class="btn info" id="refreshSyncStatusBtn">
-                        <i class="fas fa-refresh"></i>
-                        刷新状态
-                    </button>
+                <div class="sync-help-card" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
+                    <h5 style="color: #374151; margin: 0 0 8px 0;">💡 使用说明</h5>
+                    <ul style="color: #6b7280; font-size: 13px; margin: 0; padding-left: 16px; line-height: 1.5;">
+                        <li>系统已自动配置Firebase实时同步</li>
+                        <li>如果状态显示"已连接"，表示同步正常工作</li>
+                        <li>如果显示"未连接"，请检查网络连接</li>
+                        <li>所有数据变更会自动保存到云端</li>
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn secondary" id="cancelCloudSyncBtn">关闭</button>
-                <button type="submit" class="btn success" id="saveCloudSyncBtn" form="cloudSyncForm">保存GitHub配置</button>
             </div>
         </div>
     </div>
