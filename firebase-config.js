@@ -5,16 +5,13 @@
 
 // Firebase 项目配置
 const firebaseConfig = {
-  apiKey: "AIzaSyDAtk4_l58OAfAQYh0aGeykavDYfnflbKc",
-  authDomain: "zhlscglxt.firebaseapp.com",
-  projectId: "zhlscglxt",
-  storageBucket: "zhlscglxt.firebasestorage.app",
-  messagingSenderId: "364959896544",
-  appId: "1:364959896544:web:3ad7266c9832ff25569185"
+    apiKey: "AIzaSyDAtk4_l58OAfAQYh0aGeykavDYfnflbKc",
+    authDomain: "zhlscglxt.firebaseapp.com",
+    projectId: "zhlscglxt",
+    storageBucket: "zhlscglxt.firebasestorage.app",
+    messagingSenderId: "364959896544",
+    appId: "1:364959896544:web:3ad7266c9832ff25569185"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 
 // 初始化 Firebase 同步
 document.addEventListener('DOMContentLoaded', async () => {
