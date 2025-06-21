@@ -6342,22 +6342,30 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
     // 云端同步相关方法
     setupCloudSyncListeners() {
-        // 等待DOM加载完成后设置事件监听器
-        document.addEventListener('DOMContentLoaded', () => {
+        // 直接设置事件监听器，不需要等待DOMContentLoaded
+        const setupListeners = () => {
             // 关闭云端同步模态框
             const closeCloudSyncModal = document.getElementById('closeCloudSyncModal');
             const cancelCloudSyncBtn = document.getElementById('cancelCloudSyncBtn');
 
             if (closeCloudSyncModal) {
+                console.log('设置云端同步关闭按钮事件监听器');
                 closeCloudSyncModal.addEventListener('click', () => {
+                    console.log('云端同步关闭按钮被点击');
                     this.closeCloudSyncModal();
                 });
+            } else {
+                console.error('未找到云端同步关闭按钮');
             }
 
             if (cancelCloudSyncBtn) {
+                console.log('设置云端同步取消按钮事件监听器');
                 cancelCloudSyncBtn.addEventListener('click', () => {
+                    console.log('云端同步取消按钮被点击');
                     this.closeCloudSyncModal();
                 });
+            } else {
+                console.error('未找到云端同步取消按钮');
             }
 
             // 保存云端同步配置
@@ -6384,7 +6392,37 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                     this.manualSync();
                 });
             }
-        });
+
+            // 刷新同步状态
+            const refreshSyncStatusBtn = document.getElementById('refreshSyncStatusBtn');
+            if (refreshSyncStatusBtn) {
+                refreshSyncStatusBtn.addEventListener('click', () => {
+                    this.updateSyncStatus();
+                    this.showNotification('同步状态已刷新', 'info');
+                });
+            }
+
+            // 点击背景关闭模态框
+            const modalOverlay = document.getElementById('modalOverlay');
+            if (modalOverlay) {
+                modalOverlay.addEventListener('click', (e) => {
+                    // 检查是否点击的是背景而不是模态框内容
+                    if (e.target === modalOverlay) {
+                        const cloudSyncModal = document.getElementById('cloudSyncModal');
+                        if (cloudSyncModal && cloudSyncModal.classList.contains('active')) {
+                            this.closeCloudSyncModal();
+                        }
+                    }
+                });
+            }
+        };
+
+        // 如果DOM已经加载完成，直接设置监听器
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupListeners);
+        } else {
+            setupListeners();
+        }
     }
 
     // 打开云端同步配置模态框
@@ -6396,8 +6434,8 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             // 加载当前配置
             this.loadCloudSyncConfig();
 
-            modal.style.display = 'block';
-            overlay.style.display = 'block';
+            modal.classList.add('active');
+            overlay.classList.add('active');
 
             // 更新同步状态
             this.updateSyncStatus();
@@ -6406,12 +6444,17 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
     // 关闭云端同步配置模态框
     closeCloudSyncModal() {
+        console.log('尝试关闭云端同步模态框');
         const modal = document.getElementById('cloudSyncModal');
         const overlay = document.getElementById('modalOverlay');
 
         if (modal && overlay) {
-            modal.style.display = 'none';
-            overlay.style.display = 'none';
+            console.log('找到模态框和遮罩层，正在关闭');
+            modal.classList.remove('active');
+            overlay.classList.remove('active');
+            console.log('云端同步模态框已关闭');
+        } else {
+            console.error('未找到模态框或遮罩层', { modal: !!modal, overlay: !!overlay });
         }
     }
 
@@ -6543,7 +6586,29 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
         if (!statusDot || !statusText || !syncInfo) return;
 
-        if (window.cloudSync) {
+        // 优先检查 Firebase 同步状态
+        if (window.firebaseSync && window.firebaseSync.isConfigured()) {
+            const firebaseStatus = window.firebaseSync.isInitialized;
+
+            // 更新状态点
+            statusDot.className = 'status-dot';
+
+            if (firebaseStatus) {
+                statusDot.classList.add('active');
+                statusText.textContent = '已连接';
+                syncInfo.innerHTML = `
+                    <p>✅ Firebase 实时同步已启用</p>
+                    <p>🔄 多用户实时协作功能正常</p>
+                    <p>📱 支持跨设备数据同步</p>
+                    <p>💾 数据自动保存到云端</p>
+                `;
+            } else {
+                statusDot.classList.add('warning');
+                statusText.textContent = '连接中';
+                syncInfo.innerHTML = '<p>🔄 Firebase 同步正在初始化...</p>';
+            }
+        } else if (window.cloudSync) {
+            // 备用：GitHub 同步状态
             const status = window.cloudSync.getSyncStatus();
 
             // 更新状态点
@@ -6553,7 +6618,7 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                 statusDot.classList.add('active');
                 statusText.textContent = '已连接';
                 syncInfo.innerHTML = `
-                    <p>✅ 云端同步已启用</p>
+                    <p>✅ GitHub 同步已启用</p>
                     <p>📡 自动同步: ${status.autoSync ? '开启' : '关闭'}</p>
                     <p>🔑 写入权限: ${status.hasToken ? '已配置' : '未配置（只读模式）'}</p>
                     ${status.lastSync ? `<p>🕒 上次同步: ${new Date(status.lastSync).toLocaleString('zh-CN')}</p>` : ''}
@@ -6565,7 +6630,7 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             } else {
                 statusDot.classList.add('error');
                 statusText.textContent = '未配置';
-                syncInfo.innerHTML = '<p>❌ 请配置GitHub信息以启用云端同步</p>';
+                syncInfo.innerHTML = '<p>❌ 请配置Firebase或GitHub信息以启用云端同步</p>';
             }
         } else {
             statusDot.classList.add('error');
