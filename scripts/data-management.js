@@ -45,8 +45,8 @@ class DataManager {
 
         console.log('DataManager 构造函数完成');
 
-        // 设置云端同步事件监听器
-        this.setupCloudSyncListeners();
+        // 设置Firebase同步状态模态框事件监听器
+        this.setupFirebaseSyncListeners();
     }
 
     // 迁移现有发货数据到历史记录
@@ -309,9 +309,9 @@ class DataManager {
             this.clearAllData();
         });
 
-        // 云端同步按钮
+        // Firebase同步状态按钮
         document.getElementById('cloudSyncBtn').addEventListener('click', () => {
-            this.openCloudSyncModal();
+            this.showFirebaseSyncStatus();
         });
         
         // 搜索框
@@ -1246,11 +1246,6 @@ class DataManager {
                 window.firebaseSync.syncToCloud('shippingHistory', this.shippingHistory);
                 window.firebaseSync.syncToCloud('materialPurchases', this.materialPurchases);
             }, 500); // 延迟0.5秒同步
-        } else if (window.cloudSync && window.cloudSync.isConfigured()) {
-            // 备用 GitHub 同步
-            setTimeout(() => {
-                window.cloudSync.syncData(this.data);
-            }, 1000);
         }
     }
     
@@ -6340,65 +6335,22 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         this.showNotification('采购记录导出成功', 'success');
     }
 
-    // 云端同步相关方法
-    setupCloudSyncListeners() {
-        // 直接设置事件监听器，不需要等待DOMContentLoaded
+    // 设置Firebase同步状态模态框事件监听器
+    setupFirebaseSyncListeners() {
         const setupListeners = () => {
-            // 关闭云端同步模态框
+            // 关闭Firebase同步状态模态框
             const closeCloudSyncModal = document.getElementById('closeCloudSyncModal');
             const cancelCloudSyncBtn = document.getElementById('cancelCloudSyncBtn');
 
             if (closeCloudSyncModal) {
-                console.log('设置云端同步关闭按钮事件监听器');
                 closeCloudSyncModal.addEventListener('click', () => {
-                    console.log('云端同步关闭按钮被点击');
-                    this.closeCloudSyncModal();
+                    this.closeFirebaseSyncModal();
                 });
-            } else {
-                console.error('未找到云端同步关闭按钮');
             }
 
             if (cancelCloudSyncBtn) {
-                console.log('设置云端同步取消按钮事件监听器');
                 cancelCloudSyncBtn.addEventListener('click', () => {
-                    console.log('云端同步取消按钮被点击');
-                    this.closeCloudSyncModal();
-                });
-            } else {
-                console.error('未找到云端同步取消按钮');
-            }
-
-            // 保存云端同步配置
-            const saveCloudSyncBtn = document.getElementById('saveCloudSyncBtn');
-            if (saveCloudSyncBtn) {
-                saveCloudSyncBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.saveCloudSyncConfig();
-                });
-            }
-
-            // 测试连接
-            const testSyncBtn = document.getElementById('testSyncBtn');
-            if (testSyncBtn) {
-                testSyncBtn.addEventListener('click', () => {
-                    this.testCloudConnection();
-                });
-            }
-
-            // 手动同步
-            const manualSyncBtn = document.getElementById('manualSyncBtn');
-            if (manualSyncBtn) {
-                manualSyncBtn.addEventListener('click', () => {
-                    this.manualSync();
-                });
-            }
-
-            // 刷新同步状态
-            const refreshSyncStatusBtn = document.getElementById('refreshSyncStatusBtn');
-            if (refreshSyncStatusBtn) {
-                refreshSyncStatusBtn.addEventListener('click', () => {
-                    this.updateSyncStatus();
-                    this.showNotification('同步状态已刷新', 'info');
+                    this.closeFirebaseSyncModal();
                 });
             }
 
@@ -6406,11 +6358,10 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             const modalOverlay = document.getElementById('modalOverlay');
             if (modalOverlay) {
                 modalOverlay.addEventListener('click', (e) => {
-                    // 检查是否点击的是背景而不是模态框内容
                     if (e.target === modalOverlay) {
                         const cloudSyncModal = document.getElementById('cloudSyncModal');
                         if (cloudSyncModal && cloudSyncModal.classList.contains('active')) {
-                            this.closeCloudSyncModal();
+                            this.closeFirebaseSyncModal();
                         }
                     }
                 });
@@ -6425,217 +6376,82 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         }
     }
 
-    // 打开云端同步配置模态框
-    openCloudSyncModal() {
+    // 关闭Firebase同步状态模态框
+    closeFirebaseSyncModal() {
         const modal = document.getElementById('cloudSyncModal');
         const overlay = document.getElementById('modalOverlay');
 
         if (modal && overlay) {
-            // 加载当前配置
-            this.loadCloudSyncConfig();
-
-            modal.classList.add('active');
-            overlay.classList.add('active');
-
-            // 更新同步状态
-            this.updateSyncStatus();
-        }
-    }
-
-    // 关闭云端同步配置模态框
-    closeCloudSyncModal() {
-        console.log('尝试关闭云端同步模态框');
-        const modal = document.getElementById('cloudSyncModal');
-        const overlay = document.getElementById('modalOverlay');
-
-        if (modal && overlay) {
-            console.log('找到模态框和遮罩层，正在关闭');
             modal.classList.remove('active');
             overlay.classList.remove('active');
-            console.log('云端同步模态框已关闭');
-        } else {
-            console.error('未找到模态框或遮罩层', { modal: !!modal, overlay: !!overlay });
         }
     }
 
-    // 加载云端同步配置
-    loadCloudSyncConfig() {
-        if (window.cloudSync) {
-            const config = window.cloudSync.config;
-
-            const usernameInput = document.getElementById('githubUsername');
-            const repoInput = document.getElementById('githubRepo');
-            const autoSyncCheckbox = document.getElementById('autoSync');
-
-            if (usernameInput && config.owner !== 'YOUR_GITHUB_USERNAME') {
-                usernameInput.value = config.owner;
-            }
-
-            if (repoInput) {
-                repoInput.value = config.repo;
-            }
-
-            if (autoSyncCheckbox) {
-                autoSyncCheckbox.checked = !!window.cloudSync.syncTimer;
-            }
-        }
-    }
-
-    // 保存云端同步配置
-    saveCloudSyncConfig() {
-        const usernameInput = document.getElementById('githubUsername');
-        const repoInput = document.getElementById('githubRepo');
-        const tokenInput = document.getElementById('githubToken');
-        const autoSyncCheckbox = document.getElementById('autoSync');
-
-        if (!usernameInput || !repoInput) {
-            this.showNotification('配置表单未找到', 'error');
-            return;
-        }
-
-        const username = usernameInput.value.trim();
-        const repo = repoInput.value.trim();
-        const token = tokenInput ? tokenInput.value.trim() : '';
-        const autoSync = autoSyncCheckbox ? autoSyncCheckbox.checked : true;
-
-        if (!username || !repo) {
-            this.showNotification('请填写GitHub用户名和仓库名', 'error');
-            return;
-        }
-
-        if (window.cloudSync) {
-            // 配置云端同步
-            window.cloudSync.configure(username, repo, token || null);
-
-            // 启动或停止自动同步
-            if (autoSync) {
-                window.cloudSync.startAutoSync();
-            } else {
-                window.cloudSync.stopAutoSync();
-            }
-
-            // 初始化同步
-            window.cloudSync.init().then((success) => {
-                if (success) {
-                    this.showNotification('云端同步配置成功', 'success');
-                    this.updateSyncStatus();
-                } else {
-                    this.showNotification('云端同步配置已保存，但初始化失败', 'warning');
-                    this.updateSyncStatus();
-                }
-            });
-
-            this.closeCloudSyncModal();
-        } else {
-            this.showNotification('云端同步模块未加载', 'error');
-        }
-    }
-
-    // 测试云端连接
-    async testCloudConnection() {
-        const usernameInput = document.getElementById('githubUsername');
-        const repoInput = document.getElementById('githubRepo');
-
-        if (!usernameInput || !repoInput) {
-            this.showNotification('请先填写配置信息', 'error');
-            return;
-        }
-
-        const username = usernameInput.value.trim();
-        const repo = repoInput.value.trim();
-
-        if (!username || !repo) {
-            this.showNotification('请填写GitHub用户名和仓库名', 'error');
-            return;
-        }
-
-        this.showNotification('正在测试连接...', 'info');
-
-        try {
-            // 测试GitHub API连接
-            const url = `https://api.github.com/repos/${username}/${repo}`;
-            const response = await fetch(url);
-
-            if (response.status === 404) {
-                this.showNotification('仓库不存在，将在首次同步时自动创建', 'warning');
-            } else if (response.ok) {
-                this.showNotification('连接测试成功！', 'success');
-            } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-        } catch (error) {
-            console.error('连接测试失败:', error);
-            this.showNotification('连接测试失败: ' + error.message, 'error');
-        }
-    }
-
-    // 手动同步
-    async manualSync() {
-        if (window.cloudSync) {
-            await window.cloudSync.manualSync();
-        } else {
-            this.showNotification('云端同步未配置', 'error');
-        }
-    }
-
-    // 更新同步状态显示
-    updateSyncStatus() {
+    // Firebase实时同步状态显示
+    updateFirebaseSyncStatus() {
         const statusDot = document.getElementById('syncStatusDot');
         const statusText = document.getElementById('syncStatusText');
         const syncInfo = document.getElementById('syncInfo');
 
         if (!statusDot || !statusText || !syncInfo) return;
 
-        // 优先检查 Firebase 同步状态
-        if (window.firebaseSync && window.firebaseSync.isConfigured()) {
-            const firebaseStatus = window.firebaseSync.isInitialized;
-
-            // 更新状态点
-            statusDot.className = 'status-dot';
-
-            if (firebaseStatus) {
-                statusDot.classList.add('active');
-                statusText.textContent = '已连接';
-                syncInfo.innerHTML = `
-                    <p>✅ Firebase 实时同步已启用</p>
-                    <p>🔄 多用户实时协作功能正常</p>
-                    <p>📱 支持跨设备数据同步</p>
-                    <p>💾 数据自动保存到云端</p>
-                `;
-            } else {
-                statusDot.classList.add('warning');
-                statusText.textContent = '连接中';
-                syncInfo.innerHTML = '<p>🔄 Firebase 同步正在初始化...</p>';
-            }
-        } else if (window.cloudSync) {
-            // 备用：GitHub 同步状态
-            const status = window.cloudSync.getSyncStatus();
-
-            // 更新状态点
-            statusDot.className = 'status-dot';
-
-            if (status.configured && status.online) {
-                statusDot.classList.add('active');
-                statusText.textContent = '已连接';
-                syncInfo.innerHTML = `
-                    <p>✅ GitHub 同步已启用</p>
-                    <p>📡 自动同步: ${status.autoSync ? '开启' : '关闭'}</p>
-                    <p>🔑 写入权限: ${status.hasToken ? '已配置' : '未配置（只读模式）'}</p>
-                    ${status.lastSync ? `<p>🕒 上次同步: ${new Date(status.lastSync).toLocaleString('zh-CN')}</p>` : ''}
-                `;
-            } else if (status.configured && !status.online) {
-                statusDot.classList.add('warning');
-                statusText.textContent = '离线';
-                syncInfo.innerHTML = '<p>⚠️ 网络离线，数据将保存在本地</p>';
-            } else {
-                statusDot.classList.add('error');
-                statusText.textContent = '未配置';
-                syncInfo.innerHTML = '<p>❌ 请配置Firebase或GitHub信息以启用云端同步</p>';
-            }
+        if (window.firebaseSync && window.firebaseSync.isConnected()) {
+            statusDot.className = 'sync-status-dot connected';
+            statusText.textContent = '已连接';
+            syncInfo.innerHTML = `
+                <p>🚀 Firebase 实时同步已启用</p>
+                <p>👥 支持多用户协作</p>
+                <p>📱 跨设备数据同步</p>
+                <p>⚡ 实时数据更新</p>
+            `;
         } else {
-            statusDot.classList.add('error');
-            statusText.textContent = '未加载';
-            syncInfo.innerHTML = '<p>❌ 云端同步模块未加载</p>';
+            statusDot.className = 'sync-status-dot error';
+            statusText.textContent = '未连接';
+            syncInfo.innerHTML = '<p>❌ Firebase连接失败，请检查网络连接</p>';
+        }
+    }
+
+    // 显示Firebase同步状态模态框
+    showFirebaseSyncStatus() {
+        const modal = document.getElementById('cloudSyncModal');
+        const overlay = document.getElementById('modalOverlay');
+
+        if (modal && overlay) {
+            // 更新同步状态
+            this.updateFirebaseSyncStatus();
+
+            modal.classList.add('active');
+            overlay.classList.add('active');
+        }
+    }
+
+
+
+
+
+
+
+    // 更新Firebase同步状态显示
+    updateFirebaseSyncStatus() {
+        const statusDot = document.getElementById('syncStatusDot');
+        const statusText = document.getElementById('syncStatusText');
+        const syncInfo = document.getElementById('syncInfo');
+
+        if (!statusDot || !statusText || !syncInfo) return;
+
+        if (window.firebaseSync && window.firebaseSync.isConnected()) {
+            statusDot.className = 'sync-status-dot connected';
+            statusText.textContent = '已连接';
+            syncInfo.innerHTML = `
+                <p>🚀 Firebase 实时同步已启用</p>
+                <p>👥 支持多用户协作</p>
+                <p>📱 跨设备数据同步</p>
+                <p>⚡ 实时数据更新</p>
+            `;
+        } else {
+            statusDot.className = 'sync-status-dot error';
+            statusText.textContent = '未连接';
+            syncInfo.innerHTML = '<p>❌ Firebase连接失败，请检查网络连接</p>';
         }
     }
 
