@@ -1286,18 +1286,32 @@ class DataManager {
         this.showNotification('🔄 开始手动同步数据...', 'info');
 
         try {
-            // 1. 先从云端拉取最新数据
+            // 显示当前数据状态
+            console.log('🔍 当前数据状态:', {
+                本地生产数据: this.data.length,
+                本地发货历史: this.shippingHistory.length,
+                本地原材料: this.materialPurchases.length,
+                Firebase连接状态: window.firebaseSync.isConnected(),
+                Firebase初始化状态: window.firebaseSync.isInitialized
+            });
+
+            // 1. 先测试Firebase连接
+            console.log('🧪 测试Firebase连接...');
+            const connectionTest = await window.firebaseSync.testFirebaseConnection();
+            if (!connectionTest) {
+                throw new Error('Firebase连接测试失败');
+            }
+
+            // 2. 从云端拉取最新数据
             console.log('📥 从云端拉取最新数据...');
             await window.firebaseSync.loadDataFromCloud();
 
-            // 2. 然后上传本地数据
+            // 3. 上传本地数据
             console.log('📤 上传本地数据到云端...');
             await this.syncToCloud();
 
-            // 3. 触发Firebase的初始同步
-            if (window.firebaseSync.performInitialSync) {
-                await window.firebaseSync.performInitialSync();
-            }
+            // 4. 等待一下让数据处理完成
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
             this.showNotification('✅ 手动同步完成！数据已更新', 'success');
 

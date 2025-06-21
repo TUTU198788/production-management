@@ -84,9 +84,10 @@ class FirebaseSyncManager {
                     this.startRealtimeSync();
 
                     // 初始化完成后，执行数据同步
-                    setTimeout(() => {
-                        this.performInitialSync();
-                    }, 1000);
+                    setTimeout(async () => {
+                        console.log('🚀 开始执行初始数据同步...');
+                        await this.performInitialSync();
+                    }, 2000); // 延长到2秒，确保DataManager已加载
 
                     this.showNotification('云端同步已启用，支持多用户协作', 'success');
                 } else {
@@ -168,17 +169,42 @@ class FirebaseSyncManager {
     // 测试Firebase连接
     async testFirebaseConnection() {
         try {
-            // 尝试读取一个简单的文档来测试连接
-            if (window.collection && window.doc && window.getDoc) {
-                const testDocRef = window.doc(window.collection(this.db, 'test'), 'connection');
-                await window.getDoc(testDocRef);
-                console.log('✅ Firebase连接测试成功');
+            console.log('🧪 开始测试Firebase连接...');
+
+            // 测试写入
+            if (window.collection && window.doc && window.setDoc && window.getDoc) {
+                const testData = {
+                    message: 'Firebase连接测试',
+                    timestamp: Date.now(),
+                    user: this.userConfig.name,
+                    testId: Math.random().toString(36).substr(2, 9)
+                };
+
+                const testDocRef = window.doc(window.collection(this.db, 'connectionTest'), 'test_' + Date.now());
+
+                // 测试写入
+                console.log('测试写入数据...');
+                await window.setDoc(testDocRef, testData);
+                console.log('✅ 写入测试成功');
+
+                // 测试读取
+                console.log('测试读取数据...');
+                const docSnap = await window.getDoc(testDocRef);
+                if (docSnap.exists()) {
+                    console.log('✅ 读取测试成功，数据:', docSnap.data());
+                } else {
+                    console.warn('⚠️ 文档不存在');
+                }
+
+                console.log('✅ Firebase连接测试完全成功');
+                return true;
             } else {
                 console.warn('⚠️ Firebase函数未完全加载，跳过连接测试');
+                return false;
             }
         } catch (error) {
-            console.warn('⚠️ Firebase连接测试失败:', error);
-            // 连接测试失败不阻止初始化，可能是权限问题
+            console.error('❌ Firebase连接测试失败:', error);
+            return false;
         }
     }
     
@@ -273,33 +299,53 @@ class FirebaseSyncManager {
     
     // 执行初始数据同步
     async performInitialSync() {
-        if (!this.isInitialized) return;
+        if (!this.isInitialized) {
+            console.warn('Firebase未初始化，跳过初始同步');
+            return;
+        }
 
         console.log('🔄 开始执行初始数据同步...');
 
         try {
             // 等待DataManager加载完成
             let retries = 0;
-            while (!window.dataManager && retries < 30) {
-                await new Promise(resolve => setTimeout(resolve, 100));
+            while (!window.dataManager && retries < 50) {
+                console.log(`等待DataManager加载... (${retries + 1}/50)`);
+                await new Promise(resolve => setTimeout(resolve, 200));
                 retries++;
             }
 
             if (!window.dataManager) {
-                console.warn('DataManager未加载，跳过初始同步');
+                console.error('❌ DataManager未加载，跳过初始同步');
                 return;
             }
 
+            console.log('✅ DataManager已加载，开始数据同步');
+            console.log('当前本地数据状态:', {
+                productionData: window.dataManager.data?.length || 0,
+                shippingHistory: window.dataManager.shippingHistory?.length || 0,
+                materialPurchases: window.dataManager.materialPurchases?.length || 0
+            });
+
             // 1. 首先从云端拉取现有数据
+            console.log('📥 步骤1: 从云端拉取数据');
             await this.loadDataFromCloud();
 
+            // 等待一下让数据处理完成
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
             // 2. 然后将本地数据上传到云端（如果本地有数据的话）
+            console.log('📤 步骤2: 上传本地数据到云端');
             await this.uploadLocalDataToCloud();
 
             console.log('✅ 初始数据同步完成');
 
+            // 显示同步完成通知
+            this.showNotification('数据同步完成，支持多用户协作', 'success');
+
         } catch (error) {
             console.error('❌ 初始数据同步失败:', error);
+            this.showNotification('数据同步失败: ' + error.message, 'error');
         }
     }
 
@@ -329,10 +375,12 @@ class FirebaseSyncManager {
         if (!this.isInitialized) return;
 
         try {
-            if (!window.collection || !window.query || !window.getDocs) {
-                console.error('Firebase Firestore 函数未加载');
+            if (!window.collection || !window.query || !window.getDocs || !window.orderBy || !window.limit) {
+                console.error('Firebase Firestore 函数未完全加载');
                 return;
             }
+
+            console.log(`正在从云端加载 ${collectionName}...`);
 
             const q = window.query(
                 window.collection(this.db, collectionName),
@@ -475,19 +523,39 @@ class FirebaseSyncManager {
                 return false;
             }
 
+            console.log(`开始同步 ${collectionName} 到云端，数据量:`, Array.isArray(data) ? data.length : 1);
+
             const batch = window.writeBatch(this.db);
             const timestamp = window.serverTimestamp();
 
             if (operation === 'update' && Array.isArray(data)) {
                 // 批量更新
-                data.forEach(item => {
-                    const docRef = window.doc(window.collection(this.db, collectionName), item.id || this.generateDocId());
-                    batch.set(docRef, {
-                        ...item,
-                        timestamp,
-                        lastModifiedBy: this.userConfig.id,
-                        lastModifiedByName: this.userConfig.name
-                    }, { merge: true });
+                if (data.length === 0) {
+                    console.log(`${collectionName} 数据为空，跳过同步`);
+                    return true;
+                }
+
+                data.forEach((item, index) => {
+                    try {
+                        const docId = item.id || this.generateDocId();
+                        const docRef = window.doc(window.collection(this.db, collectionName), docId);
+
+                        const docData = {
+                            ...item,
+                            timestamp,
+                            lastModifiedBy: this.userConfig.id,
+                            lastModifiedByName: this.userConfig.name,
+                            syncedAt: Date.now()
+                        };
+
+                        batch.set(docRef, docData, { merge: true });
+
+                        if (index < 3) { // 只打印前3条的详细信息
+                            console.log(`准备同步文档 ${docId}:`, docData);
+                        }
+                    } catch (itemError) {
+                        console.error(`处理第 ${index} 条数据时出错:`, itemError, item);
+                    }
                 });
             } else if (operation === 'delete') {
                 // 删除操作
@@ -495,8 +563,9 @@ class FirebaseSyncManager {
                 batch.delete(docRef);
             }
 
+            console.log(`提交 ${collectionName} 批量写入...`);
             await batch.commit();
-            console.log(`${collectionName} 同步到云端成功`);
+            console.log(`✅ ${collectionName} 同步到云端成功，共 ${Array.isArray(data) ? data.length : 1} 条记录`);
             return true;
         } catch (error) {
             console.error(`${collectionName} 同步到云端失败:`, error);
