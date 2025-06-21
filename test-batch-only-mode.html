@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增生产数据只保留批量模式测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #1e40af;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            color: #059669;
+            margin-top: 0;
+        }
+        
+        .change-description {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .change-title {
+            color: #059669;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .before, .after {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .before {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+        
+        .after {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .before h4 {
+            color: #dc2626;
+            margin-top: 0;
+        }
+        
+        .after h4 {
+            color: #059669;
+            margin-top: 0;
+        }
+        
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .highlight {
+            background: #fbbf24;
+            color: #1f2937;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list li::before {
+            content: '✅';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            font-size: 16px;
+        }
+        
+        .removed-list li::before {
+            content: '❌';
+        }
+        
+        .step-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: step-counter;
+        }
+        
+        .step-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+            padding-left: 40px;
+        }
+        
+        .step-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .step-list li::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 0;
+            top: 10px;
+            background: #3b82f6;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .demo-modal {
+            background: #f8fafc;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .demo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .demo-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .demo-close {
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        
+        .demo-body {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .demo-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .demo-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .demo-btn.secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .demo-btn.primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .batch-demo-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        
+        .batch-demo-table th,
+        .batch-demo-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .batch-demo-table th {
+            background: #f3f4f6;
+            font-weight: bold;
+        }
+        
+        .form-demo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        
+        .form-group-demo {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group-demo label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #374151;
+        }
+        
+        .form-group-demo select,
+        .form-group-demo input {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 新增生产数据取消单个模式，只保留批量模式</h1>
+        
+        <div class="test-section">
+            <h3>📋 修改需求</h3>
+            <div class="change-description">
+                <div class="change-title">用户需求</div>
+                <p>取消新增生产数据的单个模式，只保留批量模式，简化用户操作流程。</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 修改对比</h3>
+            <div class="before-after">
+                <div class="before">
+                    <h4>修改前</h4>
+                    <div class="demo-modal">
+                        <div class="demo-header">
+                            <div class="demo-title">新增生产数据</div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="demo-btn secondary">批量模式</button>
+                                <button class="demo-close">×</button>
+                            </div>
+                        </div>
+                        <div class="demo-body">
+                            <p><strong>单个添加模式</strong></p>
+                            <div class="form-demo">
+                                <div class="form-group-demo">
+                                    <label>型号 *</label>
+                                    <select><option>请选择型号</option></select>
+                                </div>
+                                <div class="form-group-demo">
+                                    <label>长度 *</label>
+                                    <select><option>请先选择型号</option></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="demo-footer">
+                            <button class="demo-btn secondary">取消</button>
+                            <button class="demo-btn primary">保存</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="after">
+                    <h4>修改后</h4>
+                    <div class="demo-modal">
+                        <div class="demo-header">
+                            <div class="demo-title">新增生产数据</div>
+                            <button class="demo-close">×</button>
+                        </div>
+                        <div class="demo-body">
+                            <p><strong>批量添加模式</strong></p>
+                            <div class="form-demo">
+                                <div class="form-group-demo">
+                                    <label>工地区域</label>
+                                    <select><option>智能分配到紧急区域</option></select>
+                                </div>
+                                <div class="form-group-demo">
+                                    <label>生产日期 *</label>
+                                    <input type="date" value="2025-06-18">
+                                </div>
+                            </div>
+                            <table class="batch-demo-table">
+                                <thead>
+                                    <tr>
+                                        <th>型号</th>
+                                        <th>长度</th>
+                                        <th>生产根数</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><select><option>H100</option></select></td>
+                                        <td><select><option>3200mm</option></select></td>
+                                        <td><input type="number" value="176"></td>
+                                        <td><button class="demo-btn secondary">🗑</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="demo-footer">
+                            <button class="demo-btn secondary">取消</button>
+                            <button class="demo-btn primary">批量保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 技术实现</h3>
+            
+            <h4>1. HTML结构简化</h4>
+            <div class="code-block">
+<span class="highlight">// 移除的内容</span>
+- 模态框头部的"批量模式"切换按钮
+- 整个单个添加模式的div (id="singleMode")
+- 单个模式相关的表单字段
+
+<span class="highlight">// 保留的内容</span>
+- 批量添加模式的div (id="batchMode")
+- 批量表格和相关功能
+- 智能分配功能
+            </div>
+
+            <h4>2. JavaScript逻辑修改</h4>
+            <div class="code-block">
+<span class="highlight">// openProductionModal 方法简化</span>
+openProductionModal(id = null) {
+    this.editingId = id;
+    this.isBatchMode = true; // <span class="highlight">始终使用批量模式</span>
+    
+    if (id) {
+        // <span class="highlight">编辑模式不支持，显示提示</span>
+        this.showNotification('编辑模式暂不支持，请删除后重新添加', 'warning');
+        this.closeProductionModal();
+        return;
+    } else {
+        // <span class="highlight">新增模式：直接使用批量模式</span>
+        this.clearBatchForm();
+        this.clearBatchTable();
+        this.addBatchRow();
+    }
+}
+            </div>
+
+            <h4>3. 保存逻辑简化</h4>
+            <div class="code-block">
+<span class="highlight">// saveProductionData 方法简化</span>
+saveProductionData() {
+    // <span class="highlight">始终使用批量模式</span>
+    this.saveBatchProduction();
+}
+            </div>
+
+            <h4>4. 事件监听器更新</h4>
+            <div class="code-block">
+<span class="highlight">// 移除的事件监听器</span>
+- toggleBatchMode 按钮的点击事件
+- 单个模式表单的提交事件
+
+<span class="highlight">// 简化的保存按钮事件</span>
+saveBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    this.saveProductionData(); // <span class="highlight">直接调用保存方法</span>
+});
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ 修改完成的功能</h3>
+            <ul class="feature-list">
+                <li>移除了模态框头部的"批量模式"切换按钮</li>
+                <li>删除了整个单个添加模式的界面和逻辑</li>
+                <li>新增生产数据时直接显示批量模式界面</li>
+                <li>保存按钮固定为"批量保存"</li>
+                <li>简化了JavaScript逻辑，移除了模式切换相关代码</li>
+                <li>编辑模式暂时不支持，会显示提示信息</li>
+                <li>保持了批量模式的所有功能（智能分配、多规格添加等）</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>❌ 移除的功能</h3>
+            <ul class="feature-list removed-list">
+                <li>单个模式的表单界面</li>
+                <li>批量模式切换按钮</li>
+                <li>toggleBatchMode() 方法</li>
+                <li>单个模式相关的事件监听器</li>
+                <li>模式切换相关的状态管理</li>
+                <li>单个模式的表单验证逻辑</li>
+                <li>编辑模式的支持（临时移除）</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 测试步骤</h3>
+            <ol class="step-list">
+                <li>点击"新增生产"按钮</li>
+                <li>确认模态框标题为"新增生产数据"</li>
+                <li>确认没有"批量模式"切换按钮</li>
+                <li>确认直接显示批量模式界面</li>
+                <li>确认表格中已有一行空白的规格输入行</li>
+                <li>填写工地区域（或选择智能分配）</li>
+                <li>确认生产日期已设置为今天</li>
+                <li>在表格中填写型号、长度、生产根数</li>
+                <li>点击"添加规格"按钮添加更多行</li>
+                <li>确认底部显示总规格数、总根数、总米数</li>
+                <li>点击"批量保存"按钮</li>
+                <li>确认数据成功保存</li>
+                <li>尝试点击编辑按钮，确认显示不支持提示</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>📈 预期效果</h3>
+            <div class="change-description">
+                <div class="change-title">修改后的预期表现</div>
+                <ul>
+                    <li>✅ 新增生产数据时直接显示批量模式界面</li>
+                    <li>✅ 没有模式切换按钮，界面更简洁</li>
+                    <li>✅ 保存按钮固定显示"批量保存"</li>
+                    <li>✅ 支持添加多个规格的生产数据</li>
+                    <li>✅ 支持智能分配到紧急区域</li>
+                    <li>✅ 实时显示总计信息</li>
+                    <li>✅ 编辑模式显示不支持提示</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 用户体验改进</h3>
+            <ul class="feature-list">
+                <li>简化了操作流程，用户无需选择模式</li>
+                <li>减少了界面复杂度，降低学习成本</li>
+                <li>批量模式更适合生产环境的实际需求</li>
+                <li>统一了新增生产数据的操作方式</li>
+                <li>保持了智能分配等高级功能</li>
+                <li>提高了数据录入效率</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 注意事项</h3>
+            <ul>
+                <li>编辑功能暂时不支持，建议删除后重新添加</li>
+                <li>批量模式下至少需要添加一个规格</li>
+                <li>生产日期是必填项，系统会自动设置为当前日期</li>
+                <li>工地区域可选择具体区域或智能分配</li>
+                <li>所有批量模式的原有功能都保持不变</li>
+                <li>保存成功后会显示详细的处理结果</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 后续优化建议</h3>
+            <ul class="feature-list">
+                <li>考虑重新实现编辑功能以支持批量模式</li>
+                <li>可以添加快速模板功能，预设常用规格组合</li>
+                <li>考虑添加从历史记录快速复制的功能</li>
+                <li>可以增加批量导入Excel的快捷入口</li>
+                <li>考虑添加规格收藏功能，快速添加常用规格</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        console.log('新增生产数据只保留批量模式测试页面已加载');
+        console.log('请在主系统中测试新增生产数据功能');
+        
+        // 模拟测试功能
+        function simulateTest() {
+            console.log('模拟测试：新增生产数据只保留批量模式');
+            console.log('1. 点击新增生产按钮');
+            console.log('2. 确认直接显示批量模式');
+            console.log('3. 填写生产数据');
+            console.log('4. 点击批量保存');
+            console.log('5. 验证保存结果');
+        }
+    </script>
+</body>
+</html>

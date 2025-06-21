@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑功能调试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #dc2626;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .debug-section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .debug-section h3 {
+            color: #374151;
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .debug-output {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 15px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success {
+            background: #10b981;
+        }
+        
+        .status-error {
+            background: #ef4444;
+        }
+        
+        .status-warning {
+            background: #f59e0b;
+        }
+        
+        .test-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .test-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 编辑功能调试工具</h1>
+        
+        <div class="debug-section">
+            <h3>🎯 问题诊断</h3>
+            <p>如果编辑按钮点击没有反应，可能的原因：</p>
+            <ul>
+                <li>JavaScript错误阻止了函数执行</li>
+                <li>HTML元素ID不匹配</li>
+                <li>模态框元素缺失</li>
+                <li>事件监听器未正确绑定</li>
+                <li>数据管理器未正确初始化</li>
+            </ul>
+        </div>
+        
+        <div class="debug-section">
+            <h3>🔍 系统检查</h3>
+            <div id="systemChecks">
+                <!-- 检查结果将在这里显示 -->
+            </div>
+            <button class="btn btn-primary" onclick="runSystemChecks()">
+                <i class="fas fa-search"></i>
+                运行系统检查
+            </button>
+        </div>
+        
+        <div class="debug-section">
+            <h3>🧪 功能测试</h3>
+            <button class="btn btn-success" onclick="testEditFunction()">
+                <i class="fas fa-edit"></i>
+                测试编辑功能
+            </button>
+            <button class="btn btn-warning" onclick="testModalElements()">
+                <i class="fas fa-window-maximize"></i>
+                测试模态框元素
+            </button>
+            <button class="btn btn-danger" onclick="testDataManager()">
+                <i class="fas fa-database"></i>
+                测试数据管理器
+            </button>
+        </div>
+        
+        <div class="debug-section">
+            <h3>📊 调试输出</h3>
+            <div class="debug-output" id="debugOutput">等待调试信息...</div>
+            <button class="btn btn-primary" onclick="clearDebugOutput()">
+                <i class="fas fa-trash"></i>
+                清空输出
+            </button>
+        </div>
+        
+        <div class="debug-section">
+            <h3>🚀 快速操作</h3>
+            <button class="btn btn-primary" onclick="openMainSystem()">
+                <i class="fas fa-external-link-alt"></i>
+                打开主系统
+            </button>
+            <button class="btn btn-success" onclick="openConsole()">
+                <i class="fas fa-terminal"></i>
+                打开控制台
+            </button>
+            <button class="btn btn-warning" onclick="reloadPage()">
+                <i class="fas fa-sync-alt"></i>
+                重新加载页面
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let debugOutput = document.getElementById('debugOutput');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            debugOutput.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+        
+        function clearDebugOutput() {
+            debugOutput.textContent = '';
+        }
+        
+        function runSystemChecks() {
+            log('开始系统检查...', 'info');
+            
+            const checks = [
+                {
+                    name: 'dataManager 全局变量',
+                    test: () => typeof window.dataManager !== 'undefined',
+                    fix: '确保 data-management.js 已加载并初始化'
+                },
+                {
+                    name: 'productionModal 元素',
+                    test: () => document.getElementById('productionModal') !== null,
+                    fix: '检查 index.html 中的模态框HTML结构'
+                },
+                {
+                    name: 'singleMode 元素',
+                    test: () => document.getElementById('singleMode') !== null,
+                    fix: '确保单项编辑模式的HTML已添加'
+                },
+                {
+                    name: 'batchMode 元素',
+                    test: () => document.getElementById('batchMode') !== null,
+                    fix: '确保批量模式的HTML存在'
+                },
+                {
+                    name: 'editItem 方法',
+                    test: () => window.dataManager && typeof window.dataManager.editItem === 'function',
+                    fix: '检查 editItem 方法是否正确定义'
+                },
+                {
+                    name: 'openProductionModal 方法',
+                    test: () => window.dataManager && typeof window.dataManager.openProductionModal === 'function',
+                    fix: '检查 openProductionModal 方法是否正确定义'
+                }
+            ];
+            
+            const checksContainer = document.getElementById('systemChecks');
+            checksContainer.innerHTML = '';
+            
+            checks.forEach(check => {
+                const result = check.test();
+                const item = document.createElement('div');
+                item.className = 'test-item';
+                item.innerHTML = `
+                    <span class="status-indicator ${result ? 'status-success' : 'status-error'}"></span>
+                    <span>${check.name}: ${result ? '通过' : '失败'}</span>
+                `;
+                checksContainer.appendChild(item);
+                
+                log(`${check.name}: ${result ? '通过' : '失败'}`, result ? 'success' : 'error');
+                if (!result) {
+                    log(`  修复建议: ${check.fix}`, 'warning');
+                }
+            });
+            
+            log('系统检查完成', 'info');
+        }
+        
+        function testEditFunction() {
+            log('测试编辑功能...', 'info');
+            
+            try {
+                if (!window.dataManager) {
+                    log('dataManager 未定义', 'error');
+                    return;
+                }
+                
+                if (!window.dataManager.data || window.dataManager.data.length === 0) {
+                    log('没有数据可供编辑', 'warning');
+                    return;
+                }
+                
+                const firstItem = window.dataManager.data[0];
+                log(`尝试编辑第一条记录 (ID: ${firstItem.id})`, 'info');
+                
+                window.dataManager.editItem(firstItem.id);
+                log('editItem 方法调用成功', 'success');
+                
+            } catch (error) {
+                log(`编辑功能测试失败: ${error.message}`, 'error');
+                console.error('编辑功能测试错误:', error);
+            }
+        }
+        
+        function testModalElements() {
+            log('测试模态框元素...', 'info');
+            
+            const elements = [
+                'productionModal',
+                'singleMode',
+                'batchMode',
+                'modalTitle',
+                'typeInput',
+                'lengthInput',
+                'areaInput',
+                'plannedInput',
+                'producedInput'
+            ];
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                log(`${id}: ${element ? '存在' : '缺失'}`, element ? 'success' : 'error');
+            });
+        }
+        
+        function testDataManager() {
+            log('测试数据管理器...', 'info');
+            
+            if (!window.dataManager) {
+                log('dataManager 未定义', 'error');
+                return;
+            }
+            
+            log(`数据条数: ${window.dataManager.data.length}`, 'info');
+            log(`当前页: ${window.dataManager.currentPage}`, 'info');
+            log(`编辑ID: ${window.dataManager.editingId || '无'}`, 'info');
+            log(`批量模式: ${window.dataManager.isBatchMode}`, 'info');
+            
+            // 测试方法
+            const methods = ['editItem', 'openProductionModal', 'fillProductionForm', 'setSpecInputs'];
+            methods.forEach(method => {
+                log(`${method} 方法: ${typeof window.dataManager[method] === 'function' ? '存在' : '缺失'}`, 
+                    typeof window.dataManager[method] === 'function' ? 'success' : 'error');
+            });
+        }
+        
+        function openMainSystem() {
+            window.open('index.html', '_blank');
+        }
+        
+        function openConsole() {
+            alert('请按 F12 打开开发者工具，然后查看 Console 标签页');
+        }
+        
+        function reloadPage() {
+            if (confirm('确定要重新加载页面吗？')) {
+                window.location.reload();
+            }
+        }
+        
+        // 页面加载时自动运行检查
+        window.onload = function() {
+            log('调试工具已加载', 'success');
+            setTimeout(runSystemChecks, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批次发货计划功能演示</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .demo-title {
+            color: #1f2937;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        /* 客户卡片样式 */
+        .customer-demo-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+            max-width: 300px;
+        }
+        
+        .customer-stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .customer-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .customer-rank {
+            background: #3b82f6;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .customer-stat-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .customer-metric {
+            text-align: center;
+        }
+        
+        .customer-metric-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .customer-metric-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .customer-stat-progress {
+            margin-bottom: 15px;
+        }
+        
+        .customer-progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .customer-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 4px;
+            width: 65.2%;
+        }
+        
+        .customer-progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .customer-card-actions {
+            margin-top: 12px;
+        }
+        
+        .customer-action-btn {
+            width: 100%;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .customer-action-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        /* 功能说明样式 */
+        .feature-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .feature-list li:before {
+            content: '✅';
+            margin-right: 10px;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .instruction {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .instruction h4 {
+            margin: 0 0 10px 0;
+            color: #0369a1;
+        }
+        
+        .status-demo {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .status-card {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .status-card.sufficient {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+        
+        .status-card.insufficient {
+            background: rgba(245, 158, 11, 0.1);
+            border: 2px solid #f59e0b;
+            color: #92400e;
+        }
+        
+        .status-card.pending {
+            background: #f3f4f6;
+            border: 2px solid #d1d5db;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1 class="demo-title">📦 批次发货计划功能演示</h1>
+        
+        <div class="demo-grid">
+            <div>
+                <h3>📊 客户发货统计卡片</h3>
+                <div class="customer-demo-card">
+                    <div class="customer-stat-header">
+                        <h4 class="customer-name">盐城恒逸明</h4>
+                        <span class="customer-rank">#1</span>
+                    </div>
+
+                    <div class="customer-stat-metrics">
+                        <div class="customer-metric">
+                            <div class="customer-metric-value">3,675</div>
+                            <div class="customer-metric-label">发货量(米)</div>
+                        </div>
+                        <div class="customer-metric">
+                            <div class="customer-metric-value">963</div>
+                            <div class="customer-metric-label">发货量(根)</div>
+                        </div>
+                    </div>
+
+                    <div class="customer-stat-progress">
+                        <div class="customer-progress-bar">
+                            <div class="customer-progress-fill"></div>
+                        </div>
+                        <div class="customer-progress-text">
+                            <span>占比: 65.2%</span>
+                            <span>18 个规格</span>
+                        </div>
+                    </div>
+
+                    <div class="customer-progress-text">
+                        <span>订单数: 12</span>
+                        <span>最后发货: 2025/6/19</span>
+                    </div>
+
+                    <div class="customer-card-actions">
+                        <button class="customer-action-btn" onclick="showPlanDemo()">
+                            <i class="fas fa-plus-circle"></i>
+                            批次发货计划
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3>🎯 功能特点</h3>
+                <div class="feature-section">
+                    <h4>📋 多规格计划管理</h4>
+                    <ul class="feature-list">
+                        <li>每个计划可包含多个规格项目</li>
+                        <li>支持创建多个独立的发货计划</li>
+                        <li>自动识别H80/H100型号规格</li>
+                        <li>实时显示每个规格的可发货数量</li>
+                        <li>智能库存状态检查和汇总</li>
+                        <li>可自定义计划名称便于管理</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-section">
+                    <h4>🎨 状态可视化</h4>
+                    <div class="status-demo">
+                        <div class="status-card sufficient">
+                            <div>✓ 库存充足</div>
+                            <small>绿色显示</small>
+                        </div>
+                        <div class="status-card insufficient">
+                            <div>⚠ 库存不足</div>
+                            <small>红色显示</small>
+                        </div>
+                        <div class="status-card pending">
+                            <div>? 待完善</div>
+                            <small>灰色显示</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-section">
+                    <h4>🚀 一键执行</h4>
+                    <ul class="feature-list">
+                        <li>自动转换为发货单格式</li>
+                        <li>预填客户信息和规格数据</li>
+                        <li>与现有发货流程无缝集成</li>
+                        <li>支持批量发货操作</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="instruction">
+            <h4>🎮 使用流程（多规格支持）</h4>
+            <p>1. 在客户发货统计卡片上点击"批次发货计划"按钮</p>
+            <p>2. 在弹出的模态框中点击"新增发货计划"创建计划</p>
+            <p>3. 为计划命名，然后点击"添加规格"添加多个规格项目</p>
+            <p>4. 为每个规格选择型号类型（H80/H100）和具体规格</p>
+            <p>5. 输入各规格的计划发货数量，系统自动检查库存状态</p>
+            <p>6. 可创建多个发货计划，每个计划包含多个规格</p>
+            <p>7. 绿色表示库存充足，红色表示不足，灰色表示待完善</p>
+            <p>8. 点击"执行发货计划"自动转换所有充足规格为发货单</p>
+        </div>
+
+        <div class="feature-section">
+            <h3>💡 技术亮点</h3>
+            <ul class="feature-list">
+                <li>多层级数据结构：计划 → 规格项目 → 库存状态</li>
+                <li>与库存数据实时联动，确保数据准确性</li>
+                <li>美观的卡片式界面设计，状态一目了然</li>
+                <li>智能的型号规格联动选择</li>
+                <li>完整的数据验证和错误提示</li>
+                <li>本地存储保存计划数据，支持持久化</li>
+                <li>响应式设计，适配各种设备</li>
+                <li>灵活的规格增删改功能</li>
+                <li>智能汇总统计，显示计划整体状态</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function showPlanDemo() {
+            alert('在实际系统中，这里会打开批次发货计划模态框，您可以：\n\n📋 多规格计划管理：\n• 创建多个独立的发货计划\n• 每个计划包含多个规格项目\n• 自定义计划名称便于管理\n\n🎯 智能规格配置：\n• 为每个规格选择型号和具体规格\n• 设置各规格的发货数量\n• 实时查看库存状态\n\n📊 状态可视化：\n• 绿色：库存充足可发货\n• 红色：库存不足显示缺少数量\n• 灰色：信息不完整待完善\n\n🚀 一键执行：\n• 自动筛选库存充足的规格\n• 转换为发货单并预填数据\n• 与现有流程无缝集成\n\n界面美观大气，操作简单直观！');
+        }
+    </script>
+</body>
+</html>

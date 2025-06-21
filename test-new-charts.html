@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新图表功能测试</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #059669;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-info {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .test-info h3 {
+            color: #3b82f6;
+            margin: 0 0 15px 0;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+        
+        .chart-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        
+        .chart-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .chart-content {
+            padding: 20px;
+            height: 300px;
+            position: relative;
+        }
+        
+        .chart-content canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        .big-button {
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            width: calc(33.33% - 20px);
+            box-sizing: border-box;
+        }
+        
+        .big-button:hover {
+            background: #047857;
+        }
+        
+        .big-button.secondary {
+            background: #3b82f6;
+        }
+        
+        .big-button.secondary:hover {
+            background: #2563eb;
+        }
+        
+        .big-button.warning {
+            background: #f59e0b;
+        }
+        
+        .big-button.warning:hover {
+            background: #d97706;
+        }
+        
+        .result {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #ecfdf5;
+            border: 2px solid #059669;
+            color: #059669;
+        }
+        
+        .info {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .warning {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            color: #f59e0b;
+        }
+        
+        .error {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            color: #dc2626;
+        }
+        
+        .data-summary {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+        }
+        
+        .data-label {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .data-value {
+            color: #059669;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 新图表功能测试</h1>
+        
+        <div class="test-info">
+            <h3>🎯 图表改进说明</h3>
+            <ul>
+                <li><strong>原来</strong>：一个三状态图表（已完成、进行中、待开始）</li>
+                <li><strong>现在</strong>：两个独立图表</li>
+                <li><strong>图表1</strong>：生产状态分布（未生产 vs 已生产）</li>
+                <li><strong>图表2</strong>：发货状态分布（库存 vs 已发货）</li>
+                <li><strong>数据源</strong>：基于实际生产数据动态计算</li>
+            </ul>
+        </div>
+        
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <button class="big-button" onclick="loadTestData()">
+                📊 加载测试数据
+            </button>
+            
+            <button class="big-button secondary" onclick="updateCharts()">
+                🔄 更新图表
+            </button>
+            
+            <button class="big-button warning" onclick="openMainPage()">
+                🏠 打开主页面
+            </button>
+        </div>
+        
+        <!-- 图表展示区域 -->
+        <div class="charts-container">
+            <!-- 生产状态分布 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>生产状态分布</h3>
+                </div>
+                <div class="chart-content">
+                    <canvas id="productionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 发货状态分布 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>发货状态分布</h3>
+                </div>
+                <div class="chart-content">
+                    <canvas id="shippingChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="data-summary" id="dataSummary" style="display: none;">
+            <h4>📋 数据统计</h4>
+            <div id="dataItems">
+                <!-- 数据项将在这里显示 -->
+            </div>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let charts = {};
+        
+        // 图表颜色配置
+        const chartColors = {
+            primary: '#3b82f6',
+            success: '#10b981',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            lightGray: '#e5e7eb'
+        };
+        
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const result = document.createElement('div');
+            result.className = 'result ' + type;
+            result.innerHTML = message;
+            resultsDiv.appendChild(result);
+        }
+        
+        function initCharts() {
+            // 生产状态分布图表
+            const productionCtx = document.getElementById('productionChart');
+            if (productionCtx) {
+                charts.productionChart = new Chart(productionCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['未生产', '已生产'],
+                        datasets: [{
+                            data: [50, 50],
+                            backgroundColor: [
+                                chartColors.lightGray,
+                                chartColors.success
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.parsed.toFixed(1)}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 发货状态分布图表
+            const shippingCtx = document.getElementById('shippingChart');
+            if (shippingCtx) {
+                charts.shippingChart = new Chart(shippingCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['库存', '已发货'],
+                        datasets: [{
+                            data: [50, 50],
+                            backgroundColor: [
+                                chartColors.warning,
+                                chartColors.primary
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.parsed.toFixed(1)}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function loadTestData() {
+            addResult('🔍 加载生产数据...', 'info');
+            
+            const productionData = localStorage.getItem('productionData');
+            if (!productionData) {
+                addResult('❌ 没有找到生产数据，使用模拟数据', 'warning');
+                updateChartsWithMockData();
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(productionData);
+                updateChartsWithRealData(data);
+                addResult(`✅ 成功加载 ${data.length} 条生产记录`, 'success');
+            } catch (error) {
+                addResult(`❌ 数据加载失败：${error.message}`, 'error');
+                updateChartsWithMockData();
+            }
+        }
+        
+        function updateChartsWithRealData(data) {
+            // 计算生产状态
+            let totalPlanned = 0;
+            let totalProduced = 0;
+            let totalShipped = 0;
+            
+            data.forEach(item => {
+                totalPlanned += item.planned || 0;
+                totalProduced += item.produced || 0;
+                totalShipped += item.shipped || 0;
+            });
+            
+            // 更新生产状态图表
+            const unproduced = totalPlanned - totalProduced;
+            const unproducedPercentage = totalPlanned > 0 ? ((unproduced / totalPlanned) * 100) : 100;
+            const producedPercentage = totalPlanned > 0 ? ((totalProduced / totalPlanned) * 100) : 0;
+            
+            if (charts.productionChart) {
+                charts.productionChart.data.datasets[0].data = [
+                    parseFloat(unproducedPercentage.toFixed(1)),
+                    parseFloat(producedPercentage.toFixed(1))
+                ];
+                charts.productionChart.update();
+            }
+            
+            // 更新发货状态图表
+            const inventory = totalProduced - totalShipped;
+            const inventoryPercentage = totalProduced > 0 ? ((inventory / totalProduced) * 100) : 100;
+            const shippedPercentage = totalProduced > 0 ? ((totalShipped / totalProduced) * 100) : 0;
+            
+            if (charts.shippingChart) {
+                charts.shippingChart.data.datasets[0].data = [
+                    parseFloat(inventoryPercentage.toFixed(1)),
+                    parseFloat(shippedPercentage.toFixed(1))
+                ];
+                charts.shippingChart.update();
+            }
+            
+            // 显示数据统计
+            showDataSummary(totalPlanned, totalProduced, totalShipped);
+        }
+        
+        function updateChartsWithMockData() {
+            // 模拟数据
+            const mockData = {
+                totalPlanned: 1000,
+                totalProduced: 650,
+                totalShipped: 400
+            };
+            
+            // 更新生产状态图表
+            const unproducedPercentage = ((mockData.totalPlanned - mockData.totalProduced) / mockData.totalPlanned) * 100;
+            const producedPercentage = (mockData.totalProduced / mockData.totalPlanned) * 100;
+            
+            if (charts.productionChart) {
+                charts.productionChart.data.datasets[0].data = [
+                    parseFloat(unproducedPercentage.toFixed(1)),
+                    parseFloat(producedPercentage.toFixed(1))
+                ];
+                charts.productionChart.update();
+            }
+            
+            // 更新发货状态图表
+            const inventoryPercentage = ((mockData.totalProduced - mockData.totalShipped) / mockData.totalProduced) * 100;
+            const shippedPercentage = (mockData.totalShipped / mockData.totalProduced) * 100;
+            
+            if (charts.shippingChart) {
+                charts.shippingChart.data.datasets[0].data = [
+                    parseFloat(inventoryPercentage.toFixed(1)),
+                    parseFloat(shippedPercentage.toFixed(1))
+                ];
+                charts.shippingChart.update();
+            }
+            
+            showDataSummary(mockData.totalPlanned, mockData.totalProduced, mockData.totalShipped);
+        }
+        
+        function showDataSummary(planned, produced, shipped) {
+            const dataSummary = document.getElementById('dataSummary');
+            const dataItems = document.getElementById('dataItems');
+            
+            const inventory = produced - shipped;
+            
+            dataItems.innerHTML = `
+                <div class="data-item">
+                    <span class="data-label">计划总量</span>
+                    <span class="data-value">${planned.toLocaleString()} 根</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">已生产</span>
+                    <span class="data-value">${produced.toLocaleString()} 根</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">未生产</span>
+                    <span class="data-value">${(planned - produced).toLocaleString()} 根</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">已发货</span>
+                    <span class="data-value">${shipped.toLocaleString()} 根</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">库存</span>
+                    <span class="data-value">${inventory.toLocaleString()} 根</span>
+                </div>
+            `;
+            
+            dataSummary.style.display = 'block';
+        }
+        
+        function updateCharts() {
+            addResult('🔄 更新图表...', 'info');
+            loadTestData();
+        }
+        
+        function openMainPage() {
+            window.open('index.html', '_blank');
+        }
+        
+        // 页面加载时初始化
+        window.onload = function() {
+            initCharts();
+            setTimeout(loadTestData, 500);
+        };
+    </script>
+</body>
+</html>

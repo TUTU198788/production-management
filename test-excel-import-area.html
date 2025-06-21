@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel导入新增区域功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #059669;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-info {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .test-info h3 {
+            color: #3b82f6;
+            margin: 0 0 15px 0;
+        }
+        
+        .test-info ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .test-info li {
+            margin: 8px 0;
+        }
+        
+        .big-button {
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            width: calc(50% - 20px);
+            box-sizing: border-box;
+        }
+        
+        .big-button:hover {
+            background: #047857;
+        }
+        
+        .big-button.secondary {
+            background: #3b82f6;
+        }
+        
+        .big-button.secondary:hover {
+            background: #2563eb;
+        }
+        
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .form-group select option[value="__add_new__"] {
+            color: #059669;
+            font-weight: bold;
+        }
+        
+        .result {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #ecfdf5;
+            border: 2px solid #059669;
+            color: #059669;
+        }
+        
+        .info {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .warning {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            color: #f59e0b;
+        }
+        
+        .error {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            color: #dc2626;
+        }
+        
+        .area-list {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .area-item {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Excel导入新增区域功能测试</h1>
+        
+        <div class="test-info">
+            <h3>🧪 测试说明</h3>
+            <ul>
+                <li><strong>新增区域功能</strong>：在Excel导入界面的区域下拉框中选择"+ 新增区域"</li>
+                <li><strong>区域名称格式</strong>：建议使用C1、C2、E1、D6等格式</li>
+                <li><strong>重复检查</strong>：系统会自动检查区域是否已存在</li>
+                <li><strong>自动选择</strong>：新增成功后会自动选择新区域</li>
+                <li><strong>持久保存</strong>：新增的区域会保存到本地存储</li>
+            </ul>
+        </div>
+        
+        <div style="display: flex; gap: 20px;">
+            <button class="big-button" onclick="openExcelImportTest()">
+                📥 测试Excel导入界面
+            </button>
+            
+            <button class="big-button secondary" onclick="openMainPage()">
+                🏠 打开主页面
+            </button>
+        </div>
+        
+        <div class="demo-section">
+            <h3>🎯 模拟Excel导入区域选择</h3>
+            <p>这里模拟Excel导入界面的区域选择功能：</p>
+            
+            <div class="form-group">
+                <label for="testAreaSelect">工地区域 *</label>
+                <select id="testAreaSelect" required>
+                    <option value="">请选择工地区域</option>
+                    <!-- 区域选项将动态加载 -->
+                </select>
+            </div>
+            
+            <div class="area-list">
+                <strong>当前已有区域：</strong>
+                <div id="currentAreas">
+                    <!-- 当前区域列表将在这里显示 -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let customAreas = new Set();
+        
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const result = document.createElement('div');
+            result.className = 'result ' + type;
+            result.innerHTML = message;
+            resultsDiv.appendChild(result);
+        }
+        
+        function loadCustomAreas() {
+            try {
+                const savedAreas = localStorage.getItem('customAreas');
+                if (savedAreas) {
+                    customAreas = new Set(JSON.parse(savedAreas));
+                } else {
+                    // 默认区域
+                    customAreas = new Set(['C1', 'C2', 'C3', 'E1', 'E3', 'D6', 'A14']);
+                }
+            } catch (error) {
+                console.error('加载自定义区域失败:', error);
+                customAreas = new Set(['C1', 'C2', 'C3', 'E1', 'E3', 'D6', 'A14']);
+            }
+        }
+        
+        function updateAreaSelect() {
+            const select = document.getElementById('testAreaSelect');
+            const currentValue = select.value;
+            
+            // 清空现有选项
+            select.innerHTML = '<option value="">请选择工地区域</option>';
+            
+            // 添加所有区域选项（按字母数字排序）
+            const sortedAreas = [...customAreas].sort();
+            sortedAreas.forEach(area => {
+                const option = document.createElement('option');
+                option.value = area;
+                option.textContent = `${area}区域`;
+                select.appendChild(option);
+            });
+            
+            // 添加新增区域选项
+            const addOption = document.createElement('option');
+            addOption.value = '__add_new__';
+            addOption.textContent = '+ 新增区域';
+            addOption.style.color = '#059669';
+            addOption.style.fontWeight = 'bold';
+            select.appendChild(addOption);
+            
+            // 恢复之前的选择
+            if (currentValue && currentValue !== '__add_new__') {
+                select.value = currentValue;
+            }
+        }
+        
+        function updateCurrentAreasList() {
+            const container = document.getElementById('currentAreas');
+            container.innerHTML = '';
+            
+            if (customAreas.size === 0) {
+                container.innerHTML = '<span style="color: #6b7280;">暂无区域</span>';
+                return;
+            }
+            
+            const sortedAreas = [...customAreas].sort();
+            sortedAreas.forEach(area => {
+                const item = document.createElement('span');
+                item.className = 'area-item';
+                item.textContent = area + '区域';
+                container.appendChild(item);
+            });
+        }
+        
+        function handleNewArea() {
+            const areaName = prompt('请输入新区域名称（如：C4、E2等）：');
+            
+            if (!areaName) {
+                // 用户取消，重置选择
+                document.getElementById('testAreaSelect').value = '';
+                return;
+            }
+
+            // 验证区域名称格式
+            const trimmedName = areaName.trim().toUpperCase();
+            if (!trimmedName) {
+                addResult('❌ 区域名称不能为空', 'error');
+                document.getElementById('testAreaSelect').value = '';
+                return;
+            }
+
+            // 检查区域是否已存在
+            if (customAreas.has(trimmedName)) {
+                addResult(`⚠️ 区域 ${trimmedName} 已存在`, 'warning');
+                // 直接选择已存在的区域
+                document.getElementById('testAreaSelect').value = trimmedName;
+                return;
+            }
+
+            // 添加新区域
+            customAreas.add(trimmedName);
+            
+            // 保存到localStorage
+            localStorage.setItem('customAreas', JSON.stringify([...customAreas]));
+
+            // 更新界面
+            updateAreaSelect();
+            updateCurrentAreasList();
+
+            // 选择新添加的区域
+            document.getElementById('testAreaSelect').value = trimmedName;
+
+            // 显示成功提示
+            addResult(`✅ 区域 ${trimmedName} 添加成功！`, 'success');
+
+            console.log('新增区域:', trimmedName, '当前所有区域:', [...customAreas]);
+        }
+        
+        function openExcelImportTest() {
+            addResult('🔍 请在上方的区域选择下拉框中测试新增区域功能', 'info');
+            addResult('💡 选择"+ 新增区域"选项来添加新的工地区域', 'info');
+        }
+        
+        function openMainPage() {
+            window.open('index.html', '_blank');
+        }
+        
+        // 页面加载时初始化
+        window.onload = function() {
+            loadCustomAreas();
+            updateAreaSelect();
+            updateCurrentAreasList();
+            
+            // 绑定区域选择事件
+            document.getElementById('testAreaSelect').addEventListener('change', function() {
+                if (this.value === '__add_new__') {
+                    handleNewArea();
+                } else if (this.value) {
+                    addResult(`✅ 已选择区域：${this.value}`, 'success');
+                }
+            });
+            
+            addResult('🚀 测试环境已准备就绪！', 'info');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据恢复工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #dc2626;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .section h3 {
+            color: #059669;
+            margin-top: 0;
+        }
+        
+        .status-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .status-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+        
+        .status-success {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #059669;
+        }
+        
+        .status-warning {
+            background: #fffbeb;
+            border: 1px solid #fed7aa;
+            color: #d97706;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #d97706;
+            color: white;
+        }
+        
+        .data-preview {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .backup-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        
+        .backup-info {
+            flex: 1;
+        }
+        
+        .backup-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .file-input {
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 数据恢复工具</h1>
+        
+        <div class="section">
+            <h3>📊 当前数据状态检查</h3>
+            <button class="btn btn-primary" onclick="checkCurrentData()">检查当前数据</button>
+            <div id="currentDataStatus" class="status-box status-warning" style="display: none;">
+                正在检查...
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>💾 localStorage 数据检查</h3>
+            <button class="btn btn-primary" onclick="checkLocalStorage()">检查本地存储</button>
+            <div id="localStorageStatus" class="status-box status-warning" style="display: none;">
+                正在检查...
+            </div>
+            <div id="localStorageData" class="data-preview" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h3>🔄 数据恢复选项</h3>
+            
+            <h4>选项1：从备份文件恢复</h4>
+            <input type="file" id="backupFile" accept=".json" class="file-input">
+            <button class="btn btn-success" onclick="restoreFromFile()">从文件恢复</button>
+            
+            <h4>选项2：重新生成示例数据</h4>
+            <button class="btn btn-warning" onclick="generateSampleData()">生成示例数据</button>
+            
+            <h4>选项3：清空并重新开始</h4>
+            <button class="btn btn-danger" onclick="clearAllData()">清空所有数据</button>
+        </div>
+
+        <div class="section">
+            <h3>📋 数据预览</h3>
+            <div id="dataPreview" class="data-preview">
+                暂无数据预览
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🚀 操作结果</h3>
+            <div id="operationResult" class="status-box status-warning" style="display: none;">
+                等待操作...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 检查当前数据状态
+        function checkCurrentData() {
+            const statusDiv = document.getElementById('currentDataStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status-box status-warning';
+            statusDiv.textContent = '正在检查当前数据...';
+
+            try {
+                // 检查是否有DataManager实例
+                if (typeof DataManager !== 'undefined') {
+                    statusDiv.className = 'status-box status-success';
+                    statusDiv.innerHTML = `
+                        ✅ DataManager 类已加载<br>
+                        📝 可以尝试重新初始化数据管理器
+                    `;
+                } else {
+                    statusDiv.className = 'status-box status-error';
+                    statusDiv.innerHTML = `
+                        ❌ DataManager 类未加载<br>
+                        📝 请确保在主系统页面中运行此工具
+                    `;
+                }
+            } catch (error) {
+                statusDiv.className = 'status-box status-error';
+                statusDiv.innerHTML = `❌ 检查失败: ${error.message}`;
+            }
+        }
+
+        // 检查localStorage数据
+        function checkLocalStorage() {
+            const statusDiv = document.getElementById('localStorageStatus');
+            const dataDiv = document.getElementById('localStorageData');
+            
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status-box status-warning';
+            statusDiv.textContent = '正在检查本地存储...';
+
+            try {
+                const productionData = localStorage.getItem('productionData');
+                const operationLogs = localStorage.getItem('operationLogs');
+                const materialPurchases = localStorage.getItem('materialPurchases');
+                const customAreas = localStorage.getItem('customAreas');
+
+                let dataCount = 0;
+                let logCount = 0;
+                let materialCount = 0;
+                let areaCount = 0;
+
+                if (productionData) {
+                    const data = JSON.parse(productionData);
+                    dataCount = Array.isArray(data) ? data.length : 0;
+                }
+
+                if (operationLogs) {
+                    const logs = JSON.parse(operationLogs);
+                    logCount = Array.isArray(logs) ? logs.length : 0;
+                }
+
+                if (materialPurchases) {
+                    const materials = JSON.parse(materialPurchases);
+                    materialCount = Array.isArray(materials) ? materials.length : 0;
+                }
+
+                if (customAreas) {
+                    const areas = JSON.parse(customAreas);
+                    areaCount = Array.isArray(areas) ? areas.length : 0;
+                }
+
+                if (dataCount > 0 || logCount > 0 || materialCount > 0) {
+                    statusDiv.className = 'status-box status-success';
+                    statusDiv.innerHTML = `
+                        ✅ 找到本地存储数据:<br>
+                        📊 生产数据: ${dataCount} 条<br>
+                        📝 操作日志: ${logCount} 条<br>
+                        🏗️ 原材料采购: ${materialCount} 条<br>
+                        🏢 自定义区域: ${areaCount} 个
+                    `;
+
+                    // 显示数据预览
+                    dataDiv.style.display = 'block';
+                    dataDiv.innerHTML = `
+<strong>生产数据预览:</strong>
+${productionData ? JSON.stringify(JSON.parse(productionData).slice(0, 3), null, 2) : '无数据'}
+
+<strong>操作日志预览:</strong>
+${operationLogs ? JSON.stringify(JSON.parse(operationLogs).slice(0, 2), null, 2) : '无数据'}
+                    `;
+                } else {
+                    statusDiv.className = 'status-box status-error';
+                    statusDiv.innerHTML = `
+                        ❌ 本地存储中没有找到数据<br>
+                        📝 可能的原因：<br>
+                        • 数据被意外清空<br>
+                        • 浏览器缓存被清理<br>
+                        • 使用了不同的浏览器或隐私模式
+                    `;
+                    dataDiv.style.display = 'none';
+                }
+            } catch (error) {
+                statusDiv.className = 'status-box status-error';
+                statusDiv.innerHTML = `❌ 检查失败: ${error.message}`;
+                dataDiv.style.display = 'none';
+            }
+        }
+
+        // 从文件恢复数据
+        function restoreFromFile() {
+            const fileInput = document.getElementById('backupFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showResult('请先选择备份文件', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backupData = JSON.parse(e.target.result);
+                    
+                    if (backupData.data && Array.isArray(backupData.data)) {
+                        // 恢复生产数据
+                        localStorage.setItem('productionData', JSON.stringify(backupData.data));
+                        
+                        // 如果有其他数据也一并恢复
+                        if (backupData.operationLogs) {
+                            localStorage.setItem('operationLogs', JSON.stringify(backupData.operationLogs));
+                        }
+                        if (backupData.materialPurchases) {
+                            localStorage.setItem('materialPurchases', JSON.stringify(backupData.materialPurchases));
+                        }
+                        
+                        showResult(`✅ 成功恢复 ${backupData.data.length} 条生产数据`, 'success');
+                        updateDataPreview();
+                        
+                        // 提示用户刷新页面
+                        setTimeout(() => {
+                            if (confirm('数据已恢复到本地存储，是否刷新页面以重新加载数据？')) {
+                                window.location.reload();
+                            }
+                        }, 1000);
+                    } else {
+                        showResult('❌ 备份文件格式不正确', 'error');
+                    }
+                } catch (error) {
+                    showResult(`❌ 恢复失败: ${error.message}`, 'error');
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // 生成示例数据
+        function generateSampleData() {
+            if (!confirm('这将生成示例数据并覆盖现有数据，确定继续吗？')) {
+                return;
+            }
+
+            const sampleData = [
+                {
+                    id: 1,
+                    spec: 'H100-3200mm',
+                    area: 'C1',
+                    planned: 200,
+                    produced: 176,
+                    shipped: 0,
+                    status: 'completed',
+                    deadline: '2025-07-01',
+                    remarks: '示例数据',
+                    shippingRecords: []
+                },
+                {
+                    id: 2,
+                    spec: 'H80-4000mm',
+                    area: 'C2',
+                    planned: 150,
+                    produced: 124,
+                    shipped: 0,
+                    status: 'completed',
+                    deadline: '2025-07-01',
+                    remarks: '示例数据',
+                    shippingRecords: []
+                },
+                {
+                    id: 3,
+                    spec: 'H100-2800mm',
+                    area: 'E1',
+                    planned: 100,
+                    produced: 0,
+                    shipped: 0,
+                    status: 'planned',
+                    deadline: '2025-07-15',
+                    remarks: '示例数据',
+                    shippingRecords: []
+                }
+            ];
+
+            try {
+                localStorage.setItem('productionData', JSON.stringify(sampleData));
+                localStorage.setItem('operationLogs', JSON.stringify([]));
+                localStorage.setItem('materialPurchases', JSON.stringify([]));
+                
+                showResult(`✅ 成功生成 ${sampleData.length} 条示例数据`, 'success');
+                updateDataPreview();
+                
+                setTimeout(() => {
+                    if (confirm('示例数据已生成，是否刷新页面以重新加载数据？')) {
+                        window.location.reload();
+                    }
+                }, 1000);
+            } catch (error) {
+                showResult(`❌ 生成示例数据失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 清空所有数据
+        function clearAllData() {
+            if (!confirm('这将清空所有数据，确定继续吗？')) {
+                return;
+            }
+
+            if (!confirm('此操作不可撤销，请再次确认是否清空所有数据？')) {
+                return;
+            }
+
+            try {
+                localStorage.removeItem('productionData');
+                localStorage.removeItem('operationLogs');
+                localStorage.removeItem('materialPurchases');
+                localStorage.removeItem('customAreas');
+                
+                showResult('✅ 所有数据已清空', 'success');
+                updateDataPreview();
+            } catch (error) {
+                showResult(`❌ 清空数据失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 显示操作结果
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('operationResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = `status-box status-${type}`;
+            resultDiv.innerHTML = message;
+        }
+
+        // 更新数据预览
+        function updateDataPreview() {
+            const previewDiv = document.getElementById('dataPreview');
+            
+            try {
+                const productionData = localStorage.getItem('productionData');
+                if (productionData) {
+                    const data = JSON.parse(productionData);
+                    previewDiv.innerHTML = `
+<strong>当前数据 (${data.length} 条):</strong>
+${JSON.stringify(data.slice(0, 5), null, 2)}
+${data.length > 5 ? '\n... 还有更多数据' : ''}
+                    `;
+                } else {
+                    previewDiv.textContent = '暂无数据';
+                }
+            } catch (error) {
+                previewDiv.textContent = `数据预览失败: ${error.message}`;
+            }
+        }
+
+        // 页面加载时自动检查
+        window.onload = function() {
+            checkLocalStorage();
+            updateDataPreview();
+        };
+    </script>
+</body>
+</html>

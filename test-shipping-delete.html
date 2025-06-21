@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发货记录删除功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #dc2626;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .demo-info {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .demo-info h3 {
+            color: #dc2626;
+            margin: 0 0 15px 0;
+        }
+        
+        .test-section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h4 {
+            color: #374151;
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .test-result {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 15px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #ecfdf5;
+            border: 1px solid #059669;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #059669;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #047857;
+            margin-top: 5px;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning-box h5 {
+            color: #92400e;
+            margin: 0 0 10px 0;
+        }
+        
+        .test-steps {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .test-steps h5 {
+            color: #1e40af;
+            margin: 0 0 15px 0;
+        }
+        
+        .test-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .test-steps li {
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ 发货记录删除功能测试</h1>
+        
+        <div class="demo-info">
+            <h3>⚠️ 重要说明</h3>
+            <ul>
+                <li><strong>删除影响</strong>：删除发货记录会同时调整库存，增加可发货数量</li>
+                <li><strong>数据同步</strong>：删除操作会同步更新原始数据和历史记录</li>
+                <li><strong>不可恢复</strong>：删除操作不可撤销，请谨慎操作</li>
+                <li><strong>库存调整</strong>：删除后，对应规格的已发货数量会减少，库存会增加</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h4>📊 当前数据状态</h4>
+            <div class="stats-grid" id="currentStats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalItems">-</div>
+                    <div class="stat-label">总数据条数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalShipped">-</div>
+                    <div class="stat-label">总已发货数量</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="historyRecords">-</div>
+                    <div class="stat-label">历史记录数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="shippingRecords">-</div>
+                    <div class="stat-label">原始发货记录数</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h4>🔍 数据检查</h4>
+            <button class="btn btn-primary" onclick="checkCurrentData()">
+                <i class="fas fa-search"></i>
+                检查当前数据
+            </button>
+            <button class="btn btn-success" onclick="checkConsistency()">
+                <i class="fas fa-balance-scale"></i>
+                检查数据一致性
+            </button>
+            <button class="btn btn-warning" onclick="simulateDelete()">
+                <i class="fas fa-trash"></i>
+                模拟删除测试
+            </button>
+            <div class="test-result" id="checkResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h4>🧪 删除功能测试</h4>
+            
+            <div class="test-steps">
+                <h5>测试步骤：</h5>
+                <ol>
+                    <li>点击"检查当前数据"查看删除前的状态</li>
+                    <li>在主系统中打开"发货历史"</li>
+                    <li>选择一条发货记录，点击查看详情</li>
+                    <li>切换到编辑模式，点击"删除发货记录"</li>
+                    <li>确认删除后，返回此页面点击"检查删除后状态"</li>
+                    <li>验证库存是否正确调整</li>
+                </ol>
+            </div>
+            
+            <div class="warning-box">
+                <h5>⚠️ 测试注意事项</h5>
+                <ul>
+                    <li>建议先备份数据或在测试环境中进行</li>
+                    <li>删除操作会真实影响库存数据</li>
+                    <li>如果测试出现问题，可以刷新页面重新加载数据</li>
+                </ul>
+            </div>
+            
+            <button class="btn btn-primary" onclick="openMainSystem()">
+                <i class="fas fa-external-link-alt"></i>
+                打开主系统测试
+            </button>
+            <button class="btn btn-success" onclick="checkAfterDelete()">
+                <i class="fas fa-check"></i>
+                检查删除后状态
+            </button>
+            <button class="btn btn-warning" onclick="resetTestData()">
+                <i class="fas fa-undo"></i>
+                重置测试数据
+            </button>
+        </div>
+        
+        <div class="test-section">
+            <h4>📋 测试结果</h4>
+            <div class="test-result" id="testResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let testData = null;
+        let beforeDeleteStats = null;
+        
+        function log(message, containerId = 'testResult') {
+            const container = document.getElementById(containerId);
+            const timestamp = new Date().toLocaleTimeString();
+            container.textContent += `[${timestamp}] ${message}\n`;
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function updateStats() {
+            if (!testData) return;
+            
+            const totalItems = testData.length;
+            let totalShipped = 0;
+            let shippingRecords = 0;
+            
+            testData.forEach(item => {
+                totalShipped += item.shipped || 0;
+                if (item.shippingRecords) {
+                    shippingRecords += item.shippingRecords.length;
+                }
+            });
+            
+            const historyRecords = JSON.parse(localStorage.getItem('shippingHistory') || '[]').length;
+            
+            document.getElementById('totalItems').textContent = totalItems;
+            document.getElementById('totalShipped').textContent = totalShipped.toLocaleString();
+            document.getElementById('historyRecords').textContent = historyRecords;
+            document.getElementById('shippingRecords').textContent = shippingRecords;
+        }
+        
+        function checkCurrentData() {
+            log('=== 检查当前数据状态 ===', 'checkResult');
+            
+            try {
+                const savedData = localStorage.getItem('productionData');
+                if (!savedData) {
+                    log('❌ 没有找到本地数据', 'checkResult');
+                    return;
+                }
+                
+                testData = JSON.parse(savedData);
+                log(`✅ 加载了 ${testData.length} 条数据`, 'checkResult');
+                
+                // 统计发货相关数据
+                let totalShipped = 0;
+                let itemsWithShipping = 0;
+                let totalShippingRecords = 0;
+                
+                testData.forEach(item => {
+                    totalShipped += item.shipped || 0;
+                    if (item.shippingRecords && item.shippingRecords.length > 0) {
+                        itemsWithShipping++;
+                        totalShippingRecords += item.shippingRecords.length;
+                    }
+                });
+                
+                const historyRecords = JSON.parse(localStorage.getItem('shippingHistory') || '[]');
+                
+                log(`📊 数据统计:`, 'checkResult');
+                log(`   总已发货数量: ${totalShipped}`, 'checkResult');
+                log(`   有发货记录的项目: ${itemsWithShipping}`, 'checkResult');
+                log(`   原始发货记录数: ${totalShippingRecords}`, 'checkResult');
+                log(`   历史记录数: ${historyRecords.length}`, 'checkResult');
+                
+                // 保存删除前的状态
+                beforeDeleteStats = {
+                    totalShipped,
+                    itemsWithShipping,
+                    totalShippingRecords,
+                    historyRecords: historyRecords.length
+                };
+                
+                updateStats();
+                
+            } catch (error) {
+                log(`❌ 数据检查失败: ${error.message}`, 'checkResult');
+            }
+        }
+        
+        function checkConsistency() {
+            if (!testData) {
+                log('❌ 请先检查当前数据', 'checkResult');
+                return;
+            }
+            
+            log('=== 检查数据一致性 ===', 'checkResult');
+            
+            const historyRecords = JSON.parse(localStorage.getItem('shippingHistory') || '[]');
+            
+            // 计算历史记录中的总发货量
+            let historyTotalQuantity = 0;
+            historyRecords.forEach(record => {
+                historyTotalQuantity += record.totalQuantity || 0;
+            });
+            
+            // 计算原始数据中的总发货量
+            let originalTotalShipped = 0;
+            testData.forEach(item => {
+                originalTotalShipped += item.shipped || 0;
+            });
+            
+            log(`历史记录总发货量: ${historyTotalQuantity}`, 'checkResult');
+            log(`原始数据总发货量: ${originalTotalShipped}`, 'checkResult');
+            
+            if (Math.abs(historyTotalQuantity - originalTotalShipped) < 10) {
+                log('✅ 数据基本一致', 'checkResult');
+            } else {
+                log('⚠️ 数据可能不一致，差值较大', 'checkResult');
+            }
+        }
+        
+        function simulateDelete() {
+            log('=== 模拟删除操作 ===', 'checkResult');
+            log('这是一个模拟操作，不会真实删除数据', 'checkResult');
+            log('真实删除请在主系统中进行', 'checkResult');
+            
+            if (!testData) {
+                log('❌ 请先检查当前数据', 'checkResult');
+                return;
+            }
+            
+            // 找一个有发货记录的项目进行模拟
+            const itemWithShipping = testData.find(item => 
+                item.shippingRecords && item.shippingRecords.length > 0
+            );
+            
+            if (itemWithShipping) {
+                const shippingRecord = itemWithShipping.shippingRecords[0];
+                log(`模拟删除项目: ${itemWithShipping.spec}`, 'checkResult');
+                log(`删除前已发货: ${itemWithShipping.shipped}`, 'checkResult');
+                log(`要删除的数量: ${shippingRecord.quantity}`, 'checkResult');
+                log(`删除后已发货: ${itemWithShipping.shipped - shippingRecord.quantity}`, 'checkResult');
+                log('💡 在主系统中执行真实删除来验证功能', 'checkResult');
+            } else {
+                log('❌ 没有找到可删除的发货记录', 'checkResult');
+            }
+        }
+        
+        function checkAfterDelete() {
+            log('=== 检查删除后状态 ===', 'testResult');
+            
+            if (!beforeDeleteStats) {
+                log('❌ 没有删除前的数据，请先检查当前数据', 'testResult');
+                return;
+            }
+            
+            try {
+                const currentData = JSON.parse(localStorage.getItem('productionData') || '[]');
+                const currentHistory = JSON.parse(localStorage.getItem('shippingHistory') || '[]');
+                
+                let currentTotalShipped = 0;
+                let currentShippingRecords = 0;
+                
+                currentData.forEach(item => {
+                    currentTotalShipped += item.shipped || 0;
+                    if (item.shippingRecords) {
+                        currentShippingRecords += item.shippingRecords.length;
+                    }
+                });
+                
+                log('📊 删除前后对比:', 'testResult');
+                log(`总已发货数量: ${beforeDeleteStats.totalShipped} → ${currentTotalShipped}`, 'testResult');
+                log(`原始发货记录数: ${beforeDeleteStats.totalShippingRecords} → ${currentShippingRecords}`, 'testResult');
+                log(`历史记录数: ${beforeDeleteStats.historyRecords} → ${currentHistory.length}`, 'testResult');
+                
+                const shippedDiff = beforeDeleteStats.totalShipped - currentTotalShipped;
+                const recordDiff = beforeDeleteStats.totalShippingRecords - currentShippingRecords;
+                const historyDiff = beforeDeleteStats.historyRecords - currentHistory.length;
+                
+                if (shippedDiff > 0) {
+                    log(`✅ 已发货数量减少了 ${shippedDiff}，库存相应增加`, 'testResult');
+                }
+                
+                if (recordDiff > 0) {
+                    log(`✅ 原始发货记录减少了 ${recordDiff} 条`, 'testResult');
+                }
+                
+                if (historyDiff > 0) {
+                    log(`✅ 历史记录减少了 ${historyDiff} 条`, 'testResult');
+                }
+                
+                if (shippedDiff === 0 && recordDiff === 0 && historyDiff === 0) {
+                    log('⚠️ 数据没有变化，可能删除操作未生效', 'testResult');
+                }
+                
+                testData = currentData;
+                updateStats();
+                
+            } catch (error) {
+                log(`❌ 检查失败: ${error.message}`, 'testResult');
+            }
+        }
+        
+        function resetTestData() {
+            if (confirm('确定要重置测试数据吗？这将清空所有本地数据！')) {
+                localStorage.clear();
+                log('✅ 测试数据已重置', 'testResult');
+                testData = null;
+                beforeDeleteStats = null;
+                updateStats();
+            }
+        }
+        
+        function openMainSystem() {
+            window.open('index.html', '_blank');
+        }
+        
+        // 页面加载时自动检查数据
+        window.onload = function() {
+            checkCurrentData();
+        };
+    </script>
+</body>
+</html>

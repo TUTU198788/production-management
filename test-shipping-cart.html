@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发货购物车功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #059669;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .demo-info {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .demo-info h3 {
+            color: #3b82f6;
+            margin: 0 0 15px 0;
+        }
+        
+        .demo-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .demo-section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .demo-section h4 {
+            color: #374151;
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .inventory-table th,
+        .inventory-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .inventory-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        
+        .inventory-table tr:hover {
+            background: #f9fafb;
+        }
+        
+        .spec-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .spec-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .spec-areas {
+            font-size: 12px;
+            color: #6b7280;
+            font-style: italic;
+        }
+        
+        .quantity-input {
+            width: 80px;
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #047857;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+        }
+        
+        .btn-outline:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        
+        .shipping-cart {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #f3f4f6;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .cart-header h4 {
+            margin: 0;
+            color: #1f2937;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .cart-container {
+            padding: 20px;
+            min-height: 200px;
+        }
+        
+        .empty-cart {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px 20px;
+        }
+        
+        .empty-cart i {
+            font-size: 48px;
+            color: #d1d5db;
+            margin-bottom: 16px;
+            display: block;
+        }
+        
+        .cart-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .cart-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 16px;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .cart-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .cart-quantity {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .cart-meters {
+            font-weight: 500;
+            color: #059669;
+            text-align: right;
+        }
+        
+        .summary-section {
+            background: #ecfdf5;
+            border: 1px solid #059669;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #d1fae5;
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-label {
+            color: #047857;
+            font-weight: 500;
+        }
+        
+        .summary-value {
+            color: #059669;
+            font-weight: 600;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            font-size: 14px;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .highlight {
+            background: #fef3c7 !important;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        @media (max-width: 768px) {
+            .demo-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .cart-item {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 发货购物车功能演示</h1>
+        
+        <div class="demo-info">
+            <h3>🎯 新功能特点</h3>
+            <ul>
+                <li><strong>逐步添加</strong>：用户可以逐个选择规格，填写数量后加入发货单</li>
+                <li><strong>购物车管理</strong>：支持修改数量、删除项目、清空购物车</li>
+                <li><strong>实时汇总</strong>：自动计算总规格数、总数量、总重量、总米数</li>
+                <li><strong>数量验证</strong>：防止超出可发货数量，智能提示</li>
+                <li><strong>批量发货</strong>：最终一次性处理购物车中的所有项目</li>
+            </ul>
+        </div>
+        
+        <div class="demo-layout">
+            <!-- 左侧：可发货库存 -->
+            <div class="demo-section">
+                <h4>📦 可发货库存</h4>
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>规格型号</th>
+                            <th>可发货数量</th>
+                            <th>发货数量</th>
+                            <th>合计米数</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        <!-- 库存数据 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 右侧：发货购物车 -->
+            <div class="demo-section">
+                <div class="shipping-cart">
+                    <div class="cart-header">
+                        <h4>
+                            🛒 发货单
+                        </h4>
+                        <button class="btn btn-outline" onclick="clearCart()">
+                            🗑️ 清空
+                        </button>
+                    </div>
+                    <div class="cart-container" id="cartContainer">
+                        <div class="empty-cart">
+                            <i>🛒</i>
+                            <p>发货单为空，请选择规格加入发货单</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 汇总信息 -->
+                <div class="summary-section">
+                    <h4 style="margin: 0 0 15px 0; color: #047857;">📊 发货汇总</h4>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="summary-label">规格数：</span>
+                            <span class="summary-value" id="totalSpecs">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">总根数：</span>
+                            <span class="summary-value" id="totalQuantity">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">总重量：</span>
+                            <span class="summary-value" id="totalWeight">0.0 kg</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">总米数：</span>
+                            <span class="summary-value" id="totalMeters">0.0 m</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="openMainSystem()">
+                🚀 在主系统中测试
+            </button>
+            <button class="btn btn-success" onclick="simulateShipping()">
+                📦 模拟发货
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 模拟库存数据
+        const mockInventory = [
+            { spec: 'H80-1200mm', available: 150, areas: 'C1, C2' },
+            { spec: 'H80-1400mm', available: 200, areas: 'C1, E3' },
+            { spec: 'H100-1200mm', available: 120, areas: 'D6' },
+            { spec: 'H100-1400mm', available: 180, areas: 'A14, E3' },
+            { spec: 'H100-1600mm', available: 90, areas: 'C2, D6' }
+        ];
+        
+        let shippingCart = [];
+        
+        // 计算米数
+        function calculateMeters(spec, quantity) {
+            const match = spec.match(/(\d+)mm$/);
+            if (!match) return 0;
+            const length = parseInt(match[1]) / 1000;
+            return quantity * length;
+        }
+        
+        // 计算重量
+        function calculateWeight(spec, quantity) {
+            const match = spec.match(/^(H\d+)-(\d+)mm$/);
+            if (!match) return 0;
+            const [, type, length] = match;
+            const lengthM = parseInt(length) / 1000;
+            const weightPerMeter = type === 'H100' ? 2.5 : 2.0;
+            return quantity * lengthM * weightPerMeter;
+        }
+        
+        // 渲染库存表格
+        function renderInventory() {
+            const tbody = document.getElementById('inventoryTableBody');
+            tbody.innerHTML = '';
+            
+            mockInventory.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div class="spec-info">
+                            <div class="spec-name">${item.spec}</div>
+                            <div class="spec-areas">涉及区域: ${item.areas}</div>
+                        </div>
+                    </td>
+                    <td>${item.available.toLocaleString()}</td>
+                    <td>
+                        <input type="number" class="quantity-input" 
+                               min="1" max="${item.available}" value="1"
+                               id="qty-${index}">
+                    </td>
+                    <td id="meters-${index}">${calculateMeters(item.spec, 1).toFixed(1)}</td>
+                    <td>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="btn btn-success" onclick="addToCart(${index})">
+                                ➕ 加入
+                            </button>
+                            <button class="btn btn-outline" onclick="setMax(${index})">
+                                全部
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+                
+                // 添加数量变化监听
+                const qtyInput = document.getElementById(`qty-${index}`);
+                qtyInput.addEventListener('input', () => updateMeters(index));
+            });
+        }
+        
+        // 更新米数显示
+        function updateMeters(index) {
+            const qtyInput = document.getElementById(`qty-${index}`);
+            const metersCell = document.getElementById(`meters-${index}`);
+            const quantity = parseInt(qtyInput.value) || 0;
+            const meters = calculateMeters(mockInventory[index].spec, quantity);
+            metersCell.textContent = meters.toFixed(1);
+        }
+        
+        // 设置最大数量
+        function setMax(index) {
+            const qtyInput = document.getElementById(`qty-${index}`);
+            qtyInput.value = mockInventory[index].available;
+            updateMeters(index);
+        }
+        
+        // 添加到购物车
+        function addToCart(index) {
+            const item = mockInventory[index];
+            const qtyInput = document.getElementById(`qty-${index}`);
+            const quantity = parseInt(qtyInput.value) || 0;
+            
+            if (quantity <= 0) {
+                alert('请输入有效的发货数量');
+                return;
+            }
+            
+            if (quantity > item.available) {
+                alert('发货数量不能超过可发货数量');
+                return;
+            }
+            
+            // 检查是否已存在
+            const existingIndex = shippingCart.findIndex(cartItem => cartItem.spec === item.spec);
+            
+            if (existingIndex >= 0) {
+                const newQuantity = shippingCart[existingIndex].quantity + quantity;
+                if (newQuantity > item.available) {
+                    alert(`${item.spec} 总发货数量不能超过可发货数量 ${item.available}`);
+                    return;
+                }
+                shippingCart[existingIndex].quantity = newQuantity;
+                shippingCart[existingIndex].meters = calculateMeters(item.spec, newQuantity);
+            } else {
+                shippingCart.push({
+                    spec: item.spec,
+                    quantity: quantity,
+                    available: item.available,
+                    meters: calculateMeters(item.spec, quantity),
+                    areas: item.areas
+                });
+            }
+            
+            // 重置输入
+            qtyInput.value = 1;
+            updateMeters(index);
+            
+            // 更新显示
+            renderCart();
+            updateSummary();
+            
+            // 高亮效果
+            const row = qtyInput.closest('tr');
+            row.classList.add('highlight');
+            setTimeout(() => row.classList.remove('highlight'), 1000);
+        }
+        
+        // 渲染购物车
+        function renderCart() {
+            const container = document.getElementById('cartContainer');
+            
+            if (shippingCart.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-cart">
+                        <i>🛒</i>
+                        <p>发货单为空，请选择规格加入发货单</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let cartHTML = '<div class="cart-items">';
+            shippingCart.forEach((item, index) => {
+                cartHTML += `
+                    <div class="cart-item">
+                        <div class="spec-info">
+                            <div class="spec-name">${item.spec}</div>
+                            <div class="spec-areas">${item.areas}</div>
+                        </div>
+                        <div class="cart-quantity">
+                            <input type="number" class="quantity-input" 
+                                   min="1" max="${item.available}" value="${item.quantity}"
+                                   onchange="updateCartQuantity(${index}, this.value)">
+                            <span style="font-size: 12px; color: #6b7280;">根</span>
+                        </div>
+                        <div class="cart-meters">${item.meters.toFixed(1)} m</div>
+                        <div>
+                            <button class="btn btn-danger" onclick="removeFromCart(${index})">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            cartHTML += '</div>';
+            
+            container.innerHTML = cartHTML;
+        }
+        
+        // 更新购物车数量
+        function updateCartQuantity(index, newQuantity) {
+            const quantity = parseInt(newQuantity) || 0;
+            const item = shippingCart[index];
+            
+            if (quantity <= 0) {
+                removeFromCart(index);
+                return;
+            }
+            
+            if (quantity > item.available) {
+                alert(`${item.spec} 数量不能超过可发货数量 ${item.available}`);
+                renderCart();
+                return;
+            }
+            
+            item.quantity = quantity;
+            item.meters = calculateMeters(item.spec, quantity);
+            
+            renderCart();
+            updateSummary();
+        }
+        
+        // 从购物车移除
+        function removeFromCart(index) {
+            const item = shippingCart[index];
+            shippingCart.splice(index, 1);
+            renderCart();
+            updateSummary();
+        }
+        
+        // 清空购物车
+        function clearCart() {
+            shippingCart = [];
+            renderCart();
+            updateSummary();
+        }
+        
+        // 更新汇总
+        function updateSummary() {
+            let totalSpecs = shippingCart.length;
+            let totalQuantity = 0;
+            let totalMeters = 0;
+            let totalWeight = 0;
+            
+            shippingCart.forEach(item => {
+                totalQuantity += item.quantity;
+                totalMeters += item.meters;
+                totalWeight += calculateWeight(item.spec, item.quantity);
+            });
+            
+            document.getElementById('totalSpecs').textContent = totalSpecs;
+            document.getElementById('totalQuantity').textContent = totalQuantity.toLocaleString();
+            document.getElementById('totalMeters').textContent = totalMeters.toFixed(1) + ' m';
+            document.getElementById('totalWeight').textContent = totalWeight.toFixed(1) + ' kg';
+        }
+        
+        // 模拟发货
+        function simulateShipping() {
+            if (shippingCart.length === 0) {
+                alert('发货单为空，请先添加规格');
+                return;
+            }
+            
+            const summary = shippingCart.map(item => 
+                `${item.spec}: ${item.quantity}根 (${item.meters.toFixed(1)}m)`
+            ).join('\n');
+            
+            alert(`模拟发货成功！\n\n发货清单：\n${summary}\n\n总计：${shippingCart.length}种规格`);
+            clearCart();
+        }
+        
+        // 打开主系统
+        function openMainSystem() {
+            window.open('index.html', '_blank');
+        }
+        
+        // 初始化
+        window.onload = function() {
+            renderInventory();
+            updateSummary();
+        };
+    </script>
+</body>
+</html>

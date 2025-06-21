@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>梯桁筋与组合肋可视化管理系统</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for Excel reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- 云端同步功能 -->
+    <script src="scripts/cloud-sync.js"></script>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo-section">
+                <i class="fas fa-industry"></i>
+                <h1>梯桁筋与组合肋可视化管理系统</h1>
+            </div>
+            <div class="header-actions">
+                <div class="status-indicator">
+                    <span class="status-dot active"></span>
+                    <span>实时监控</span>
+                </div>
+                <button class="refresh-btn" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i>
+                    刷新数据
+                </button>
+                <button class="cloud-sync-btn" id="cloudSyncBtn" title="云端同步设置">
+                    <i class="fas fa-cloud"></i>
+                    云端同步
+                </button>
+                <div class="last-update">
+                    最后更新: <span id="lastUpdate">2024-01-15 14:30:25</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="main-content">
+        <!-- 关键指标卡片区 -->
+        <section class="metrics-section">
+            <div class="metrics-container">
+                <!-- 第一行：原有的四个卡片 -->
+                <div class="metrics-row">
+                    <div class="metric-card total">
+                        <div class="metric-icon">
+                            <i class="fas fa-cubes"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>总需求量</h3>
+                            <div class="metric-value" id="totalDemand">0</div>
+                            <div class="metric-unit">米 (m)</div>
+                            <div class="metric-subtitle">计划生产总量</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card produced">
+                        <div class="metric-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>已生产量</h3>
+                            <div class="metric-value" id="totalProduced">0</div>
+                            <div class="metric-unit">米 (m)</div>
+                            <div class="metric-subtitle">累计完成生产</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card pending">
+                        <div class="metric-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>待生产量</h3>
+                            <div class="metric-value" id="totalPending">0</div>
+                            <div class="metric-unit">米 (m)</div>
+                            <div class="metric-subtitle">剩余生产任务</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card efficiency">
+                        <div class="metric-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>生产进度</h3>
+                            <div class="metric-value" id="productionProgress">0%</div>
+                            <div class="metric-subtitle">完成率统计</div>
+                            <div class="progress-ring">
+                                <svg class="progress-ring-svg" width="60" height="60">
+                                    <circle class="progress-ring-circle-bg" cx="30" cy="30" r="26"></circle>
+                                    <circle class="progress-ring-circle" cx="30" cy="30" r="26"
+                                            stroke-dasharray="163.36" stroke-dashoffset="163.36" id="progressCircle"></circle>
+                                </svg>
+                                <div class="progress-text" id="progressText">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第二行：新增的四个卡片 -->
+                <div class="metrics-row">
+                    <div class="metric-card shipped">
+                        <div class="metric-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>已发货量</h3>
+                            <div class="metric-value" id="totalShipped">0</div>
+                            <div class="metric-unit">米 (m)</div>
+                            <div class="metric-subtitle">累计发货数量</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card unshipped">
+                        <div class="metric-icon">
+                            <i class="fas fa-warehouse"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>未发货量</h3>
+                            <div class="metric-value" id="totalUnshipped">0</div>
+                            <div class="metric-unit">米 (m)</div>
+                            <div class="metric-subtitle">待发货库存</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card material" id="materialCard" style="cursor: pointer;" title="点击管理原材料采购">
+                        <div class="metric-icon">
+                            <i class="fas fa-industry"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>原材采购</h3>
+                            <div class="metric-value" id="totalMaterial">0</div>
+                            <div class="metric-unit">吨 (t)</div>
+                            <div class="metric-subtitle">累计采购量</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card inventory">
+                        <div class="metric-icon">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>库存状态</h3>
+                            <div class="metric-value" id="inventoryStatus">正常</div>
+                            <div class="metric-unit">状态</div>
+                            <div class="metric-subtitle">
+                                <span class="inventory-detail">
+                                    库存：<span id="inventoryQuantity">0</span>米
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 产量统计面板 -->
+        <section class="production-stats-panel">
+            <div class="stats-container">
+                <div class="stats-card-mini">
+                    <div class="stats-icon daily">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-value" id="dailyProduction">0</div>
+                        <div class="stats-label">日产量 (米)</div>
+                    </div>
+                </div>
+
+                <div class="stats-card-mini">
+                    <div class="stats-icon monthly">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-value" id="monthlyProduction">0</div>
+                        <div class="stats-label">月产量 (米)</div>
+                    </div>
+                </div>
+
+                <div class="stats-card-mini">
+                    <div class="stats-icon quarterly">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-value" id="quarterlyProduction">0</div>
+                        <div class="stats-label">季度产量 (米)</div>
+                    </div>
+                </div>
+
+                <div class="stats-card-mini">
+                    <div class="stats-icon yearly">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-value" id="yearlyProduction">0</div>
+                        <div class="stats-label">本年产量 (米)</div>
+                    </div>
+                </div>
+
+                <div class="stats-refresh">
+                    <button class="stats-refresh-btn" id="refreshProductionStats" title="刷新产量统计">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 图表展示区域 -->
+        <section class="charts-section">
+            <div class="charts-container">
+                <!-- 生产状态分布 -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>生产状态分布</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn"><i class="fas fa-expand"></i></button>
+                            <button class="chart-btn"><i class="fas fa-download"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="productionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 发货状态分布 -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>发货状态分布</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn"><i class="fas fa-expand"></i></button>
+                            <button class="chart-btn"><i class="fas fa-download"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="shippingChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 规格型号需求分布 -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>规格型号需求分布</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn" onclick="window.dashboard.updateCharts()" title="强制刷新图表"><i class="fas fa-sync-alt"></i></button>
+                            <button class="chart-btn"><i class="fas fa-expand"></i></button>
+                            <button class="chart-btn"><i class="fas fa-download"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="specChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 工地区域需求分布 -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>工地区域需求分布</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn"><i class="fas fa-expand"></i></button>
+                            <button class="chart-btn"><i class="fas fa-download"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="areaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 生产数据管理区域 -->
+        <section class="data-management-section">
+            <div class="management-container">
+                <!-- 操作工具栏 -->
+                <div class="toolbar-card">
+                    <div class="toolbar-header">
+                        <h3>生产数据管理</h3>
+                        <div class="toolbar-actions">
+                            <button class="action-btn success" id="addPlanBtn">
+                                <i class="fas fa-clipboard-list"></i>
+                                新增计划
+                            </button>
+                            <button class="action-btn primary" id="addProductionBtn">
+                                <i class="fas fa-plus"></i>
+                                新增生产
+                            </button>
+                            <button class="action-btn warning" id="batchShippingBtn">
+                                <i class="fas fa-truck"></i>
+                                批量发货
+                            </button>
+                            <button class="action-btn info" id="shippingHistoryBtn">
+                                <i class="fas fa-history"></i>
+                                发货历史
+                            </button>
+                            <button class="action-btn secondary" id="batchEditBtn">
+                                <i class="fas fa-edit"></i>
+                                批量编辑
+                            </button>
+                            <button class="action-btn success" id="exportDataBtn">
+                                <i class="fas fa-download"></i>
+                                导出数据
+                            </button>
+                            <button class="action-btn warning" id="importDataBtn">
+                                <i class="fas fa-upload"></i>
+                                导入JSON
+                            </button>
+                            <button class="action-btn info" id="importExcelBtn">
+                                <i class="fas fa-file-excel"></i>
+                                导入Excel
+                            </button>
+                            <button class="action-btn info" id="viewLogsBtn">
+                                <i class="fas fa-history"></i>
+                                操作日志
+                            </button>
+                            <button class="action-btn danger" id="clearAllDataBtn">
+                                <i class="fas fa-trash-alt"></i>
+                                清空所有数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据表格 -->
+                <div class="data-table-card">
+                    <div class="table-header">
+                        <div class="table-controls">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchInput" placeholder="搜索规格型号、区域...">
+                            </div>
+                            <div class="table-filters">
+                                <select id="statusFilter" class="filter-select">
+                                    <option value="">全部状态</option>
+                                    <option value="planned">计划中</option>
+                                    <option value="producing">生产中</option>
+                                    <option value="completed">已完成</option>
+                                    <option value="shipped">已发货</option>
+                                </select>
+                                <select id="areaFilter" class="filter-select">
+                                    <option value="">全部区域</option>
+                                    <option value="C1">C1区域</option>
+                                    <option value="C2">C2区域</option>
+                                    <option value="C3">C3区域</option>
+                                    <option value="E1">E1区域</option>
+                                    <option value="E3">E3区域</option>
+                                    <option value="D6">D6区域</option>
+                                    <option value="A14">A14区域</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table" id="productionTable">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAll">
+                                    </th>
+                                    <th data-sort="spec">规格型号 <i class="fas fa-sort"></i></th>
+                                    <th data-sort="area">工地区域 <i class="fas fa-sort"></i></th>
+                                    <th data-sort="planned">计划数量 <i class="fas fa-sort"></i></th>
+                                    <th data-sort="produced">已生产 <i class="fas fa-sort"></i></th>
+                                    <th data-sort="remaining">剩余数量 <i class="fas fa-sort"></i></th>
+                                    <th data-sort="status">状态 <i class="fas fa-sort"></i></th>
+                                    <th data-sort="deadline">交付日期 <i class="fas fa-sort"></i></th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- 数据行将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="table-footer">
+                        <div class="table-info">
+                            <span>共 <span id="totalRecords">0</span> 条记录</span>
+                            <span>已选择 <span id="selectedCount">0</span> 项</span>
+                        </div>
+                        <div class="pagination">
+                            <button class="page-btn" id="prevPage" disabled>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span class="page-info">
+                                第 <span id="currentPage">1</span> 页，共 <span id="totalPages">1</span> 页
+                            </span>
+                            <button class="page-btn" id="nextPage" disabled>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 区域统计和详细信息 -->
+        <section class="area-stats-section">
+            <div class="area-stats-container">
+                <!-- 区域统计卡片 -->
+                <div class="area-stats-header">
+                    <h3>各区域生产统计</h3>
+                    <div class="stats-summary">
+                        <span>共 <span id="totalAreas">0</span> 个区域</span>
+                        <span class="drag-hint">
+                            <i class="fas fa-arrows-alt"></i>
+                            可拖拽排序（排序代表紧急程度）
+                        </span>
+                        <button class="refresh-areas-btn" id="refreshAreasBtn">
+                            <i class="fas fa-sync-alt"></i>
+                            刷新统计
+                        </button>
+                    </div>
+                </div>
+                <div class="area-cards-grid" id="areaCardsContainer">
+                    <!-- 区域卡片将通过JavaScript动态生成 -->
+                </div>
+                
+                <!-- 客户发货量统计 -->
+                <div class="stats-card">
+                    <div class="stats-header">
+                        <h3>客户发货量统计</h3>
+                        <div class="stats-header-actions">
+                            <button class="btn btn-primary btn-sm" id="addCustomerCardBtn">
+                                <i class="fas fa-plus"></i>
+                                新增客户卡片
+                            </button>
+                            <button class="btn btn-outline btn-sm" id="refreshCustomerStats">
+                                <i class="fas fa-sync-alt"></i>
+                                刷新统计
+                            </button>
+                        </div>
+                    </div>
+                    <div class="stats-content">
+                        <div id="customerStatsContainer" class="customer-stats-grid">
+                            <!-- 客户发货统计卡片将通过JavaScript动态生成 -->
+                        </div>
+                        <div class="customer-stats-summary" id="customerStatsSummary">
+                            <div class="summary-item">
+                                <span class="summary-label">总发货客户数：</span>
+                                <span class="summary-value" id="totalCustomers">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">总发货量：</span>
+                                <span class="summary-value" id="totalShippedMeters">0.0 米</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 未生产规格统计 -->
+                <div class="stats-card">
+                    <div class="stats-header">
+                        <h3>未生产规格统计</h3>
+                        <div class="stats-summary">
+                            <span>显示所有未生产的具体规格</span>
+                            <button class="refresh-stats-btn" id="refreshUnproducedStatsBtn">
+                                <i class="fas fa-sync-alt"></i>
+                                刷新统计
+                            </button>
+                        </div>
+                    </div>
+                    <div class="stats-content">
+                        <div class="unproduced-stats-grid" id="unproducedStatsContainer">
+                            <!-- 未生产规格卡片将通过JavaScript动态生成 -->
+                        </div>
+                        <div class="unproduced-stats-info" id="unproducedStatsInfo">
+                            <p>共 <span id="unproducedSpecCount">0</span> 种规格未完成生产</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 模态框 -->
+    <!-- 新增计划模态框 -->
+    <div class="modal" id="planModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新增生产计划</h3>
+                <button class="modal-close" id="closePlanModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="planForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="planTypeInput">型号 *</label>
+                            <select id="planTypeInput" required>
+                                <option value="">请选择型号</option>
+                                <option value="H100">H100</option>
+                                <option value="H80">H80</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="planLengthInput">长度 *</label>
+                            <select id="planLengthInput" required disabled>
+                                <option value="">请先选择型号</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="planSpecDisplay">完整规格</label>
+                            <input type="text" id="planSpecDisplay" readonly placeholder="将根据型号和长度自动生成">
+                        </div>
+                        <div class="form-group">
+                            <label for="planAreaInput">工地区域 *</label>
+                            <select id="planAreaInput" required>
+                                <option value="">请选择工地区域</option>
+                                <option value="C1">C1区域</option>
+                                <option value="C2">C2区域</option>
+                                <option value="C3">C3区域</option>
+                                <option value="E1">E1区域</option>
+                                <option value="E3">E3区域</option>
+                                <option value="D6">D6区域</option>
+                                <option value="A14">A14区域</option>
+                                <option value="__add_new__">+ 新增区域</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="planQuantityInput">计划数量 *</label>
+                            <input type="number" id="planQuantityInput" min="1" required placeholder="请输入计划数量">
+                        </div>
+                        <div class="form-group">
+                            <label for="planDeadlineInput">计划交付日期</label>
+                            <input type="date" id="planDeadlineInput">
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="planRemarksInput">计划备注</label>
+                        <textarea id="planRemarksInput" rows="3" placeholder="请输入计划备注信息"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelPlanBtn">取消</button>
+                <button type="submit" class="btn success" id="savePlanBtn" form="planForm">保存计划</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑生产数据模态框 -->
+    <div class="modal" id="productionModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="modalTitle">新增生产数据</h3>
+                <div class="modal-header-actions">
+                    <button class="modal-close" id="closeModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- 单项编辑模式 -->
+                <div id="singleMode" class="production-mode" style="display: none;">
+                    <form id="productionForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="typeInput">型号 *</label>
+                                <select id="typeInput" required>
+                                    <option value="">请选择型号</option>
+                                    <option value="H80">H80</option>
+                                    <option value="H100">H100</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="lengthInput">长度 *</label>
+                                <select id="lengthInput" disabled required>
+                                    <option value="">请先选择型号</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="specDisplay">完整规格</label>
+                                <input type="text" id="specDisplay" readonly placeholder="自动生成">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="areaInput">工地区域 *</label>
+                                <select id="areaInput" required>
+                                    <option value="">请选择区域</option>
+                                    <option value="C1">C1区域</option>
+                                    <option value="C2">C2区域</option>
+                                    <option value="C3">C3区域</option>
+                                    <option value="E1">E1区域</option>
+                                    <option value="E3">E3区域</option>
+                                    <option value="D6">D6区域</option>
+                                    <option value="A14">A14区域</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="plannedInput">计划数量 (根) *</label>
+                                <input type="number" id="plannedInput" min="1" required placeholder="请输入计划数量">
+                            </div>
+                            <div class="form-group">
+                                <label for="producedInput">已生产数量 (根)</label>
+                                <input type="number" id="producedInput" min="0" placeholder="请输入已生产数量">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="statusInput">状态</label>
+                                <select id="statusInput">
+                                    <option value="planned">计划中</option>
+                                    <option value="producing">生产中</option>
+                                    <option value="completed">已完成</option>
+                                    <option value="shipped">已发货</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="deadlineInput">交期</label>
+                                <input type="date" id="deadlineInput">
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="remarksInput">备注</label>
+                            <textarea id="remarksInput" rows="3" placeholder="请输入备注信息"></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 批量添加模式 -->
+                <div id="batchMode" class="production-mode">
+                    <div class="batch-header">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="batchArea">工地区域 <span style="color: #6b7280; font-size: 12px;">(可选，系统可智能分配)</span></label>
+                                <select id="batchArea">
+                                    <option value="">智能分配到紧急区域</option>
+                                    <option value="C1">C1区域</option>
+                                    <option value="C2">C2区域</option>
+                                    <option value="C3">C3区域</option>
+                                    <option value="E1">E1区域</option>
+                                    <option value="E3">E3区域</option>
+                                    <option value="D6">D6区域</option>
+                                    <option value="A14">A14区域</option>
+                                    <option value="__add_new__">+ 新增区域</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="batchProductionDate">生产日期 *</label>
+                                <input type="date" id="batchProductionDate" required>
+                            </div>
+                            <div class="form-group">
+                                <button type="button" class="btn btn-success" id="addBatchRow">
+                                    <i class="fas fa-plus"></i>
+                                    添加规格
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="batch-table-container">
+                        <table class="batch-table">
+                            <thead>
+                                <tr>
+                                    <th>型号</th>
+                                    <th>长度</th>
+                                    <th>生产根数</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batchTableBody">
+                                <!-- 批量行将通过JavaScript动态添加 -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="batch-summary">
+                        <div class="summary-item">
+                            <span>总规格数：</span>
+                            <span id="totalSpecs">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>总根数：</span>
+                            <span id="totalQuantity">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>总米数：</span>
+                            <span id="totalMeters">0.0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelBtn">取消</button>
+                <button type="button" class="btn primary" id="saveBtn">
+                    <span id="saveButtonText">批量保存</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 发货管理模态框 -->
+    <div class="modal" id="shippingModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="shippingModalTitle">批量发货管理</h3>
+                <div class="modal-header-actions">
+                    <button class="modal-close" id="closeShippingModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+
+
+                <!-- 批量发货模式 -->
+                <div id="batchShippingMode" class="shipping-mode">
+                    <div class="batch-shipping-header">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="batchShippingDate">发货日期 *</label>
+                                <input type="date" id="batchShippingDate" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="batchCustomerName">客户名称 *</label>
+                                <select id="batchCustomerName" required>
+                                    <option value="">请选择客户</option>
+                                    <option value="南通际铨">南通际铨</option>
+                                    <option value="盐城恒逸明">盐城恒逸明</option>
+                                    <option value="绍兴精工">绍兴精工</option>
+                                    <option value="上海福铁龙">上海福铁龙</option>
+                                    <option value="苏州良浦">苏州良浦</option>
+                                    <option value="南通顶德">南通顶德</option>
+                                    <option value="南通科达">南通科达</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="batchTransportCompany">运输公司</label>
+                                <input type="text" id="batchTransportCompany" placeholder="请输入运输公司">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="batchTrackingNumber">运单号</label>
+                                <input type="text" id="batchTrackingNumber" placeholder="请输入运单号">
+                            </div>
+                            <div class="form-group">
+                                <label for="batchDeliveryAddress">收货地址</label>
+                                <input type="text" id="batchDeliveryAddress" placeholder="请输入收货地址">
+                            </div>
+                        </div>
+
+                        <!-- 搜索功能 -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="specSearchInput">搜索规格型号</label>
+                                <input type="text" id="specSearchInput" placeholder="输入规格型号进行搜索，如：H100、1200mm等">
+                            </div>
+                            <div class="form-group">
+                                <button type="button" class="btn btn-secondary" id="clearSearchBtn">
+                                    <i class="fas fa-times"></i>
+                                    清空搜索
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="button" class="btn btn-info" id="loadAvailableItems">
+                                <i class="fas fa-search"></i>
+                                加载可发货项目
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="batch-shipping-table-container">
+                        <table class="batch-shipping-table">
+                            <thead>
+                                <tr>
+                                    <th>规格型号</th>
+                                    <th>可发货数量</th>
+                                    <th>发货数量</th>
+                                    <th>合计米数</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batchShippingTableBody">
+                                <!-- 批量发货项目将通过JavaScript动态添加 -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 发货购物车 -->
+                    <div class="shipping-cart-section">
+                        <div class="shipping-cart-header">
+                            <h4>
+                                <i class="fas fa-shopping-cart"></i>
+                                发货单
+                            </h4>
+                            <button type="button" class="btn btn-sm btn-outline" onclick="dataManager.clearShippingCart()">
+                                <i class="fas fa-trash"></i>
+                                清空发货单
+                            </button>
+                        </div>
+                        <div class="shipping-cart-container" id="shippingCartContainer">
+                            <div class="empty-cart">
+                                <i class="fas fa-shopping-cart"></i>
+                                <p>发货单为空，请选择规格加入发货单</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="batch-shipping-summary">
+                        <div class="summary-item">
+                            <span>发货规格数：</span>
+                            <span id="totalShippingSpecs">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>发货总根数：</span>
+                            <span id="totalShippingQuantity">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>发货总重量：</span>
+                            <span id="totalShippingWeight">0.0 kg</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>发货总米数：</span>
+                            <span id="totalShippingMeters">0.0 m</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="batchShippingRemarks">发货备注</label>
+                        <textarea id="batchShippingRemarks" rows="3" placeholder="请输入发货备注"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelShippingBtn">取消</button>
+                <button type="button" class="btn info" id="previewShippingBtn" style="display: none;">
+                    <i class="fas fa-eye"></i>
+                    预览发货单
+                </button>
+                <button type="button" class="btn success" id="exportShippingBtn" style="display: none;">
+                    <i class="fas fa-download"></i>
+                    导出发货单
+                </button>
+                <button type="button" class="btn primary" id="confirmShippingBtn">
+                    <span id="shippingButtonText">批量发货</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 发货历史模态框 -->
+    <div class="modal large" id="shippingHistoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>发货历史管理</h3>
+                <div class="modal-header-actions">
+                    <button type="button" class="btn btn-outline" id="refreshShippingHistoryBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        刷新
+                    </button>
+                    <button class="modal-close" id="closeShippingHistoryModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- 筛选区域 -->
+                <div class="shipping-history-filters">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="historyDateFrom">开始日期：</label>
+                            <input type="date" id="historyDateFrom">
+                        </div>
+                        <div class="form-group">
+                            <label for="historyDateTo">结束日期：</label>
+                            <input type="date" id="historyDateTo">
+                        </div>
+                        <div class="form-group">
+                            <label for="historyCustomer">客户：</label>
+                            <select id="historyCustomer">
+                                <option value="">全部客户</option>
+                                <option value="南通际铨">南通际铨</option>
+                                <option value="盐城恒逸明">盐城恒逸明</option>
+                                <option value="绍兴精工">绍兴精工</option>
+                                <option value="上海福铁龙">上海福铁龙</option>
+                                <option value="苏州良浦">苏州良浦</option>
+                                <option value="南通顶德">南通顶德</option>
+                                <option value="南通科达">南通科达</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" class="btn btn-info" id="filterShippingHistoryBtn">
+                                <i class="fas fa-search"></i>
+                                筛选
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 发货记录列表 -->
+                <div class="shipping-history-list" id="shippingHistoryList">
+                    <!-- 发货记录将通过JavaScript动态生成 -->
+                </div>
+
+                <!-- 统计信息 -->
+                <div class="shipping-history-summary">
+                    <div class="summary-item">
+                        <span>发货次数：</span>
+                        <span id="totalShippingRecords">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>总发货量：</span>
+                        <span id="totalShippedQuantity">0 根</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>总发货重量：</span>
+                        <span id="totalShippedWeight">0.0 kg</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>总发货米数：</span>
+                        <span id="totalShippedMeters">0.0 m</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelShippingHistoryBtn">关闭</button>
+                <button type="button" class="btn success" id="exportShippingHistoryBtn">
+                    <i class="fas fa-download"></i>
+                    导出历史
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 发货详情编辑模态框 -->
+    <div class="modal large" id="shippingDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="shippingDetailTitle">发货详情</h3>
+                <div class="modal-header-actions">
+                    <button type="button" class="btn btn-outline" id="toggleShippingEditMode">
+                        <i class="fas fa-edit"></i>
+                        <span id="editModeText">编辑</span>
+                    </button>
+                    <button class="modal-close" id="closeShippingDetailModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- 发货基本信息 -->
+                <div class="shipping-detail-info">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="detailShippingDate">发货日期：</label>
+                            <input type="date" id="detailShippingDate" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="detailCustomerName">客户名称：</label>
+                            <input type="text" id="detailCustomerName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="detailTransportCompany">运输公司：</label>
+                            <input type="text" id="detailTransportCompany" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="detailTrackingNumber">运单号：</label>
+                            <input type="text" id="detailTrackingNumber" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="detailDeliveryAddress">收货地址：</label>
+                            <input type="text" id="detailDeliveryAddress" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="detailShippingRemarks">发货备注：</label>
+                        <textarea id="detailShippingRemarks" rows="2" readonly></textarea>
+                    </div>
+                </div>
+
+                <!-- 发货项目列表 -->
+                <div class="shipping-detail-items">
+                    <div class="section-header">
+                        <h4>发货项目</h4>
+                        <button type="button" class="btn btn-sm btn-success" id="addShippingItemBtn" style="display: none;">
+                            <i class="fas fa-plus"></i>
+                            添加项目
+                        </button>
+                    </div>
+                    <div class="shipping-items-table-container">
+                        <table class="shipping-items-table">
+                            <thead>
+                                <tr>
+                                    <th>规格型号</th>
+                                    <th>发货数量</th>
+                                    <th>重量(kg)</th>
+                                    <th>米数(m)</th>
+                                    <th class="edit-mode-column" style="display: none;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="shippingDetailItemsBody">
+                                <!-- 发货项目将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 发货汇总 -->
+                <div class="shipping-detail-summary">
+                    <div class="summary-item">
+                        <span>规格数量：</span>
+                        <span id="detailTotalSpecs">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>总根数：</span>
+                        <span id="detailTotalQuantity">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>总重量：</span>
+                        <span id="detailTotalWeight">0.0 kg</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>总米数：</span>
+                        <span id="detailTotalMeters">0.0 m</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelShippingDetailBtn">取消</button>
+                <button type="button" class="btn danger" id="deleteShippingRecordBtn" style="display: none;">
+                    <i class="fas fa-trash"></i>
+                    删除发货记录
+                </button>
+                <button type="button" class="btn primary" id="saveShippingDetailBtn" style="display: none;">
+                    <i class="fas fa-save"></i>
+                    保存修改
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量操作模态框 -->
+    <div class="modal" id="batchModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>批量操作</h3>
+                <button class="modal-close" id="closeBatchModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="batch-options">
+                    <div class="batch-option" data-action="updateStatus">
+                        <i class="fas fa-edit"></i>
+                        <span>批量更新状态</span>
+                    </div>
+                    <div class="batch-option" data-action="updateProduction">
+                        <i class="fas fa-plus"></i>
+                        <span>批量增加生产数量</span>
+                    </div>
+                    <div class="batch-option" data-action="batchShipping">
+                        <i class="fas fa-truck"></i>
+                        <span>批量发货</span>
+                    </div>
+                    <div class="batch-option" data-action="delete">
+                        <i class="fas fa-trash"></i>
+                        <span>批量删除</span>
+                    </div>
+                </div>
+
+                <div class="batch-form" id="batchForm" style="display: none;">
+                    <!-- 批量操作表单将根据选择的操作动态生成 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelBatchBtn">取消</button>
+                <button type="button" class="btn primary" id="executeBatchBtn" style="display: none;">执行操作</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Excel导入模态框 -->
+    <div class="modal" id="excelImportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Excel数据导入</h3>
+                <button class="modal-close" id="closeExcelImportModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="import-instructions">
+                    <div class="instruction-item">
+                        <i class="fas fa-magic"></i>
+                        <span>系统可自动识别Excel表格中的型号，型号选择为可选项</span>
+                    </div>
+                    <div class="instruction-item">
+                        <i class="fas fa-info-circle"></i>
+                        <span>请选择工地区域，然后选择Excel文件</span>
+                    </div>
+                    <div class="instruction-item">
+                        <i class="fas fa-file-excel"></i>
+                        <span>支持.xlsx和.xls格式文件</span>
+                    </div>
+                    <div class="instruction-item">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>导入的数据将添加到现有数据中，不会覆盖</span>
+                    </div>
+                </div>
+
+                <form id="excelImportForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="importTypeSelect">型号 <span style="color: #6b7280; font-size: 12px;">(可选，系统可自动识别)</span></label>
+                            <select id="importTypeSelect">
+                                <option value="">自动识别型号</option>
+                                <option value="H100">强制使用 H100</option>
+                                <option value="H80">强制使用 H80</option>
+                                <option value="H120">强制使用 H120</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="importAreaSelect">工地区域 *</label>
+                            <select id="importAreaSelect" required>
+                                <option value="">请选择工地区域</option>
+                                <option value="C1">C1区域</option>
+                                <option value="C2">C2区域</option>
+                                <option value="C3">C3区域</option>
+                                <option value="E1">E1区域</option>
+                                <option value="E3">E3区域</option>
+                                <option value="D6">D6区域</option>
+                                <option value="A14">A14区域</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="excelFileInput">选择Excel文件 *</label>
+                        <div class="file-input-container">
+                            <input type="file" id="excelFileInput" accept=".xlsx,.xls" required>
+                            <div class="file-input-info">
+                                <i class="fas fa-upload"></i>
+                                <span>点击选择文件或拖拽文件到此处</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="importRemarks">导入备注</label>
+                        <textarea id="importRemarks" rows="3" placeholder="请输入导入备注信息（可选）"></textarea>
+                    </div>
+                </form>
+
+                <!-- 预览区域 -->
+                <div id="importPreview" style="display: none;">
+                    <h4>数据预览</h4>
+                    <div class="preview-info">
+                        <span>预览前5行数据，共 <span id="previewTotalRows">0</span> 行</span>
+                    </div>
+                    <div class="preview-table-container">
+                        <table class="preview-table">
+                            <thead id="previewTableHead">
+                                <!-- 表头将动态生成 -->
+                            </thead>
+                            <tbody id="previewTableBody">
+                                <!-- 预览数据将动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelExcelImportBtn">取消</button>
+                <button type="button" class="btn info" id="quickImportBtn" disabled>
+                    <i class="fas fa-bolt"></i>
+                    快速导入
+                </button>
+                <button type="button" class="btn primary" id="previewExcelBtn" disabled>
+                    <i class="fas fa-eye"></i>
+                    预览数据
+                </button>
+                <button type="button" class="btn success" id="confirmExcelImportBtn" disabled>
+                    <i class="fas fa-upload"></i>
+                    确认导入
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 原材料采购管理模态框 -->
+    <div class="modal" id="materialModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="materialModalTitle">原材料采购管理</h3>
+                <div class="modal-header-actions">
+                    <button type="button" class="btn btn-outline" id="toggleMaterialMode">
+                        <i class="fas fa-history"></i>
+                        <span id="materialModeText">查看记录</span>
+                    </button>
+                    <button class="modal-close" id="closeMaterialModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- 新增采购模式 -->
+                <div id="addMaterialMode" class="material-mode">
+                    <form id="materialForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="materialDate">采购日期 *</label>
+                                <input type="date" id="materialDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="materialQuantity">采购吨位 *</label>
+                                <input type="number" id="materialQuantity" min="0.1" step="0.1" required placeholder="请输入采购吨位">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="materialDiameter">钢筋直径 *</label>
+                                <select id="materialDiameter" required>
+                                    <option value="">请选择直径</option>
+                                    <option value="4mm">4mm</option>
+                                    <option value="5mm">5mm</option>
+                                    <option value="6mm">6mm</option>
+                                    <option value="8mm">8mm</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="materialSupplier">供应厂家 *</label>
+                                <select id="materialSupplier" required>
+                                    <option value="">请选择厂家</option>
+                                    <option value="鸿穗">鸿穗</option>
+                                    <option value="昊达鑫">昊达鑫</option>
+                                    <option value="河北晟科">河北晟科</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="materialPrice">单价（元/吨）</label>
+                                <input type="number" id="materialPrice" min="0" step="0.01" placeholder="请输入单价">
+                            </div>
+                            <div class="form-group">
+                                <label for="materialBatch">批次号</label>
+                                <input type="text" id="materialBatch" placeholder="请输入批次号">
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="materialRemarks">备注</label>
+                            <textarea id="materialRemarks" rows="3" placeholder="请输入备注信息"></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 历史记录模式 -->
+                <div id="materialHistoryMode" class="material-mode" style="display: none;">
+                    <div class="material-history-header">
+                        <div class="history-filters">
+                            <div class="form-group">
+                                <label for="historyDateFrom">开始日期：</label>
+                                <input type="date" id="historyDateFrom">
+                            </div>
+                            <div class="form-group">
+                                <label for="historyDateTo">结束日期：</label>
+                                <input type="date" id="historyDateTo">
+                            </div>
+                            <div class="form-group">
+                                <label for="historySupplier">厂家：</label>
+                                <select id="historySupplier">
+                                    <option value="">全部厂家</option>
+                                    <option value="鸿穗">鸿穗</option>
+                                    <option value="昊达鑫">昊达鑫</option>
+                                    <option value="河北晟科">河北晟科</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-info" id="filterMaterialHistory">
+                                <i class="fas fa-search"></i>
+                                筛选
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="material-history-table-container">
+                        <table class="material-history-table">
+                            <thead>
+                                <tr>
+                                    <th>采购日期</th>
+                                    <th>直径</th>
+                                    <th>厂家</th>
+                                    <th>采购吨位</th>
+                                    <th>单价（元/吨）</th>
+                                    <th>总金额（元）</th>
+                                    <th>批次号</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materialHistoryTableBody">
+                                <!-- 历史记录将通过JavaScript动态添加 -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="material-summary">
+                        <div class="summary-item">
+                            <span>总采购次数：</span>
+                            <span id="totalPurchases">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>总采购吨位：</span>
+                            <span id="totalPurchasedTons">0.0 吨</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>总采购金额：</span>
+                            <span id="totalPurchaseAmount">0.00 元</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>平均单价：</span>
+                            <span id="averagePrice">0.00 元/吨</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelMaterialBtn">取消</button>
+                <button type="button" class="btn success" id="exportMaterialBtn" style="display: none;">
+                    <i class="fas fa-download"></i>
+                    导出记录
+                </button>
+                <button type="submit" class="btn primary" id="saveMaterialBtn" form="materialForm">
+                    <span id="materialButtonText">保存采购</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作日志模态框 -->
+    <div class="modal large" id="logsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>操作日志</h3>
+                <button class="modal-close" id="closeLogsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="logs-controls">
+                    <div class="logs-filters">
+                        <select id="logTypeFilter" class="filter-select">
+                            <option value="">全部操作</option>
+                            <option value="create">新增</option>
+                            <option value="update">更新</option>
+                            <option value="delete">删除</option>
+                            <option value="shipping">发货</option>
+                            <option value="batch">批量操作</option>
+                        </select>
+                        <input type="date" id="logDateFilter" class="filter-select">
+                        <button class="btn secondary" id="clearLogsBtn">清空日志</button>
+                        <button class="btn primary" id="exportLogsBtn">导出日志</button>
+                    </div>
+                </div>
+
+                <div class="logs-container">
+                    <div class="logs-list" id="logsList">
+                        <!-- 日志条目将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 云端同步配置模态框 -->
+    <div class="modal" id="cloudSyncModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>云端同步配置</h3>
+                <button class="modal-close" id="closeCloudSyncModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="sync-status-card">
+                    <div class="sync-status-header">
+                        <h4>同步状态</h4>
+                        <div class="sync-indicator" id="syncIndicator">
+                            <span class="status-dot" id="syncStatusDot"></span>
+                            <span id="syncStatusText">未配置</span>
+                        </div>
+                    </div>
+                    <div class="sync-info" id="syncInfo">
+                        <p>配置云端同步后，多个用户可以实时共享数据</p>
+                    </div>
+                </div>
+
+                <form id="cloudSyncForm">
+                    <div class="form-group">
+                        <label for="githubUsername">GitHub 用户名 *</label>
+                        <input type="text" id="githubUsername" placeholder="例如: zhangsan" required>
+                        <small>您的GitHub用户名</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="githubRepo">数据仓库名 *</label>
+                        <input type="text" id="githubRepo" placeholder="例如: production-data" required>
+                        <small>用于存储数据的GitHub仓库名（会自动创建）</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="githubToken">GitHub Token（可选）</label>
+                        <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+                        <small>
+                            用于写入数据。<a href="https://github.com/settings/tokens" target="_blank">点击获取Token</a>
+                            <br>权限需要：repo（完整仓库访问权限）
+                        </small>
+                    </div>
+
+                    <div class="sync-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="autoSync" checked>
+                            启用自动同步（每30秒）
+                        </label>
+                    </div>
+                </form>
+
+                <div class="sync-actions">
+                    <button type="button" class="btn secondary" id="testSyncBtn">
+                        <i class="fas fa-vial"></i>
+                        测试连接
+                    </button>
+                    <button type="button" class="btn primary" id="manualSyncBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        立即同步
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelCloudSyncBtn">取消</button>
+                <button type="submit" class="btn success" id="saveCloudSyncBtn" form="cloudSyncForm">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 生产数据管理模态框 -->
+    <div class="modal" id="productionManagementModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>生产数据管理</h3>
+                <div class="modal-header-actions">
+                    <button class="btn btn-outline" id="refreshProductionDataBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        刷新数据
+                    </button>
+                    <button class="modal-close" id="closeProductionManagementModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- 统计信息 -->
+                <div class="production-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">总生产记录</span>
+                        <span class="stat-value" id="totalProductionRecords">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">已生产总量</span>
+                        <span class="stat-value" id="totalProducedQuantity">0 根</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">涉及规格</span>
+                        <span class="stat-value" id="totalProductionSpecs">0 种</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">分型号统计</span>
+                        <span class="stat-value" id="totalProductionAreas">暂无数据</span>
+                    </div>
+                </div>
+
+                <!-- 筛选和操作工具栏 -->
+                <div class="production-toolbar">
+                    <div class="toolbar-filters">
+                        <select id="productionSpecFilter">
+                            <option value="">全部规格</option>
+                        </select>
+                        <select id="productionAreaFilter">
+                            <option value="">全部区域</option>
+                        </select>
+                        <input type="text" id="productionSearchInput" placeholder="搜索生产记录...">
+                    </div>
+                    <div class="toolbar-actions">
+                        <button class="btn btn-danger" id="batchDeleteProductionBtn" disabled>
+                            <i class="fas fa-trash-alt"></i>
+                            批量删除
+                        </button>
+                        <button class="btn btn-warning" id="batchEditProductionBtn" disabled>
+                            <i class="fas fa-edit"></i>
+                            批量修改
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 生产数据表格 -->
+                <div class="production-table-container">
+                    <table class="production-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllProduction">
+                                </th>
+                                <th>规格型号</th>
+                                <th>工地区域</th>
+                                <th>生产数量</th>
+                                <th>生产日期</th>
+                                <th>生产备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productionTableBody">
+                            <!-- 生产数据将动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页控制 -->
+                <div class="production-pagination">
+                    <button class="btn btn-outline" id="prevProductionPage" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                        上一页
+                    </button>
+                    <span class="pagination-info">
+                        第 <span id="currentProductionPage">1</span> 页，共 <span id="totalProductionPages">1</span> 页
+                    </span>
+                    <button class="btn btn-outline" id="nextProductionPage" disabled>
+                        下一页
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelProductionManagementBtn">关闭</button>
+                <button type="button" class="btn primary" id="exportProductionDataBtn">
+                    <i class="fas fa-download"></i>
+                    导出生产数据
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 生产记录编辑模态框 -->
+    <div class="modal" id="editProductionRecordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="editProductionRecordTitle">编辑生产记录</h3>
+                <button class="modal-close" id="closeEditProductionRecordModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editProductionRecordForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editProductionSpec">规格型号 *</label>
+                            <input type="text" id="editProductionSpec" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editProductionArea">工地区域 *</label>
+                            <input type="text" id="editProductionArea" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editProductionQuantity">生产数量 *</label>
+                            <input type="number" id="editProductionQuantity" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editProductionDate">生产日期 *</label>
+                            <input type="date" id="editProductionDate" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProductionRemarks">生产备注</label>
+                        <textarea id="editProductionRemarks" rows="3" placeholder="请输入生产备注"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelEditProductionRecordBtn">取消</button>
+                <button type="submit" class="btn primary" form="editProductionRecordForm">
+                    <i class="fas fa-save"></i>
+                    保存修改
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增客户卡片模态框 -->
+    <div class="modal" id="addCustomerCardModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新增客户卡片</h3>
+                <button class="modal-close" id="closeAddCustomerCardModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="customer-selection-section">
+                    <h4>选择客户</h4>
+                    <p class="section-description">从现有客户中选择要添加统计卡片的客户</p>
+
+                    <div class="customer-search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="customerSearchInput" placeholder="搜索客户名称...">
+                    </div>
+
+                    <div class="customer-list" id="customerSelectionList">
+                        <!-- 客户选择列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <div class="selected-customer-section" id="selectedCustomerSection" style="display: none;">
+                    <h4>已选择客户</h4>
+                    <div class="selected-customer-info" id="selectedCustomerInfo">
+                        <!-- 选中的客户信息 -->
+                    </div>
+
+                    <div class="customer-actions">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="createShippingPlanCheckbox">
+                            <span>同时创建批次发货需求</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary" id="cancelAddCustomerCard">取消</button>
+                <button type="button" class="btn primary" id="confirmAddCustomerCard" disabled>确认添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遮罩层 -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase 实时同步 -->
+    <script src="scripts/firebase-sync.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <!-- JavaScript -->
+    <script src="scripts/performance.js"></script>
+    <script src="scripts/data-management.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="scripts/charts.js"></script>
+
+    <!-- 数据恢复脚本 -->
+    <script>
+        // 页面加载后的额外检查和修复
+        window.addEventListener('load', function() {
+            console.log('=== 页面完全加载后的数据检查 ===');
+
+            // 延迟检查，确保所有脚本都已加载
+            setTimeout(function() {
+                console.log('window.dataManager 存在:', !!window.dataManager);
+
+                if (!window.dataManager && typeof DataManager !== 'undefined') {
+                    console.log('🔧 执行最终修复...');
+                    try {
+                        window.dataManager = new DataManager();
+                        console.log('✅ 最终修复成功！');
+
+                        // 检查数据
+                        const localData = localStorage.getItem('productionData');
+                        if (localData) {
+                            const data = JSON.parse(localData);
+                            console.log('✅ 找到历史数据:', data.length, '条');
+
+                            // 确保数据加载
+                            if (window.dataManager.data.length === 0) {
+                                window.dataManager.loadFromLocalStorage();
+                                console.log('重新加载后数据条数:', window.dataManager.data.length);
+                            }
+
+                            // 更新界面
+                            setTimeout(() => {
+                                window.dataManager.renderTable();
+                                window.dataManager.updateStats();
+                                window.dataManager.renderAreaStats();
+                                window.dataManager.renderUnproducedStats();
+                                console.log('✅ 界面更新完成');
+
+                                // 显示成功消息
+                                const successMsg = document.createElement('div');
+                                successMsg.style.cssText = `
+                                    position: fixed;
+                                    top: 20px;
+                                    right: 20px;
+                                    background: #10b981;
+                                    color: white;
+                                    padding: 15px 20px;
+                                    border-radius: 8px;
+                                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                    z-index: 10000;
+                                    font-weight: bold;
+                                `;
+                                successMsg.innerHTML = `🎉 数据恢复成功！找到 ${data.length} 条历史记录`;
+                                document.body.appendChild(successMsg);
+
+                                setTimeout(() => {
+                                    successMsg.remove();
+                                }, 5000);
+                            }, 500);
+                        }
+                    } catch (error) {
+                        console.error('❌ 最终修复失败:', error);
+                    }
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

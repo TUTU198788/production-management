@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑删除功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #dc2626;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .demo-info {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .demo-info h3 {
+            color: #dc2626;
+            margin: 0 0 15px 0;
+        }
+        
+        .test-section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h4 {
+            color: #374151;
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .test-result {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 15px;
+        }
+        
+        .feature-list {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-list h5 {
+            color: #1e40af;
+            margin: 0 0 15px 0;
+        }
+        
+        .feature-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .feature-list li {
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+        
+        .test-steps {
+            background: #ecfdf5;
+            border: 1px solid #059669;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .test-steps h5 {
+            color: #047857;
+            margin: 0 0 15px 0;
+        }
+        
+        .test-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .test-steps li {
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning-box h5 {
+            color: #92400e;
+            margin: 0 0 10px 0;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>✏️ 编辑删除功能测试</h1>
+        
+        <div class="demo-info">
+            <h3>🎯 功能修复说明</h3>
+            <ul>
+                <li><strong>编辑功能修复</strong>：编辑按钮现在可以正常打开单项编辑模式</li>
+                <li><strong>删除确认优化</strong>：删除前会显示详细的记录信息确认</li>
+                <li><strong>模式切换</strong>：编辑时使用单项模式，新增时使用批量模式</li>
+                <li><strong>数据验证</strong>：编辑时会验证数据有效性和逻辑关系</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h4>✏️ 编辑功能测试</h4>
+            
+            <div class="feature-list">
+                <h5>编辑功能特点：</h5>
+                <ul>
+                    <li>点击编辑按钮打开单项编辑模式</li>
+                    <li>自动填充现有数据到表单</li>
+                    <li>支持修改所有字段（规格、区域、数量等）</li>
+                    <li>数据验证：已生产不能超过计划数量（有确认提示）</li>
+                    <li>保存后立即更新表格和统计</li>
+                </ul>
+            </div>
+            
+            <div class="test-steps">
+                <h5>测试步骤：</h5>
+                <ol>
+                    <li>在主系统中找到任意一条记录</li>
+                    <li>点击该记录的"编辑"按钮</li>
+                    <li>验证模态框是否正确打开并显示单项编辑模式</li>
+                    <li>检查表单是否自动填充了现有数据</li>
+                    <li>修改一些字段（如数量、备注等）</li>
+                    <li>点击保存，验证数据是否正确更新</li>
+                </ol>
+            </div>
+            
+            <button class="btn btn-primary" onclick="openMainSystem()">
+                <i class="fas fa-external-link-alt"></i>
+                打开主系统测试编辑
+            </button>
+        </div>
+        
+        <div class="test-section">
+            <h4>🗑️ 删除功能测试</h4>
+            
+            <div class="feature-list">
+                <h5>删除功能特点：</h5>
+                <ul>
+                    <li>点击删除按钮显示详细确认对话框</li>
+                    <li>确认对话框显示完整记录信息</li>
+                    <li>包含规格、区域、计划数量、已生产、已发货等信息</li>
+                    <li>明确提示"此操作不可撤销"</li>
+                    <li>确认后立即删除并更新界面</li>
+                </ul>
+            </div>
+            
+            <div class="test-steps">
+                <h5>测试步骤：</h5>
+                <ol>
+                    <li>在主系统中找到一条测试记录</li>
+                    <li>点击该记录的"删除"按钮</li>
+                    <li>验证确认对话框是否显示详细信息</li>
+                    <li>检查信息是否准确（规格、数量等）</li>
+                    <li>点击"确定"确认删除</li>
+                    <li>验证记录是否从表格中消失</li>
+                    <li>检查统计数据是否相应更新</li>
+                </ol>
+            </div>
+            
+            <div class="warning-box">
+                <h5>⚠️ 删除测试注意事项</h5>
+                <ul>
+                    <li>建议先备份重要数据</li>
+                    <li>可以先创建测试记录进行删除测试</li>
+                    <li>删除操作真实有效，无法撤销</li>
+                    <li>删除后相关的发货记录也会受影响</li>
+                </ul>
+            </div>
+            
+            <button class="btn btn-danger" onclick="openMainSystem()">
+                <i class="fas fa-external-link-alt"></i>
+                打开主系统测试删除
+            </button>
+        </div>
+        
+        <div class="test-section">
+            <h4>🔧 功能验证清单</h4>
+            
+            <div class="test-result" id="testChecklist">
+请按照以下清单逐项测试：
+
+□ 编辑功能测试
+  □ 点击编辑按钮能正常打开模态框
+  □ 模态框显示单项编辑模式（不是批量模式）
+  □ 表单字段自动填充现有数据
+  □ 规格选择器正确显示当前规格
+  □ 可以修改各个字段
+  □ 保存后数据正确更新
+  □ 界面立即刷新显示新数据
+
+□ 删除功能测试
+  □ 点击删除按钮显示确认对话框
+  □ 确认对话框显示详细记录信息
+  □ 信息包含：规格、区域、计划数量、已生产、已发货
+  □ 显示"此操作不可撤销"警告
+  □ 点击确定后记录被删除
+  □ 表格立即更新，记录消失
+  □ 统计数据相应调整
+
+□ 数据验证测试
+  □ 编辑时输入无效数据会有错误提示
+  □ 已生产数量超过计划数量会有确认提示
+  □ 必填字段为空时会有验证提示
+  □ 保存成功后显示成功通知
+
+□ 界面交互测试
+  □ 模态框可以正常打开和关闭
+  □ 表单重置功能正常
+  □ 按钮状态正确（启用/禁用）
+  □ 加载状态显示正常
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h4>🛠️ 操作工具</h4>
+            <button class="btn btn-primary" onclick="openMainSystem()">
+                <i class="fas fa-external-link-alt"></i>
+                打开主系统
+            </button>
+            <button class="btn btn-success" onclick="createTestData()">
+                <i class="fas fa-plus"></i>
+                创建测试数据
+            </button>
+            <button class="btn btn-warning" onclick="checkConsole()">
+                <i class="fas fa-bug"></i>
+                检查控制台
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function openMainSystem() {
+            window.open('index.html', '_blank');
+        }
+        
+        function createTestData() {
+            alert('请在主系统中使用"新增生产"功能创建测试数据\n\n建议创建：\n• 规格：H100-1000mm\n• 区域：测试区域\n• 计划数量：100\n• 已生产：50\n\n这样可以安全地进行编辑和删除测试');
+        }
+        
+        function checkConsole() {
+            alert('请打开浏览器开发者工具（F12）查看控制台\n\n查看是否有：\n• JavaScript错误\n• 网络请求失败\n• 数据加载问题\n• 功能执行日志');
+        }
+        
+        // 页面加载时的提示
+        window.onload = function() {
+            console.log('编辑删除功能测试页面已加载');
+            console.log('请按照测试清单逐项验证功能');
+        };
+    </script>
+</body>
+</html>

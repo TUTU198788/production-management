@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>未生产规格分组显示测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #1e40af;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            color: #059669;
+            margin-top: 0;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list li::before {
+            content: '✅';
+            margin-right: 10px;
+        }
+        
+        .demo-container {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .spec-type-header {
+            margin: 20px 0 15px 0;
+        }
+        
+        .spec-type-header:first-child {
+            margin-top: 0;
+        }
+        
+        .spec-type-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e5e7eb;
+            border-left: 4px solid #3b82f6;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .spec-type-title.h80 {
+            border-left-color: #10b981;
+        }
+        
+        .spec-type-title.other {
+            border-left-color: #f59e0b;
+        }
+        
+        .spec-type-title h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .spec-type-count {
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        .spec-type-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .unproduced-spec-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .unproduced-spec-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #f59e0b, #ea580c);
+        }
+        
+        .unproduced-spec-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .unproduced-spec-card.h100::before {
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        }
+        
+        .unproduced-spec-card.h80::before {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+        
+        .unproduced-spec-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+        
+        .unproduced-spec-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 8px 0;
+        }
+        
+        .unproduced-spec-unit {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        
+        .unproduced-spec-progress {
+            width: 100%;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+        
+        .unproduced-spec-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+        
+        .unproduced-spec-details {
+            font-size: 11px;
+            color: #6b7280;
+            line-height: 1.3;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .comparison-item {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .before {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+        
+        .after {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .before h4 {
+            color: #dc2626;
+            margin-top: 0;
+        }
+        
+        .after h4 {
+            color: #059669;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 未生产规格分组显示功能</h1>
+        
+        <div class="test-section">
+            <h3>🎯 功能概述</h3>
+            <p>未生产规格统计功能已升级，现在支持按型号分组显示，让H80和H100规格分别排序，便于管理和查看：</p>
+            <ul class="feature-list">
+                <li><strong>按型号分组</strong>：H100、H80、其他规格分别显示</li>
+                <li><strong>分组内排序</strong>：每个分组内按未生产量从多到少排序</li>
+                <li><strong>清晰区分</strong>：不同型号使用不同颜色标识</li>
+                <li><strong>统计信息</strong>：显示每个分组的规格数量</li>
+                <li><strong>保持功能</strong>：原有的详细信息和进度条功能完整保留</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🎨 新的显示效果</h3>
+            <p>现在的未生产规格统计按型号分组显示，每个分组内按未生产量排序：</p>
+            
+            <div class="demo-container">
+                <!-- H100规格组 -->
+                <div class="spec-type-header">
+                    <div class="spec-type-title">
+                        <h4>H100 规格</h4>
+                        <span class="spec-type-count">3 个规格</span>
+                    </div>
+                </div>
+                
+                <div class="spec-type-container">
+                    <div class="unproduced-spec-card h100">
+                        <div class="unproduced-spec-title">H100-1400mm</div>
+                        <div class="unproduced-spec-value">450</div>
+                        <div class="unproduced-spec-unit">根 (待生产)</div>
+                        <div class="unproduced-spec-progress">
+                            <div class="unproduced-spec-progress-bar" style="width: 65%"></div>
+                        </div>
+                        <div class="unproduced-spec-details">
+                            <div>计划: 1,200根</div>
+                            <div>已产: 750根</div>
+                            <div>完成: 62.5%</div>
+                            <div>区域: C1, C3</div>
+                        </div>
+                    </div>
+                    
+                    <div class="unproduced-spec-card h100">
+                        <div class="unproduced-spec-title">H100-1200mm</div>
+                        <div class="unproduced-spec-value">320</div>
+                        <div class="unproduced-spec-unit">根 (待生产)</div>
+                        <div class="unproduced-spec-progress">
+                            <div class="unproduced-spec-progress-bar" style="width: 45%"></div>
+                        </div>
+                        <div class="unproduced-spec-details">
+                            <div>计划: 800根</div>
+                            <div>已产: 480根</div>
+                            <div>完成: 60.0%</div>
+                            <div>区域: D2, E1</div>
+                        </div>
+                    </div>
+                    
+                    <div class="unproduced-spec-card h100">
+                        <div class="unproduced-spec-title">H100-1000mm</div>
+                        <div class="unproduced-spec-value">180</div>
+                        <div class="unproduced-spec-unit">根 (待生产)</div>
+                        <div class="unproduced-spec-progress">
+                            <div class="unproduced-spec-progress-bar" style="width: 70%"></div>
+                        </div>
+                        <div class="unproduced-spec-details">
+                            <div>计划: 600根</div>
+                            <div>已产: 420根</div>
+                            <div>完成: 70.0%</div>
+                            <div>区域: A1</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- H80规格组 -->
+                <div class="spec-type-header">
+                    <div class="spec-type-title h80">
+                        <h4>H80 规格</h4>
+                        <span class="spec-type-count">2 个规格</span>
+                    </div>
+                </div>
+                
+                <div class="spec-type-container">
+                    <div class="unproduced-spec-card h80">
+                        <div class="unproduced-spec-title">H80-800mm</div>
+                        <div class="unproduced-spec-value">280</div>
+                        <div class="unproduced-spec-unit">根 (待生产)</div>
+                        <div class="unproduced-spec-progress">
+                            <div class="unproduced-spec-progress-bar" style="width: 55%"></div>
+                        </div>
+                        <div class="unproduced-spec-details">
+                            <div>计划: 900根</div>
+                            <div>已产: 620根</div>
+                            <div>完成: 68.9%</div>
+                            <div>区域: B2, C2</div>
+                        </div>
+                    </div>
+                    
+                    <div class="unproduced-spec-card h80">
+                        <div class="unproduced-spec-title">H80-600mm</div>
+                        <div class="unproduced-spec-value">150</div>
+                        <div class="unproduced-spec-unit">根 (待生产)</div>
+                        <div class="unproduced-spec-progress">
+                            <div class="unproduced-spec-progress-bar" style="width: 75%"></div>
+                        </div>
+                        <div class="unproduced-spec-details">
+                            <div>计划: 600根</div>
+                            <div>已产: 450根</div>
+                            <div>完成: 75.0%</div>
+                            <div>区域: F1</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 改进对比</h3>
+            <div class="comparison-grid">
+                <div class="comparison-item before">
+                    <h4>❌ 原来的显示方式</h4>
+                    <ul style="font-size: 14px; color: #7f1d1d;">
+                        <li>所有规格混合显示</li>
+                        <li>H80和H100规格混在一起</li>
+                        <li>难以快速区分型号</li>
+                        <li>查找特定型号不便</li>
+                    </ul>
+                </div>
+                <div class="comparison-item after">
+                    <h4>✅ 现在的显示方式</h4>
+                    <ul style="font-size: 14px; color: #064e3b;">
+                        <li>按型号清晰分组显示</li>
+                        <li>H100、H80分别排序</li>
+                        <li>颜色区分不同型号</li>
+                        <li>快速定位特定规格</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎨 颜色标识系统</h3>
+            <p>不同型号使用不同的颜色标识，便于快速识别：</p>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0;">
+                <div style="text-align: center;">
+                    <div style="width: 100%; height: 4px; background: linear-gradient(90deg, #3b82f6, #1d4ed8); border-radius: 2px; margin-bottom: 8px;"></div>
+                    <strong style="color: #3b82f6;">H100 规格</strong>
+                    <div style="font-size: 12px; color: #6b7280;">蓝色标识</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #059669); border-radius: 2px; margin-bottom: 8px;"></div>
+                    <strong style="color: #10b981;">H80 规格</strong>
+                    <div style="font-size: 12px; color: #6b7280;">绿色标识</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 100%; height: 4px; background: linear-gradient(90deg, #f59e0b, #ea580c); border-radius: 2px; margin-bottom: 8px;"></div>
+                    <strong style="color: #f59e0b;">其他规格</strong>
+                    <div style="font-size: 12px; color: #6b7280;">橙色标识</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 排序逻辑</h3>
+            <ul class="feature-list">
+                <li><strong>分组排序</strong>：先按型号分组（H100 → H80 → 其他）</li>
+                <li><strong>组内排序</strong>：每个分组内按未生产量从多到少排序</li>
+                <li><strong>优先级明确</strong>：未生产量大的规格优先显示</li>
+                <li><strong>便于管理</strong>：管理者可快速识别需要优先生产的规格</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 技术实现</h3>
+            <p>新的分组显示功能通过以下技术实现：</p>
+            <ul class="feature-list">
+                <li><strong>数据分组</strong>：按规格名称前缀自动分组</li>
+                <li><strong>分别排序</strong>：每个分组内独立排序</li>
+                <li><strong>动态渲染</strong>：根据数据动态生成分组标题和卡片</li>
+                <li><strong>样式区分</strong>：使用CSS类和颜色区分不同型号</li>
+                <li><strong>响应式布局</strong>：适配不同屏幕尺寸</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>💡 使用优势</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="padding: 15px; background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px;">
+                    <h4 style="color: #1d4ed8; margin-top: 0;">🎯 管理便捷</h4>
+                    <ul style="font-size: 14px; color: #1e3a8a;">
+                        <li>快速定位特定型号</li>
+                        <li>清晰的优先级排序</li>
+                        <li>直观的进度显示</li>
+                        <li>便于制定生产计划</li>
+                    </ul>
+                </div>
+                <div style="padding: 15px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px;">
+                    <h4 style="color: #059669; margin-top: 0;">📊 数据清晰</h4>
+                    <ul style="font-size: 14px; color: #064e3b;">
+                        <li>型号分组一目了然</li>
+                        <li>颜色标识易于识别</li>
+                        <li>统计信息完整准确</li>
+                        <li>支持多种规格类型</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 未来扩展</h3>
+            <p>基于新的分组架构，未来可以轻松扩展更多功能：</p>
+            <ul class="feature-list">
+                <li><strong>更多型号支持</strong>：轻松添加H120、H150等新型号</li>
+                <li><strong>自定义分组</strong>：支持按区域、客户等维度分组</li>
+                <li><strong>分组统计</strong>：显示每个分组的汇总统计信息</li>
+                <li><strong>筛选功能</strong>：支持按分组筛选显示</li>
+                <li><strong>导出功能</strong>：按分组导出统计报告</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生产数据管理功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #059669;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-info {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .test-info h3 {
+            color: #3b82f6;
+            margin: 0 0 15px 0;
+        }
+        
+        .test-info ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .test-info li {
+            margin: 8px 0;
+        }
+        
+        .big-button {
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            width: calc(33.33% - 20px);
+            box-sizing: border-box;
+        }
+        
+        .big-button:hover {
+            background: #047857;
+        }
+        
+        .big-button.secondary {
+            background: #3b82f6;
+        }
+        
+        .big-button.secondary:hover {
+            background: #2563eb;
+        }
+        
+        .big-button.warning {
+            background: #f59e0b;
+        }
+        
+        .big-button.warning:hover {
+            background: #d97706;
+        }
+        
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+        }
+        
+        .metric-card::after {
+            content: '点击管理';
+            position: absolute;
+            bottom: 8px;
+            right: 12px;
+            font-size: 10px;
+            opacity: 0.8;
+        }
+        
+        .metric-content h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .metric-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .metric-unit {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .metric-subtitle {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        
+        .result {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #ecfdf5;
+            border: 2px solid #059669;
+            color: #059669;
+        }
+        
+        .info {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .warning {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            color: #f59e0b;
+        }
+        
+        .error {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            color: #dc2626;
+        }
+        
+        .data-summary {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+        }
+        
+        .data-label {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .data-value {
+            color: #059669;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 生产数据管理功能测试</h1>
+        
+        <div class="test-info">
+            <h3>🧪 功能测试说明</h3>
+            <ul>
+                <li><strong>点击已生产量卡片</strong>：测试卡片点击事件和模态框打开</li>
+                <li><strong>查看生产记录</strong>：显示所有生产记录的详细信息</li>
+                <li><strong>编辑生产记录</strong>：修改生产数量、日期、备注等信息</li>
+                <li><strong>删除生产记录</strong>：单个删除或批量删除生产记录</li>
+                <li><strong>筛选和搜索</strong>：按规格、区域筛选，支持关键词搜索</li>
+                <li><strong>数据导出</strong>：导出生产记录为JSON格式</li>
+            </ul>
+        </div>
+        
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <button class="big-button" onclick="testProductionCard()">
+                📊 测试已生产量卡片
+            </button>
+            
+            <button class="big-button secondary" onclick="checkProductionData()">
+                🔍 检查生产数据
+            </button>
+            
+            <button class="big-button warning" onclick="openMainPage()">
+                🏠 打开主页面
+            </button>
+        </div>
+        
+        <div class="demo-section">
+            <h3>🎯 模拟已生产量卡片</h3>
+            <p>点击下面的卡片来测试生产数据管理功能：</p>
+            
+            <div class="metric-card" onclick="simulateProductionManagement()">
+                <div class="metric-content">
+                    <h3>已生产量</h3>
+                    <div class="metric-value" id="demoProducedValue">0</div>
+                    <div class="metric-unit">米 (m)</div>
+                    <div class="metric-subtitle">累计完成生产</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="data-summary" id="dataSummary" style="display: none;">
+            <h4>📋 当前生产数据概览</h4>
+            <div id="dataItems">
+                <!-- 数据项将在这里显示 -->
+            </div>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const result = document.createElement('div');
+            result.className = 'result ' + type;
+            result.innerHTML = message;
+            resultsDiv.appendChild(result);
+        }
+        
+        function testProductionCard() {
+            addResult('🎯 测试已生产量卡片点击功能...', 'info');
+            
+            // 检查是否有生产数据
+            const productionData = localStorage.getItem('productionData');
+            if (!productionData) {
+                addResult('❌ 没有找到生产数据，请先在主页面添加一些生产数据', 'error');
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(productionData);
+                const producedItems = data.filter(item => item.produced > 0);
+                
+                if (producedItems.length === 0) {
+                    addResult('⚠️ 没有已生产的数据，请先在主页面添加一些生产记录', 'warning');
+                    return;
+                }
+                
+                addResult(`✅ 找到 ${producedItems.length} 个已生产项目`, 'success');
+                addResult('💡 请在主页面点击"已生产量"卡片来测试功能', 'info');
+                
+            } catch (error) {
+                addResult(`❌ 数据解析失败：${error.message}`, 'error');
+            }
+        }
+        
+        function checkProductionData() {
+            addResult('🔍 检查生产数据结构...', 'info');
+            
+            const productionData = localStorage.getItem('productionData');
+            if (!productionData) {
+                addResult('❌ 没有找到生产数据', 'error');
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(productionData);
+                let totalProduced = 0;
+                let recordsWithProduction = 0;
+                let recordsWithDetails = 0;
+                
+                data.forEach(item => {
+                    if (item.produced > 0) {
+                        totalProduced += item.produced;
+                        recordsWithProduction++;
+                        
+                        if (item.productionRecords && Array.isArray(item.productionRecords)) {
+                            recordsWithDetails++;
+                        }
+                    }
+                });
+                
+                // 更新演示卡片
+                document.getElementById('demoProducedValue').textContent = totalProduced;
+                
+                // 显示数据概览
+                const dataSummary = document.getElementById('dataSummary');
+                const dataItems = document.getElementById('dataItems');
+                
+                dataItems.innerHTML = `
+                    <div class="data-item">
+                        <span class="data-label">总记录数</span>
+                        <span class="data-value">${data.length}</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">有生产数据的记录</span>
+                        <span class="data-value">${recordsWithProduction}</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">有详细生产记录的项目</span>
+                        <span class="data-value">${recordsWithDetails}</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">总生产数量</span>
+                        <span class="data-value">${totalProduced} 根</span>
+                    </div>
+                `;
+                
+                dataSummary.style.display = 'block';
+                
+                addResult(`✅ 数据检查完成！`, 'success');
+                addResult(`📊 共 ${data.length} 条记录，其中 ${recordsWithProduction} 条有生产数据`, 'info');
+                addResult(`🔧 ${recordsWithDetails} 条记录有详细的生产记录`, 'info');
+                
+            } catch (error) {
+                addResult(`❌ 数据检查失败：${error.message}`, 'error');
+            }
+        }
+        
+        function simulateProductionManagement() {
+            addResult('🎯 模拟点击已生产量卡片...', 'info');
+            addResult('💡 这里模拟了卡片点击事件，实际功能请在主页面测试', 'info');
+            addResult('📋 生产数据管理功能包括：', 'info');
+            addResult('• 查看所有生产记录的详细信息', 'info');
+            addResult('• 编辑生产数量、日期、备注', 'info');
+            addResult('• 单个删除或批量删除记录', 'info');
+            addResult('• 按规格、区域筛选数据', 'info');
+            addResult('• 搜索和分页浏览', 'info');
+            addResult('• 导出生产记录数据', 'info');
+        }
+        
+        function openMainPage() {
+            window.open('index.html', '_blank');
+        }
+        
+        // 页面加载时自动检查数据
+        window.onload = function() {
+            setTimeout(checkProductionData, 500);
+        };
+    </script>
+</body>
+</html>

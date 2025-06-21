@@ -1,0 +1,3219 @@
+{
+  "exportTime": "2025-06-19T01:20:18.950Z",
+  "data": [
+    {
+      "id": 1,
+      "spec": "H100-400mm",
+      "area": "C2",
+      "planned": 2,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 2,
+      "spec": "H100-1400mm",
+      "area": "C2",
+      "planned": 2,
+      "produced": 2,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 2,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "spec": "H100-1600mm",
+      "area": "C2",
+      "planned": 4,
+      "produced": 4,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 4,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "spec": "H100-1800mm",
+      "area": "C2",
+      "planned": 8,
+      "produced": 8,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-04",
+          "quantity": 8,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "spec": "H100-2000mm",
+      "area": "C2",
+      "planned": 68,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 6,
+      "spec": "H100-2200mm",
+      "area": "C2",
+      "planned": 12,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 7,
+      "spec": "H100-2400mm",
+      "area": "C2",
+      "planned": 66,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 8,
+      "spec": "H100-2800mm",
+      "area": "C2",
+      "planned": 23,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 9,
+      "spec": "H100-3000mm",
+      "area": "C2",
+      "planned": 13,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 10,
+      "spec": "H100-3200mm",
+      "area": "C2",
+      "planned": 4,
+      "produced": 4,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 4,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "spec": "H100-3400mm",
+      "area": "C2",
+      "planned": 8,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 12,
+      "spec": "H100-3600mm",
+      "area": "C2",
+      "planned": 66,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 13,
+      "spec": "H100-3800mm",
+      "area": "C2",
+      "planned": 25,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 14,
+      "spec": "H100-4000mm",
+      "area": "C2",
+      "planned": 37,
+      "produced": 37,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-16",
+          "quantity": 37,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "spec": "H100-4200mm",
+      "area": "C2",
+      "planned": 13,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 16,
+      "spec": "H100-4400mm",
+      "area": "C2",
+      "planned": 263,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 17,
+      "spec": "H100-4600mm",
+      "area": "C2",
+      "planned": 90,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 18,
+      "spec": "H100-4800mm",
+      "area": "C2",
+      "planned": 342,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 19,
+      "spec": "H100-5000mm",
+      "area": "C2",
+      "planned": 13,
+      "produced": 13,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条标准模版.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-15",
+          "quantity": 13,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "spec": "H80-2200mm",
+      "area": "A12",
+      "planned": 6,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场A12肋条.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 21,
+      "spec": "H80-2400mm",
+      "area": "A12",
+      "planned": 5,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场A12肋条.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 22,
+      "spec": "H80-2600mm",
+      "area": "A12",
+      "planned": 2,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场A12肋条.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 23,
+      "spec": "H80-3000mm",
+      "area": "A12",
+      "planned": 2,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场A12肋条.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 24,
+      "spec": "H80-3200mm",
+      "area": "A12",
+      "planned": 14,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场A12肋条.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 25,
+      "spec": "H80-3400mm",
+      "area": "A12",
+      "planned": 127,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场A12肋条.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 26,
+      "spec": "H80-3600mm",
+      "area": "A12",
+      "planned": 113,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场A12肋条.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 27,
+      "spec": "H80-3800mm",
+      "area": "A12",
+      "planned": 35,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场A12肋条.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 28,
+      "spec": "H80-4000mm",
+      "area": "A12",
+      "planned": 42,
+      "produced": 42,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场A12肋条.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 42,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "spec": "H80-4200mm",
+      "area": "A12",
+      "planned": 3,
+      "produced": 3,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场A12肋条.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 3,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "spec": "H100-5800mm",
+      "area": "D5",
+      "planned": 11,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 31,
+      "spec": "H100-5600mm",
+      "area": "D5",
+      "planned": 11,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 32,
+      "spec": "H100-5400mm",
+      "area": "D5",
+      "planned": 15,
+      "produced": 15,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 15,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "spec": "H100-5200mm",
+      "area": "D5",
+      "planned": 58,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 34,
+      "spec": "H100-5000mm",
+      "area": "D5",
+      "planned": 33,
+      "produced": 33,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-15",
+          "quantity": 33,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "spec": "H100-4800mm",
+      "area": "D5",
+      "planned": 349,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 36,
+      "spec": "H100-4600mm",
+      "area": "D5",
+      "planned": 411,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 37,
+      "spec": "H100-4400mm",
+      "area": "D5",
+      "planned": 10,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 38,
+      "spec": "H100-4200mm",
+      "area": "D5",
+      "planned": 17,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 39,
+      "spec": "H100-4000mm",
+      "area": "D5",
+      "planned": 41,
+      "produced": 41,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-16",
+          "quantity": 41,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "spec": "H100-3800mm",
+      "area": "D5",
+      "planned": 17,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 41,
+      "spec": "H100-3600mm",
+      "area": "D5",
+      "planned": 77,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 42,
+      "spec": "H100-3400mm",
+      "area": "D5",
+      "planned": 98,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 43,
+      "spec": "H100-3200mm",
+      "area": "D5",
+      "planned": 287,
+      "produced": 287,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 79,
+          "remarks": "批量生产"
+        },
+        {
+          "date": "2025-06-18",
+          "quantity": 208,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "spec": "H100-3000mm",
+      "area": "D5",
+      "planned": 199,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 45,
+      "spec": "H100-2800mm",
+      "area": "D5",
+      "planned": 93,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 46,
+      "spec": "H100-2600mm",
+      "area": "D5",
+      "planned": 57,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 47,
+      "spec": "H100-2400mm",
+      "area": "D5",
+      "planned": 37,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 48,
+      "spec": "H100-2200mm",
+      "area": "D5",
+      "planned": 58,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 49,
+      "spec": "H100-2000mm",
+      "area": "D5",
+      "planned": 14,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 50,
+      "spec": "H100-1800mm",
+      "area": "D5",
+      "planned": 12,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 51,
+      "spec": "H100-1600mm",
+      "area": "D5",
+      "planned": 9,
+      "produced": 9,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 9,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "spec": "H100-1400mm",
+      "area": "D5",
+      "planned": 5,
+      "produced": 5,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 5,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "spec": "H100-1200mm",
+      "area": "D5",
+      "planned": 4,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 54,
+      "spec": "H100-1000mm",
+      "area": "D5",
+      "planned": 2,
+      "produced": 2,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D5.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-07",
+          "quantity": 2,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 55,
+      "spec": "H100-5000mm",
+      "area": "D6",
+      "planned": 24,
+      "produced": 24,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-15",
+          "quantity": 24,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 56,
+      "spec": "H100-4800mm",
+      "area": "D6",
+      "planned": 86,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 57,
+      "spec": "H100-4600mm",
+      "area": "D6",
+      "planned": 27,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 58,
+      "spec": "H100-4400mm",
+      "area": "D6",
+      "planned": 1,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 59,
+      "spec": "H100-4200mm",
+      "area": "D6",
+      "planned": 2,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 60,
+      "spec": "H100-4000mm",
+      "area": "D6",
+      "planned": 1,
+      "produced": 1,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-16",
+          "quantity": 1,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 61,
+      "spec": "H100-3800mm",
+      "area": "D6",
+      "planned": 1,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 62,
+      "spec": "H100-3600mm",
+      "area": "D6",
+      "planned": 1,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 63,
+      "spec": "H100-3400mm",
+      "area": "D6",
+      "planned": 54,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 64,
+      "spec": "H100-3000mm",
+      "area": "D6",
+      "planned": 2,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 65,
+      "spec": "H100-2800mm",
+      "area": "D6",
+      "planned": 31,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 66,
+      "spec": "H100-2600mm",
+      "area": "D6",
+      "planned": 8,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 67,
+      "spec": "H100-2400mm",
+      "area": "D6",
+      "planned": 12,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 68,
+      "spec": "H100-2200mm",
+      "area": "D6",
+      "planned": 8,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 69,
+      "spec": "H100-2000mm",
+      "area": "D6",
+      "planned": 9,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 70,
+      "spec": "H100-1800mm",
+      "area": "D6",
+      "planned": 9,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 71,
+      "spec": "H100-1600mm",
+      "area": "D6",
+      "planned": 7,
+      "produced": 7,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 7,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 72,
+      "spec": "H100-1400mm",
+      "area": "D6",
+      "planned": 6,
+      "produced": 2,
+      "status": "producing",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 2,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 73,
+      "spec": "H100-1200mm",
+      "area": "D6",
+      "planned": 1,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 74,
+      "spec": "H80-4000mm",
+      "area": "D6",
+      "planned": 3,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 75,
+      "spec": "H80-3800mm",
+      "area": "D6",
+      "planned": 20,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 76,
+      "spec": "H80-3600mm",
+      "area": "D6",
+      "planned": 27,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 77,
+      "spec": "H80-3400mm",
+      "area": "D6",
+      "planned": 332,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 78,
+      "spec": "H80-3200mm",
+      "area": "D6",
+      "planned": 138,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 79,
+      "spec": "H80-3000mm",
+      "area": "D6",
+      "planned": 73,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 80,
+      "spec": "H80-2800mm",
+      "area": "D6",
+      "planned": 73,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 81,
+      "spec": "H80-2600mm",
+      "area": "D6",
+      "planned": 31,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 82,
+      "spec": "H80-2400mm",
+      "area": "D6",
+      "planned": 65,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 83,
+      "spec": "H80-2200mm",
+      "area": "D6",
+      "planned": 32,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 84,
+      "spec": "H80-2000mm",
+      "area": "D6",
+      "planned": 19,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 85,
+      "spec": "H80-1800mm",
+      "area": "D6",
+      "planned": 18,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 86,
+      "spec": "H80-1600mm",
+      "area": "D6",
+      "planned": 11,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 87,
+      "spec": "H80-1400mm",
+      "area": "D6",
+      "planned": 9,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 88,
+      "spec": "H80-1200mm",
+      "area": "D6",
+      "planned": 4,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 89,
+      "spec": "H100-5000mm",
+      "area": "D4",
+      "planned": 119,
+      "produced": 119,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-15",
+          "quantity": 119,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 90,
+      "spec": "H100-4800mm",
+      "area": "D4",
+      "planned": 305,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 91,
+      "spec": "H100-4600mm",
+      "area": "D4",
+      "planned": 300,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 92,
+      "spec": "H100-4400mm",
+      "area": "D4",
+      "planned": 127,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 93,
+      "spec": "H100-4200mm",
+      "area": "D4",
+      "planned": 10,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 94,
+      "spec": "H100-4000mm",
+      "area": "D4",
+      "planned": 22,
+      "produced": 22,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-16",
+          "quantity": 22,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 95,
+      "spec": "H100-3800mm",
+      "area": "D4",
+      "planned": 10,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 96,
+      "spec": "H100-3600mm",
+      "area": "D4",
+      "planned": 51,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 97,
+      "spec": "H100-3400mm",
+      "area": "D4",
+      "planned": 31,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 98,
+      "spec": "H100-3200mm",
+      "area": "D4",
+      "planned": 63,
+      "produced": 63,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 63,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 99,
+      "spec": "H100-3000mm",
+      "area": "D4",
+      "planned": 59,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 100,
+      "spec": "H100-2800mm",
+      "area": "D4",
+      "planned": 75,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 101,
+      "spec": "H100-2600mm",
+      "area": "D4",
+      "planned": 2,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 102,
+      "spec": "H100-2400mm",
+      "area": "D4",
+      "planned": 16,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 103,
+      "spec": "H100-2200mm",
+      "area": "D4",
+      "planned": 43,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 104,
+      "spec": "H100-2000mm",
+      "area": "D4",
+      "planned": 39,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 105,
+      "spec": "H100-1800mm",
+      "area": "D4",
+      "planned": 94,
+      "produced": 3,
+      "status": "producing",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-04",
+          "quantity": 3,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 106,
+      "spec": "H100-1600mm",
+      "area": "D4",
+      "planned": 10,
+      "produced": 10,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 10,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 107,
+      "spec": "H100-1400mm",
+      "area": "D4",
+      "planned": 14,
+      "produced": 14,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 14,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 108,
+      "spec": "H100-1200mm",
+      "area": "D4",
+      "planned": 1,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 109,
+      "spec": "H100-1000mm",
+      "area": "D4",
+      "planned": 2,
+      "produced": 2,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D4.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-07",
+          "quantity": 2,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 110,
+      "spec": "H80-3600mm",
+      "area": "A5",
+      "planned": 174,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 111,
+      "spec": "H80-3400mm",
+      "area": "A5",
+      "planned": 20,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 112,
+      "spec": "H80-3200mm",
+      "area": "A5",
+      "planned": 224,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 113,
+      "spec": "H80-3000mm",
+      "area": "A5",
+      "planned": 3,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 114,
+      "spec": "H80-2600mm",
+      "area": "A5",
+      "planned": 57,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 115,
+      "spec": "H80-2400mm",
+      "area": "A5",
+      "planned": 118,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 116,
+      "spec": "H80-2200mm",
+      "area": "A5",
+      "planned": 62,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 117,
+      "spec": "H80-2000mm",
+      "area": "A5",
+      "planned": 49,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 118,
+      "spec": "H80-1800mm",
+      "area": "A5",
+      "planned": 18,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A5.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 119,
+      "spec": "H80-4800mm",
+      "area": "A3",
+      "planned": 4,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 120,
+      "spec": "H80-4600mm",
+      "area": "A3",
+      "planned": 4,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 121,
+      "spec": "H80-4200mm",
+      "area": "A3",
+      "planned": 15,
+      "produced": 15,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 15,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 122,
+      "spec": "H80-4000mm",
+      "area": "A3",
+      "planned": 26,
+      "produced": 26,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 26,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 123,
+      "spec": "H80-3800mm",
+      "area": "A3",
+      "planned": 98,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 124,
+      "spec": "H80-3600mm",
+      "area": "A3",
+      "planned": 299,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 125,
+      "spec": "H80-3400mm",
+      "area": "A3",
+      "planned": 6,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 126,
+      "spec": "H80-3200mm",
+      "area": "A3",
+      "planned": 77,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 127,
+      "spec": "H80-2800mm",
+      "area": "A3",
+      "planned": 8,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 128,
+      "spec": "H80-2600mm",
+      "area": "A3",
+      "planned": 31,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 129,
+      "spec": "H80-2400mm",
+      "area": "A3",
+      "planned": 24,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 130,
+      "spec": "H80-2200mm",
+      "area": "A3",
+      "planned": 7,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 131,
+      "spec": "H80-2000mm",
+      "area": "A3",
+      "planned": 52,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A3.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 132,
+      "spec": "H80-4200mm",
+      "area": "A4",
+      "planned": 7,
+      "produced": 7,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 7,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 133,
+      "spec": "H80-4000mm",
+      "area": "A4",
+      "planned": 80,
+      "produced": 80,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 13,
+          "remarks": "批量生产"
+        },
+        {
+          "date": "2025-06-05",
+          "quantity": 67,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 134,
+      "spec": "H80-3800mm",
+      "area": "A4",
+      "planned": 69,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 135,
+      "spec": "H80-3600mm",
+      "area": "A4",
+      "planned": 261,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 136,
+      "spec": "H80-3400mm",
+      "area": "A4",
+      "planned": 73,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 137,
+      "spec": "H80-3200mm",
+      "area": "A4",
+      "planned": 43,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 138,
+      "spec": "H80-3000mm",
+      "area": "A4",
+      "planned": 9,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 139,
+      "spec": "H80-2800mm",
+      "area": "A4",
+      "planned": 49,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 140,
+      "spec": "H80-2600mm",
+      "area": "A4",
+      "planned": 21,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 141,
+      "spec": "H80-2400mm",
+      "area": "A4",
+      "planned": 474,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 142,
+      "spec": "H80-2200mm",
+      "area": "A4",
+      "planned": 87,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 143,
+      "spec": "H80-2000mm",
+      "area": "A4",
+      "planned": 79,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 144,
+      "spec": "H80-1800mm",
+      "area": "A4",
+      "planned": 20,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 145,
+      "spec": "H80-1600mm",
+      "area": "A4",
+      "planned": 16,
+      "produced": 16,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 16,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 146,
+      "spec": "H80-1400mm",
+      "area": "A4",
+      "planned": 44,
+      "produced": 17,
+      "status": "producing",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 17,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 147,
+      "spec": "H80-1000mm",
+      "area": "A4",
+      "planned": 1,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A4.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 148,
+      "spec": "H80-4000mm",
+      "area": "D1",
+      "planned": 5,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 149,
+      "spec": "H80-3800mm",
+      "area": "D1",
+      "planned": 2,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 150,
+      "spec": "H80-3600mm",
+      "area": "D1",
+      "planned": 34,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 151,
+      "spec": "H80-3400mm",
+      "area": "D1",
+      "planned": 136,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 152,
+      "spec": "H80-3200mm",
+      "area": "D1",
+      "planned": 347,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 153,
+      "spec": "H80-3000mm",
+      "area": "D1",
+      "planned": 48,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 154,
+      "spec": "H80-2800mm",
+      "area": "D1",
+      "planned": 128,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 155,
+      "spec": "H80-2600mm",
+      "area": "D1",
+      "planned": 11,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 156,
+      "spec": "H80-2400mm",
+      "area": "D1",
+      "planned": 32,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 157,
+      "spec": "H80-2200mm",
+      "area": "D1",
+      "planned": 6,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 158,
+      "spec": "H80-2000mm",
+      "area": "D1",
+      "planned": 49,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 159,
+      "spec": "H80-1800mm",
+      "area": "D1",
+      "planned": 14,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 160,
+      "spec": "H80-1600mm",
+      "area": "D1",
+      "planned": 14,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 161,
+      "spec": "H80-1400mm",
+      "area": "D1",
+      "planned": 6,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 162,
+      "spec": "H80-1200mm",
+      "area": "D1",
+      "planned": 3,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 163,
+      "spec": "H80-1000mm",
+      "area": "D1",
+      "planned": 3,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D1.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 164,
+      "spec": "H80-4000mm",
+      "area": "D64",
+      "planned": 5,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 165,
+      "spec": "H80-3800mm",
+      "area": "D64",
+      "planned": 8,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 166,
+      "spec": "H80-3600mm",
+      "area": "D64",
+      "planned": 37,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 167,
+      "spec": "H80-3400mm",
+      "area": "D64",
+      "planned": 146,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 168,
+      "spec": "H80-3200mm",
+      "area": "D64",
+      "planned": 345,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 169,
+      "spec": "H80-3000mm",
+      "area": "D64",
+      "planned": 63,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 170,
+      "spec": "H80-2800mm",
+      "area": "D64",
+      "planned": 130,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 171,
+      "spec": "H80-2600mm",
+      "area": "D64",
+      "planned": 10,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 172,
+      "spec": "H80-2400mm",
+      "area": "D64",
+      "planned": 22,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 173,
+      "spec": "H80-2200mm",
+      "area": "D64",
+      "planned": 6,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 174,
+      "spec": "H80-2000mm",
+      "area": "D64",
+      "planned": 44,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 175,
+      "spec": "H80-1800mm",
+      "area": "D64",
+      "planned": 14,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 176,
+      "spec": "H80-1600mm",
+      "area": "D64",
+      "planned": 14,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 177,
+      "spec": "H80-1400mm",
+      "area": "D64",
+      "planned": 3,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 178,
+      "spec": "H80-1200mm",
+      "area": "D64",
+      "planned": 1,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 179,
+      "spec": "H80-1000mm",
+      "area": "D64",
+      "planned": 1,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D6-4F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 180,
+      "spec": "H80-4000mm",
+      "area": "A6",
+      "planned": 28,
+      "produced": 28,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-05",
+          "quantity": 28,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 181,
+      "spec": "H80-3800mm",
+      "area": "A6",
+      "planned": 8,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 182,
+      "spec": "H80-3600mm",
+      "area": "A6",
+      "planned": 114,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 183,
+      "spec": "H80-3400mm",
+      "area": "A6",
+      "planned": 14,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 184,
+      "spec": "H80-3200mm",
+      "area": "A6",
+      "planned": 225,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 185,
+      "spec": "H80-2800mm",
+      "area": "A6",
+      "planned": 53,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 186,
+      "spec": "H80-2600mm",
+      "area": "A6",
+      "planned": 8,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 187,
+      "spec": "H80-2200mm",
+      "area": "A6",
+      "planned": 36,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 188,
+      "spec": "H80-1800mm",
+      "area": "A6",
+      "planned": 50,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 189,
+      "spec": "H80-1600mm",
+      "area": "A6",
+      "planned": 56,
+      "produced": 1,
+      "status": "producing",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 1,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 190,
+      "spec": "H80-1400mm",
+      "area": "A6",
+      "planned": 111,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 191,
+      "spec": "H80-1200mm",
+      "area": "A6",
+      "planned": 51,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A62F.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 192,
+      "spec": "H80-4000mm",
+      "area": "B13",
+      "planned": 25,
+      "produced": 7,
+      "status": "producing",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条B13.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-05",
+          "quantity": 7,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 193,
+      "spec": "H80-3800mm",
+      "area": "B13",
+      "planned": 63,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条B13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 194,
+      "spec": "H80-3600mm",
+      "area": "B13",
+      "planned": 110,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条B13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 195,
+      "spec": "H80-3400mm",
+      "area": "B13",
+      "planned": 106,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条B13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 196,
+      "spec": "H80-3200mm",
+      "area": "B13",
+      "planned": 57,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条B13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 197,
+      "spec": "H80-3000mm",
+      "area": "B13",
+      "planned": 11,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条B13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 198,
+      "spec": "H80-2800mm",
+      "area": "B13",
+      "planned": 1,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条B13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 200,
+      "spec": "H80-2400mm",
+      "area": "B13",
+      "planned": 7,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条B13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 201,
+      "spec": "H80-2200mm",
+      "area": "B13",
+      "planned": 3,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条B13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 202,
+      "spec": "H80-4200mm",
+      "area": "A122",
+      "planned": 3,
+      "produced": 3,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A122.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 3,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 203,
+      "spec": "H80-4000mm",
+      "area": "A122",
+      "planned": 43,
+      "produced": 43,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A122.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 43,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 204,
+      "spec": "H80-3800mm",
+      "area": "A122",
+      "planned": 36,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A122.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 205,
+      "spec": "H80-3600mm",
+      "area": "A122",
+      "planned": 114,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A122.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 206,
+      "spec": "H80-3400mm",
+      "area": "A122",
+      "planned": 128,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A122.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 207,
+      "spec": "H80-3200mm",
+      "area": "A122",
+      "planned": 14,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A122.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 208,
+      "spec": "H80-3000mm",
+      "area": "A122",
+      "planned": 2,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A122.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 209,
+      "spec": "H80-2600mm",
+      "area": "A122",
+      "planned": 2,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A122.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 210,
+      "spec": "H80-2400mm",
+      "area": "A122",
+      "planned": 5,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A122.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 211,
+      "spec": "H80-2200mm",
+      "area": "A122",
+      "planned": 6,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条A122.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 212,
+      "spec": "H100-3600mm",
+      "area": "D13",
+      "planned": 26,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 213,
+      "spec": "H100-3200mm",
+      "area": "D13",
+      "planned": 30,
+      "produced": 30,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 30,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 214,
+      "spec": "H100-3000mm",
+      "area": "D13",
+      "planned": 28,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 215,
+      "spec": "H100-2800mm",
+      "area": "D13",
+      "planned": 60,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 216,
+      "spec": "H100-2600mm",
+      "area": "D13",
+      "planned": 4,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 217,
+      "spec": "H100-2400mm",
+      "area": "D13",
+      "planned": 1,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 218,
+      "spec": "H100-2200mm",
+      "area": "D13",
+      "planned": 1,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 219,
+      "spec": "H100-2000mm",
+      "area": "D13",
+      "planned": 8,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 220,
+      "spec": "H100-1800mm",
+      "area": "D13",
+      "planned": 40,
+      "produced": 40,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-04",
+          "quantity": 40,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 221,
+      "spec": "H100-1600mm",
+      "area": "D13",
+      "planned": 8,
+      "produced": 8,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 8,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 222,
+      "spec": "H100-1400mm",
+      "area": "D13",
+      "planned": 3,
+      "produced": 3,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-13",
+          "quantity": 3,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 223,
+      "spec": "H100-1200mm",
+      "area": "D13",
+      "planned": 57,
+      "produced": 17,
+      "status": "producing",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-06",
+          "quantity": 17,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 224,
+      "spec": "H100-1000mm",
+      "area": "D13",
+      "planned": 1,
+      "produced": 1,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-07",
+          "quantity": 1,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 225,
+      "spec": "H80-3800mm",
+      "area": "D13",
+      "planned": 21,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 226,
+      "spec": "H80-3600mm",
+      "area": "D13",
+      "planned": 162,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 227,
+      "spec": "H80-3400mm",
+      "area": "D13",
+      "planned": 68,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 228,
+      "spec": "H80-3200mm",
+      "area": "D13",
+      "planned": 28,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 229,
+      "spec": "H80-3000mm",
+      "area": "D13",
+      "planned": 32,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 230,
+      "spec": "H80-2800mm",
+      "area": "D13",
+      "planned": 8,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 231,
+      "spec": "H80-2400mm",
+      "area": "D13",
+      "planned": 18,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 232,
+      "spec": "H80-2200mm",
+      "area": "D13",
+      "planned": 14,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 233,
+      "spec": "H80-2000mm",
+      "area": "D13",
+      "planned": 12,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 234,
+      "spec": "H80-1800mm",
+      "area": "D13",
+      "planned": 12,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 235,
+      "spec": "H80-1400mm",
+      "area": "D13",
+      "planned": 7,
+      "produced": 0,
+      "status": "planned",
+      "deadline": "",
+      "remarks": "从Excel导入: 浦东机场肋条D13.xlsx",
+      "shipped": 0,
+      "shippingRecords": []
+    },
+    {
+      "id": 236,
+      "spec": "H100-5400mm",
+      "area": "C1",
+      "planned": 19,
+      "produced": 19,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "批量生产",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 19,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 237,
+      "spec": "H100-3200mm",
+      "area": "C1",
+      "planned": 192,
+      "produced": 192,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "批量生产",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 192,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 238,
+      "spec": "H80-4200mm",
+      "area": "C1",
+      "planned": 210,
+      "produced": 210,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "批量生产",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-18",
+          "quantity": 210,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 239,
+      "spec": "H100-1000mm",
+      "area": "C1",
+      "planned": 17,
+      "produced": 17,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "批量生产",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-06",
+          "quantity": 17,
+          "remarks": "批量生产"
+        }
+      ]
+    },
+    {
+      "id": 240,
+      "spec": "H100-3200mm",
+      "area": "C1",
+      "planned": 107,
+      "produced": 107,
+      "status": "completed",
+      "deadline": "",
+      "remarks": "批量生产",
+      "shipped": 0,
+      "shippingRecords": [],
+      "productionRecords": [
+        {
+          "date": "2025-06-04",
+          "quantity": 107,
+          "remarks": "批量生产"
+        }
+      ]
+    }
+  ]
+}

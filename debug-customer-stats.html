@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户发货统计调试工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #059669;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .debug-section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .debug-section h3 {
+            color: #374151;
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-success { background: #059669; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-danger { background: #dc2626; color: white; }
+        
+        .output {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 15px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #ecfdf5;
+            border: 1px solid #059669;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #059669;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #047857;
+            margin-top: 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📊 客户发货统计调试工具</h1>
+        
+        <div class="debug-section">
+            <h3>📈 当前统计状态</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalCustomers">-</div>
+                    <div class="stat-label">发货客户数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalShippedMeters">-</div>
+                    <div class="stat-label">总发货量(米)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="historyRecords">-</div>
+                    <div class="stat-label">历史记录数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="originalRecords">-</div>
+                    <div class="stat-label">原始发货记录数</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>🔍 数据检查</h3>
+            <button class="btn btn-primary" onclick="checkShippingHistory()">
+                <i class="fas fa-history"></i>
+                检查发货历史
+            </button>
+            <button class="btn btn-success" onclick="checkOriginalData()">
+                <i class="fas fa-database"></i>
+                检查原始数据
+            </button>
+            <button class="btn btn-warning" onclick="calculateStats()">
+                <i class="fas fa-calculator"></i>
+                计算客户统计
+            </button>
+            <button class="btn btn-danger" onclick="forceMigration()">
+                <i class="fas fa-sync"></i>
+                强制数据迁移
+            </button>
+            <div class="output" id="debugOutput"></div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>🛠️ 操作工具</h3>
+            <button class="btn btn-primary" onclick="openMainSystem()">
+                <i class="fas fa-external-link-alt"></i>
+                打开主系统
+            </button>
+            <button class="btn btn-success" onclick="refreshStats()">
+                <i class="fas fa-refresh"></i>
+                刷新统计
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let debugData = null;
+        let shippingHistory = null;
+        
+        function log(message) {
+            const output = document.getElementById('debugOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function updateStats() {
+            // 统计发货历史
+            const history = JSON.parse(localStorage.getItem('shippingHistory') || '[]');
+            const customerSet = new Set();
+            let totalMeters = 0;
+            
+            history.forEach(record => {
+                if (record.customerName) {
+                    customerSet.add(record.customerName);
+                }
+                totalMeters += record.totalMeters || 0;
+            });
+            
+            // 统计原始数据
+            const data = JSON.parse(localStorage.getItem('productionData') || '[]');
+            let originalShippingRecords = 0;
+            
+            data.forEach(item => {
+                if (item.shippingRecords) {
+                    originalShippingRecords += item.shippingRecords.length;
+                }
+            });
+            
+            document.getElementById('totalCustomers').textContent = customerSet.size;
+            document.getElementById('totalShippedMeters').textContent = totalMeters.toFixed(1);
+            document.getElementById('historyRecords').textContent = history.length;
+            document.getElementById('originalRecords').textContent = originalShippingRecords;
+        }
+        
+        function checkShippingHistory() {
+            log('=== 检查发货历史 ===');
+            
+            try {
+                shippingHistory = JSON.parse(localStorage.getItem('shippingHistory') || '[]');
+                log(`发货历史记录数: ${shippingHistory.length}`);
+                
+                if (shippingHistory.length > 0) {
+                    const customerSet = new Set();
+                    let totalQuantity = 0;
+                    let totalMeters = 0;
+                    
+                    shippingHistory.forEach((record, index) => {
+                        if (record.customerName) {
+                            customerSet.add(record.customerName);
+                        }
+                        totalQuantity += record.totalQuantity || 0;
+                        totalMeters += record.totalMeters || 0;
+                        
+                        if (index < 3) {
+                            log(`记录 ${index + 1}: ${record.customerName} - ${record.totalQuantity}根 - ${record.totalMeters}米`);
+                        }
+                    });
+                    
+                    log(`客户数: ${customerSet.size}, 总数量: ${totalQuantity}, 总米数: ${totalMeters.toFixed(1)}`);
+                    log(`客户列表: ${Array.from(customerSet).join(', ')}`);
+                } else {
+                    log('❌ 没有发货历史记录');
+                }
+                
+            } catch (error) {
+                log(`❌ 检查发货历史失败: ${error.message}`);
+            }
+        }
+        
+        function checkOriginalData() {
+            log('=== 检查原始数据 ===');
+            
+            try {
+                debugData = JSON.parse(localStorage.getItem('productionData') || '[]');
+                log(`原始数据条数: ${debugData.length}`);
+                
+                let itemsWithShipping = 0;
+                let totalShippingRecords = 0;
+                const customerSet = new Set();
+                
+                debugData.forEach(item => {
+                    if (item.shippingRecords && item.shippingRecords.length > 0) {
+                        itemsWithShipping++;
+                        totalShippingRecords += item.shippingRecords.length;
+                        
+                        item.shippingRecords.forEach(record => {
+                            const customerName = record.customerName || record.customer;
+                            if (customerName) {
+                                customerSet.add(customerName);
+                            }
+                        });
+                    }
+                });
+                
+                log(`有发货记录的项目: ${itemsWithShipping}`);
+                log(`发货记录总数: ${totalShippingRecords}`);
+                log(`客户数: ${customerSet.size}`);
+                log(`客户列表: ${Array.from(customerSet).join(', ')}`);
+                
+            } catch (error) {
+                log(`❌ 检查原始数据失败: ${error.message}`);
+            }
+        }
+        
+        function calculateStats() {
+            log('=== 计算客户统计 ===');
+            
+            if (!shippingHistory) checkShippingHistory();
+            if (!debugData) checkOriginalData();
+            
+            const customerMap = new Map();
+            
+            if (shippingHistory && shippingHistory.length > 0) {
+                log('使用发货历史计算统计...');
+                
+                shippingHistory.forEach(record => {
+                    const customerName = record.customerName;
+                    if (!customerName) return;
+                    
+                    if (!customerMap.has(customerName)) {
+                        customerMap.set(customerName, {
+                            customerName: customerName,
+                            totalQuantity: 0,
+                            totalMeters: 0,
+                            orderCount: 0
+                        });
+                    }
+                    
+                    const customerStat = customerMap.get(customerName);
+                    customerStat.totalQuantity += record.totalQuantity || 0;
+                    customerStat.totalMeters += record.totalMeters || 0;
+                    customerStat.orderCount += 1;
+                });
+            }
+            
+            const customerStats = Array.from(customerMap.values());
+            log(`计算完成，客户统计数: ${customerStats.length}`);
+            
+            customerStats.forEach((stat, index) => {
+                log(`客户 ${index + 1}: ${stat.customerName} - 数量:${stat.totalQuantity}, 米数:${stat.totalMeters.toFixed(1)}, 订单:${stat.orderCount}`);
+            });
+        }
+        
+        function forceMigration() {
+            log('=== 强制数据迁移 ===');
+            
+            if (!debugData) checkOriginalData();
+            
+            if (!debugData || debugData.length === 0) {
+                log('❌ 没有原始数据可迁移');
+                return;
+            }
+            
+            const shippingGroups = new Map();
+            
+            debugData.forEach(item => {
+                if (item.shippingRecords && item.shippingRecords.length > 0) {
+                    item.shippingRecords.forEach(record => {
+                        const customerName = record.customerName || record.customer || '未知客户';
+                        const groupKey = `${record.date}-${customerName}`;
+                        
+                        if (!shippingGroups.has(groupKey)) {
+                            shippingGroups.set(groupKey, {
+                                id: Date.now() + Math.random(),
+                                documentNumber: `FH${Date.now()}`,
+                                date: record.date,
+                                customerName: customerName,
+                                company: record.company || '',
+                                trackingNumber: record.trackingNumber || '',
+                                deliveryAddress: record.deliveryAddress || '',
+                                remarks: record.remarks || '',
+                                items: [],
+                                totalQuantity: 0,
+                                totalWeight: 0,
+                                totalMeters: 0,
+                                timestamp: record.timestamp || new Date().toISOString()
+                            });
+                        }
+                        
+                        const group = shippingGroups.get(groupKey);
+                        group.items.push({
+                            spec: item.spec,
+                            quantity: record.quantity,
+                            weight: 0,
+                            meters: 0
+                        });
+                        
+                        group.totalQuantity += record.quantity;
+                    });
+                }
+            });
+            
+            const migratedRecords = Array.from(shippingGroups.values());
+            localStorage.setItem('shippingHistory', JSON.stringify(migratedRecords));
+            
+            log(`✅ 迁移完成，生成 ${migratedRecords.length} 条历史记录`);
+            updateStats();
+        }
+        
+        function refreshStats() {
+            updateStats();
+            log('✅ 统计数据已刷新');
+        }
+        
+        function openMainSystem() {
+            window.open('index.html', '_blank');
+        }
+        
+        // 页面加载时自动更新统计
+        window.onload = function() {
+            updateStats();
+            log('🔧 客户发货统计调试工具已启动');
+        };
+    </script>
+</body>
+</html>

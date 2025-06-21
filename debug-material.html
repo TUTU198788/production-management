@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原材料采购调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input, select { padding: 8px; margin-bottom: 10px; width: 200px; }
+        button { padding: 10px 20px; margin: 5px; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>原材料采购功能调试</h1>
+    
+    <div class="debug">
+        <h3>调试信息</h3>
+        <div id="debugInfo">等待初始化...</div>
+    </div>
+
+    <div class="debug">
+        <h3>主系统集成测试</h3>
+        <button onclick="testMainSystem()">测试主系统数据管理器</button>
+        <button onclick="testLocalStorage()">检查localStorage</button>
+        <button onclick="simulateMainSave()">模拟主系统保存</button>
+        <div id="mainSystemInfo">等待测试...</div>
+    </div>
+
+    <form id="materialForm">
+        <div class="form-group">
+            <label for="materialDate">采购日期 *</label>
+            <input type="date" id="materialDate" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="materialQuantity">采购吨位 *</label>
+            <input type="number" id="materialQuantity" min="0.1" step="0.1" required placeholder="请输入采购吨位">
+        </div>
+        
+        <div class="form-group">
+            <label for="materialDiameter">钢筋直径 *</label>
+            <select id="materialDiameter" required>
+                <option value="">请选择直径</option>
+                <option value="4mm">4mm</option>
+                <option value="5mm">5mm</option>
+                <option value="6mm">6mm</option>
+                <option value="8mm">8mm</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="materialSupplier">供应厂家 *</label>
+            <select id="materialSupplier" required>
+                <option value="">请选择厂家</option>
+                <option value="鸿穗">鸿穗</option>
+                <option value="昊达鑫">昊达鑫</option>
+                <option value="河北晟科">河北晟科</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="materialPrice">单价（元/吨）</label>
+            <input type="number" id="materialPrice" min="0" step="0.01" placeholder="可选">
+        </div>
+        
+        <div class="form-group">
+            <label for="materialBatch">批次号</label>
+            <input type="text" id="materialBatch" placeholder="可选">
+        </div>
+        
+        <div class="form-group">
+            <label for="materialRemarks">备注</label>
+            <input type="text" id="materialRemarks" placeholder="可选">
+        </div>
+        
+        <button type="submit">保存采购记录</button>
+    </form>
+
+    <div class="debug">
+        <h3>已保存的采购记录</h3>
+        <div id="savedRecords">无记录</div>
+        <button onclick="loadRecords()">刷新记录</button>
+        <button onclick="clearRecords()">清空记录</button>
+    </div>
+
+    <script>
+        // 简化的数据管理器
+        class DebugDataManager {
+            constructor() {
+                this.materialPurchases = [];
+                this.loadFromLocalStorage();
+                this.setupEventListeners();
+                this.updateDebugInfo();
+                
+                // 设置默认日期
+                document.getElementById('materialDate').value = new Date().toISOString().split('T')[0];
+            }
+
+            setupEventListeners() {
+                const form = document.getElementById('materialForm');
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    console.log('表单提交事件触发');
+                    this.saveMaterialPurchase();
+                });
+            }
+
+            saveMaterialPurchase() {
+                console.log('saveMaterialPurchase 方法被调用');
+                
+                const date = document.getElementById('materialDate').value;
+                const quantity = parseFloat(document.getElementById('materialQuantity').value);
+                const diameter = document.getElementById('materialDiameter').value;
+                const supplier = document.getElementById('materialSupplier').value;
+                const price = parseFloat(document.getElementById('materialPrice').value) || 0;
+                const batch = document.getElementById('materialBatch').value;
+                const remarks = document.getElementById('materialRemarks').value;
+
+                console.log('表单数据:', { date, quantity, diameter, supplier, price, batch, remarks });
+
+                // 验证必填字段
+                if (!date || !quantity || !diameter || !supplier) {
+                    alert('请填写必填字段（采购日期、采购吨位、钢筋直径、供应厂家）');
+                    return;
+                }
+
+                if (quantity <= 0) {
+                    alert('采购吨位必须大于0');
+                    return;
+                }
+
+                // 创建采购记录
+                const purchaseRecord = {
+                    id: Date.now() + Math.random(),
+                    date: date,
+                    quantity: quantity,
+                    diameter: diameter,
+                    supplier: supplier,
+                    price: price,
+                    totalAmount: quantity * price,
+                    batch: batch,
+                    remarks: remarks,
+                    timestamp: new Date().toISOString()
+                };
+
+                console.log('创建的采购记录:', purchaseRecord);
+
+                // 添加到采购记录
+                this.materialPurchases.push(purchaseRecord);
+                console.log('当前所有采购记录:', this.materialPurchases);
+
+                // 保存到本地存储
+                this.saveToLocalStorage();
+                
+                // 更新显示
+                this.updateDebugInfo();
+                this.displayRecords();
+                
+                // 清空表单
+                document.getElementById('materialForm').reset();
+                document.getElementById('materialDate').value = new Date().toISOString().split('T')[0];
+
+                alert(`成功添加采购记录：${supplier} ${diameter} ${quantity}吨`);
+            }
+
+            saveToLocalStorage() {
+                console.log('保存到本地存储:', this.materialPurchases);
+                localStorage.setItem('materialPurchases', JSON.stringify(this.materialPurchases));
+            }
+
+            loadFromLocalStorage() {
+                try {
+                    const saved = localStorage.getItem('materialPurchases');
+                    if (saved) {
+                        this.materialPurchases = JSON.parse(saved);
+                        console.log('从本地存储加载:', this.materialPurchases);
+                    } else {
+                        this.materialPurchases = [];
+                        console.log('本地存储为空，初始化为空数组');
+                    }
+                } catch (error) {
+                    console.error('加载本地存储失败:', error);
+                    this.materialPurchases = [];
+                }
+            }
+
+            updateDebugInfo() {
+                const info = document.getElementById('debugInfo');
+                info.innerHTML = `
+                    <p>当前采购记录数量: ${this.materialPurchases.length}</p>
+                    <p>本地存储键: materialPurchases</p>
+                    <p>本地存储内容: ${localStorage.getItem('materialPurchases') || '空'}</p>
+                `;
+            }
+
+            displayRecords() {
+                const container = document.getElementById('savedRecords');
+                if (this.materialPurchases.length === 0) {
+                    container.innerHTML = '无记录';
+                    return;
+                }
+
+                const html = this.materialPurchases.map((record, index) => `
+                    <div style="border: 1px solid #ccc; padding: 10px; margin: 5px 0;">
+                        <strong>记录 ${index + 1}:</strong><br>
+                        日期: ${record.date}<br>
+                        厂家: ${record.supplier}<br>
+                        直径: ${record.diameter}<br>
+                        数量: ${record.quantity} 吨<br>
+                        单价: ${record.price} 元/吨<br>
+                        总金额: ${record.totalAmount} 元<br>
+                        批次: ${record.batch || '无'}<br>
+                        备注: ${record.remarks || '无'}
+                    </div>
+                `).join('');
+                
+                container.innerHTML = html;
+            }
+        }
+
+        // 全局函数
+        function loadRecords() {
+            window.debugManager.loadFromLocalStorage();
+            window.debugManager.updateDebugInfo();
+            window.debugManager.displayRecords();
+        }
+
+        function clearRecords() {
+            if (confirm('确定要清空所有记录吗？')) {
+                localStorage.removeItem('materialPurchases');
+                window.debugManager.materialPurchases = [];
+                window.debugManager.updateDebugInfo();
+                window.debugManager.displayRecords();
+            }
+        }
+
+        function testMainSystem() {
+            const info = document.getElementById('mainSystemInfo');
+            let html = '<h4>主系统检查结果:</h4>';
+
+            // 检查主系统数据管理器
+            html += `<p>window.dataManager 存在: ${!!window.dataManager}</p>`;
+            if (window.dataManager) {
+                html += `<p>materialPurchases 数组: ${Array.isArray(window.dataManager.materialPurchases)}</p>`;
+                html += `<p>materialPurchases 长度: ${window.dataManager.materialPurchases ? window.dataManager.materialPurchases.length : 'undefined'}</p>`;
+                if (window.dataManager.materialPurchases && window.dataManager.materialPurchases.length > 0) {
+                    html += `<p>第一条记录: ${JSON.stringify(window.dataManager.materialPurchases[0])}</p>`;
+                }
+            }
+
+            // 检查仪表板
+            html += `<p>window.dashboard 存在: ${!!window.dashboard}</p>`;
+            if (window.dashboard) {
+                html += `<p>dashboard.data 存在: ${!!window.dashboard.data}</p>`;
+                if (window.dashboard.data) {
+                    html += `<p>materialTons: ${window.dashboard.data.materialTons}</p>`;
+                }
+            }
+
+            info.innerHTML = html;
+        }
+
+        function testLocalStorage() {
+            const info = document.getElementById('mainSystemInfo');
+            const keys = ['materialPurchases', 'productionData', 'operationLogs'];
+            let html = '<h4>localStorage 检查:</h4>';
+
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                html += `<p>${key}: ${value ? `${value.length} 字符` : '不存在'}</p>`;
+                if (value && key === 'materialPurchases') {
+                    try {
+                        const parsed = JSON.parse(value);
+                        html += `<p>materialPurchases 解析: ${Array.isArray(parsed) ? `${parsed.length} 条记录` : '格式错误'}</p>`;
+                    } catch (e) {
+                        html += `<p>materialPurchases 解析失败: ${e.message}</p>`;
+                    }
+                }
+            });
+
+            info.innerHTML = html;
+        }
+
+        function simulateMainSave() {
+            // 模拟主系统的保存逻辑
+            const testRecord = {
+                id: Date.now() + Math.random(),
+                date: '2024-01-15',
+                quantity: 10.5,
+                diameter: '6mm',
+                supplier: '鸿穗',
+                price: 3500,
+                totalAmount: 36750,
+                batch: 'TEST001',
+                remarks: '测试记录',
+                timestamp: new Date().toISOString()
+            };
+
+            // 模拟主系统的数据结构
+            let materialPurchases = [];
+            try {
+                const saved = localStorage.getItem('materialPurchases');
+                if (saved) {
+                    materialPurchases = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('加载失败:', e);
+            }
+
+            materialPurchases.push(testRecord);
+            localStorage.setItem('materialPurchases', JSON.stringify(materialPurchases));
+
+            // 如果主系统存在，更新它
+            if (window.dataManager) {
+                window.dataManager.materialPurchases = materialPurchases;
+                if (window.dataManager.updateStats) {
+                    window.dataManager.updateStats();
+                }
+            }
+
+            alert('模拟保存完成，请检查主系统');
+            testMainSystem();
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            window.debugManager = new DebugDataManager();
+            window.debugManager.displayRecords();
+        });
+    </script>
+</body>
+</html>

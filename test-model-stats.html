@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>型号统计测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+        }
+        .result {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #28a745;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .model-card {
+            display: inline-block;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            text-align: center;
+            min-width: 150px;
+            position: relative;
+        }
+        .model-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1e3a8a, #f97316);
+            border-radius: 8px 8px 0 0;
+        }
+        .model-card.h100::before {
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+        }
+        .model-card.h80::before {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+        .model-card.h120::before {
+            background: linear-gradient(90deg, #f97316, #ea580c);
+        }
+        .model-title {
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+        .model-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+            margin: 5px 0;
+        }
+        .model-details {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>未生产规格统计功能测试</h1>
+
+        <div class="test-data">
+            <h3>测试数据</h3>
+            <p>模拟以下生产数据：</p>
+            <ul>
+                <li>H100-1000mm: 计划500根，已生产300根，未生产200根</li>
+                <li>H100-1200mm: 计划300根，已生产100根，未生产200根</li>
+                <li>H80-800mm: 计划400根，已生产350根，未生产50根</li>
+                <li>H80-1000mm: 计划200根，已生产150根，未生产50根</li>
+                <li>H120-1500mm: 计划600根，已生产200根，未生产400根</li>
+                <li>H100-1400mm: 计划100根，已生产100根，未生产0根（不显示）</li>
+            </ul>
+            <p><strong>预期结果（按未生产量排序）：</strong></p>
+            <ul>
+                <li>H120-1500mm：未生产400根（排第一）</li>
+                <li>H100-1000mm：未生产200根（排第二）</li>
+                <li>H100-1200mm：未生产200根（排第三）</li>
+                <li>H80-800mm：未生产50根（排第四）</li>
+                <li>H80-1000mm：未生产50根（排第五）</li>
+            </ul>
+        </div>
+
+        <button onclick="runTest()">运行测试</button>
+        <button onclick="clearResults()">清除结果</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // 模拟数据管理器的calculateUnproducedSpecs方法
+        function calculateUnproducedSpecs(testData) {
+            const specMap = new Map();
+
+            // 遍历所有数据，按规格分组统计
+            testData.forEach(item => {
+                const spec = item.spec;
+
+                if (!specMap.has(spec)) {
+                    specMap.set(spec, {
+                        spec: spec,
+                        planned: 0,
+                        produced: 0,
+                        areas: new Set()
+                    });
+                }
+
+                const specData = specMap.get(spec);
+                specData.planned += item.planned || 0;
+                specData.produced += item.produced || 0;
+                specData.areas.add(item.area || 'C1');
+            });
+
+            // 筛选出未完成生产的规格
+            const unproducedSpecs = Array.from(specMap.values())
+                .map(spec => ({
+                    spec: spec.spec,
+                    planned: spec.planned,
+                    produced: spec.produced,
+                    unproduced: Math.max(0, spec.planned - spec.produced),
+                    areas: Array.from(spec.areas).sort()
+                }))
+                .filter(spec => spec.unproduced > 0); // 只显示未完成的规格
+
+            // 按未生产量从多到少排序
+            unproducedSpecs.sort((a, b) => b.unproduced - a.unproduced);
+
+            return unproducedSpecs;
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString('zh-CN');
+        }
+
+        function runTest() {
+            // 测试数据
+            const testData = [
+                { spec: 'H100-1000mm', planned: 500, produced: 300, area: 'C1' },
+                { spec: 'H100-1200mm', planned: 300, produced: 100, area: 'C2' },
+                { spec: 'H80-800mm', planned: 400, produced: 350, area: 'E3' },
+                { spec: 'H80-1000mm', planned: 200, produced: 150, area: 'D6' },
+                { spec: 'H120-1500mm', planned: 600, produced: 200, area: 'A14' },
+                { spec: 'H100-1400mm', planned: 100, produced: 100, area: 'C3' } // 已完成，不显示
+            ];
+
+            // 计算统计结果
+            const unproducedSpecs = calculateUnproducedSpecs(testData);
+
+            // 显示结果
+            const resultsDiv = document.getElementById('results');
+
+            let html = '<div class="result"><h3>计算结果</h3>';
+
+            // 显示规格卡片
+            html += '<div style="margin: 20px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">';
+            unproducedSpecs.forEach((spec, index) => {
+                const completionRate = spec.planned > 0 ? ((spec.produced / spec.planned) * 100).toFixed(1) : 0;
+                const progressWidth = Math.min(completionRate, 100);
+
+                // 根据型号设置样式类
+                const typeMatch = spec.spec.match(/^(H\d+)/);
+                const typeClass = typeMatch ? typeMatch[1].toLowerCase() : 'default';
+
+                html += `
+                    <div class="model-card ${typeClass}" style="min-height: 200px;">
+                        <div class="model-title">${spec.spec}</div>
+                        <div class="model-value">${formatNumber(spec.unproduced)}</div>
+                        <div style="font-size: 12px; margin: 5px 0;">根 (待生产)</div>
+                        <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 8px 0;">
+                            <div style="height: 100%; background: linear-gradient(90deg, #10b981, #059669); border-radius: 2px; width: ${progressWidth}%;"></div>
+                        </div>
+                        <div class="model-details">
+                            <div>计划: ${formatNumber(spec.planned)}根</div>
+                            <div>已产: ${formatNumber(spec.produced)}根</div>
+                            <div>完成: ${completionRate}%</div>
+                            <div>区域: ${spec.areas.join(', ')}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            // 显示统计信息
+            html += `<p><strong>共 ${unproducedSpecs.length} 种规格未完成生产</strong></p>`;
+
+            // 显示排序结果
+            html += '<h4>排序结果（按未生产量从多到少）：</h4><ol>';
+            unproducedSpecs.forEach(spec => {
+                html += `<li>${spec.spec}：${formatNumber(spec.unproduced)}根</li>`;
+            });
+            html += '</ol></div>';
+
+            resultsDiv.innerHTML = html;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原材料采购功能测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-card { border: 2px solid #007bff; padding: 20px; margin: 10px 0; cursor: pointer; }
+        .test-card:hover { background: #f0f8ff; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: white; margin: 50px auto; padding: 20px; width: 500px; border-radius: 8px; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { padding: 10px 20px; margin: 5px; }
+        .result { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>原材料采购功能独立测试</h1>
+    
+    <div class="test-card" id="materialCard" onclick="openMaterialModal()">
+        <h3>原材采购</h3>
+        <div id="totalMaterial">0.0</div>
+        <div>吨 (t)</div>
+        <div>累计采购量</div>
+    </div>
+
+    <div class="result" id="testResult">
+        <h4>测试结果:</h4>
+        <p>等待测试...</p>
+    </div>
+
+    <!-- 原材料采购模态框 -->
+    <div class="modal" id="materialModal">
+        <div class="modal-content">
+            <h3>原材料采购管理</h3>
+            
+            <form id="materialForm">
+                <div class="form-group">
+                    <label for="materialDate">采购日期 *</label>
+                    <input type="date" id="materialDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="materialQuantity">采购吨位 *</label>
+                    <input type="number" id="materialQuantity" min="0.1" step="0.1" required placeholder="请输入采购吨位">
+                </div>
+                
+                <div class="form-group">
+                    <label for="materialDiameter">钢筋直径 *</label>
+                    <select id="materialDiameter" required>
+                        <option value="">请选择直径</option>
+                        <option value="4mm">4mm</option>
+                        <option value="5mm">5mm</option>
+                        <option value="6mm">6mm</option>
+                        <option value="8mm">8mm</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="materialSupplier">供应厂家 *</label>
+                    <select id="materialSupplier" required>
+                        <option value="">请选择厂家</option>
+                        <option value="鸿穗">鸿穗</option>
+                        <option value="昊达鑫">昊达鑫</option>
+                        <option value="河北晟科">河北晟科</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="materialPrice">单价（元/吨）</label>
+                    <input type="number" id="materialPrice" min="0" step="0.01" placeholder="可选">
+                </div>
+                
+                <div class="form-group">
+                    <label for="materialBatch">批次号</label>
+                    <input type="text" id="materialBatch" placeholder="可选">
+                </div>
+                
+                <div class="form-group">
+                    <label for="materialRemarks">备注</label>
+                    <textarea id="materialRemarks" rows="3" placeholder="可选"></textarea>
+                </div>
+                
+                <button type="submit">保存采购记录</button>
+                <button type="button" onclick="closeMaterialModal()">取消</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据管理器
+        class TestDataManager {
+            constructor() {
+                this.materialPurchases = [];
+                this.loadFromLocalStorage();
+                this.setupEventListeners();
+                this.updateDisplay();
+                
+                // 设置默认日期
+                document.getElementById('materialDate').value = new Date().toISOString().split('T')[0];
+            }
+
+            setupEventListeners() {
+                const form = document.getElementById('materialForm');
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    console.log('表单提交事件触发');
+                    this.saveMaterialPurchase();
+                });
+            }
+
+            saveMaterialPurchase() {
+                console.log('=== saveMaterialPurchase 开始 ===');
+                
+                const date = document.getElementById('materialDate').value;
+                const quantity = parseFloat(document.getElementById('materialQuantity').value);
+                const diameter = document.getElementById('materialDiameter').value;
+                const supplier = document.getElementById('materialSupplier').value;
+                const price = parseFloat(document.getElementById('materialPrice').value) || 0;
+                const batch = document.getElementById('materialBatch').value;
+                const remarks = document.getElementById('materialRemarks').value;
+
+                console.log('表单数据收集:', {
+                    date, quantity, diameter, supplier, price, batch, remarks
+                });
+
+                // 验证必填字段
+                if (!date || !quantity || !diameter || !supplier) {
+                    alert('请填写必填字段（采购日期、采购吨位、钢筋直径、供应厂家）');
+                    return;
+                }
+
+                if (quantity <= 0) {
+                    alert('采购吨位必须大于0');
+                    return;
+                }
+
+                // 创建采购记录
+                const purchaseRecord = {
+                    id: Date.now() + Math.random(),
+                    date: date,
+                    quantity: quantity,
+                    diameter: diameter,
+                    supplier: supplier,
+                    price: price,
+                    totalAmount: quantity * price,
+                    batch: batch,
+                    remarks: remarks,
+                    timestamp: new Date().toISOString()
+                };
+
+                console.log('创建的采购记录:', purchaseRecord);
+
+                // 添加到采购记录
+                this.materialPurchases.push(purchaseRecord);
+                console.log('添加到materialPurchases数组，当前长度:', this.materialPurchases.length);
+
+                // 保存到本地存储
+                console.log('开始保存到localStorage...');
+                this.saveToLocalStorage();
+                console.log('保存完成，更新显示...');
+                
+                // 更新显示
+                this.updateDisplay();
+                this.updateTestResult();
+                
+                // 关闭模态框
+                console.log('关闭模态框...');
+                this.closeMaterialModal();
+                
+                // 清空表单
+                document.getElementById('materialForm').reset();
+                document.getElementById('materialDate').value = new Date().toISOString().split('T')[0];
+
+                alert(`成功添加采购记录：${supplier} ${diameter} ${quantity}吨`);
+                console.log('=== saveMaterialPurchase 完成 ===');
+            }
+
+            saveToLocalStorage() {
+                console.log('保存到本地存储:', this.materialPurchases);
+                localStorage.setItem('materialPurchases', JSON.stringify(this.materialPurchases));
+            }
+
+            loadFromLocalStorage() {
+                try {
+                    const saved = localStorage.getItem('materialPurchases');
+                    if (saved) {
+                        this.materialPurchases = JSON.parse(saved);
+                        console.log('从本地存储加载:', this.materialPurchases);
+                    } else {
+                        this.materialPurchases = [];
+                        console.log('本地存储为空，初始化为空数组');
+                    }
+                } catch (error) {
+                    console.error('加载本地存储失败:', error);
+                    this.materialPurchases = [];
+                }
+            }
+
+            updateDisplay() {
+                const totalTons = this.materialPurchases.reduce((sum, p) => sum + p.quantity, 0);
+                document.getElementById('totalMaterial').textContent = totalTons.toFixed(1);
+            }
+
+            updateTestResult() {
+                const result = document.getElementById('testResult');
+                const totalTons = this.materialPurchases.reduce((sum, p) => sum + p.quantity, 0);
+                
+                result.innerHTML = `
+                    <h4>测试结果:</h4>
+                    <p>✅ 采购记录数量: ${this.materialPurchases.length}</p>
+                    <p>✅ 总采购吨位: ${totalTons.toFixed(1)} 吨</p>
+                    <p>✅ localStorage 保存: ${localStorage.getItem('materialPurchases') ? '成功' : '失败'}</p>
+                    <p>✅ 卡片显示更新: ${document.getElementById('totalMaterial').textContent}</p>
+                    <h5>最新记录:</h5>
+                    <pre>${JSON.stringify(this.materialPurchases[this.materialPurchases.length - 1] || {}, null, 2)}</pre>
+                `;
+            }
+
+            closeMaterialModal() {
+                document.getElementById('materialModal').style.display = 'none';
+            }
+        }
+
+        // 全局函数
+        function openMaterialModal() {
+            console.log('原材料采购卡片被点击');
+            document.getElementById('materialModal').style.display = 'block';
+        }
+
+        function closeMaterialModal() {
+            document.getElementById('materialModal').style.display = 'none';
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            window.testManager = new TestDataManager();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>删除区域功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #1e40af;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            color: #059669;
+            margin-top: 0;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list li::before {
+            content: '✅';
+            margin-right: 10px;
+        }
+        
+        .warning-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #ef4444;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .warning-box h4 {
+            color: #dc2626;
+            margin-top: 0;
+        }
+        
+        .warning-box ul {
+            color: #7f1d1d;
+            margin-bottom: 0;
+        }
+        
+        .demo-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+            border-top: 4px solid #1e40af;
+        }
+        
+        .demo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .demo-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .demo-status {
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .demo-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .demo-metric {
+            text-align: center;
+        }
+        
+        .demo-metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e40af;
+            line-height: 1.2;
+        }
+        
+        .demo-metric-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .demo-progress {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        
+        .demo-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #f97316);
+            border-radius: 4px;
+        }
+        
+        .demo-progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+        
+        .demo-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .demo-btn {
+            flex: 1;
+            padding: 8px 4px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-height: 32px;
+            transition: all 0.2s;
+        }
+        
+        .demo-btn.primary {
+            background: #1e40af;
+            color: white;
+        }
+        
+        .demo-btn.secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .demo-btn.danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .demo-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+        
+        .demo-btn.danger:hover {
+            background: #dc2626;
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        }
+        
+        .process-flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .process-step {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .process-step::before {
+            content: attr(data-step);
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e40af;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .process-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin: 8px 0 4px 0;
+        }
+        
+        .process-desc {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 0;
+        }
+        
+        .confirmation-demo {
+            background: #fffbeb;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        
+        .confirmation-demo h4 {
+            color: #d97706;
+            margin-top: 0;
+        }
+        
+        .confirmation-text {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #374151;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ 删除区域功能测试</h1>
+        
+        <div class="test-section">
+            <h3>🎯 功能概述</h3>
+            <p>新增的删除区域功能允许管理员整体删除某个区域及其所有相关数据，包括：</p>
+            <ul class="feature-list">
+                <li><strong>删除区域内所有订单</strong>：彻底清除该区域的所有生产计划</li>
+                <li><strong>删除生产记录</strong>：清除所有相关的生产进度数据</li>
+                <li><strong>删除发货记录</strong>：清除所有相关的发货历史记录</li>
+                <li><strong>更新区域列表</strong>：从自定义区域列表中移除该区域</li>
+                <li><strong>安全确认机制</strong>：多重确认防止误删除操作</li>
+                <li><strong>详细操作日志</strong>：记录删除操作的详细信息</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>⚠️ 安全警告</h3>
+            <div class="warning-box">
+                <h4>⚠️ 重要提醒</h4>
+                <p><strong>删除区域是不可撤销的操作！</strong></p>
+                <ul>
+                    <li>将永久删除该区域的所有订单数据</li>
+                    <li>将永久删除所有生产进度记录</li>
+                    <li>将永久删除所有发货历史记录</li>
+                    <li>删除后无法恢复，请谨慎操作</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎨 界面展示</h3>
+            <p>区域卡片现在包含三个操作按钮，新增了红色的"删除区域"按钮：</p>
+            
+            <div class="demo-card">
+                <div class="demo-header">
+                    <div class="demo-title">C1区域</div>
+                    <div class="demo-status">生产中</div>
+                </div>
+
+                <div class="demo-metrics">
+                    <div class="demo-metric">
+                        <div class="demo-metric-value">1,250.5</div>
+                        <div class="demo-metric-label">总需求(m)</div>
+                    </div>
+                    <div class="demo-metric">
+                        <div class="demo-metric-value">892.3</div>
+                        <div class="demo-metric-label">已生产(m)</div>
+                    </div>
+                    <div class="demo-metric">
+                        <div class="demo-metric-value">358.2</div>
+                        <div class="demo-metric-label">未生产(m)</div>
+                    </div>
+                </div>
+
+                <div class="demo-progress">
+                    <div class="demo-progress-fill" style="width: 71.4%"></div>
+                </div>
+                <div class="demo-progress-text">
+                    <span>完成率: 71.4%</span>
+                    <span>12 个规格</span>
+                </div>
+
+                <div class="demo-actions">
+                    <button class="demo-btn primary">
+                        <i class="fas fa-eye"></i>
+                        查看详情
+                    </button>
+                    <button class="demo-btn secondary">
+                        <i class="fas fa-plus"></i>
+                        新增生产
+                    </button>
+                    <button class="demo-btn danger">
+                        <i class="fas fa-trash-alt"></i>
+                        删除区域
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 删除流程</h3>
+            <div class="process-flow">
+                <div class="process-step" data-step="1">
+                    <div class="process-title">点击删除按钮</div>
+                    <div class="process-desc">用户点击区域卡片上的"删除区域"按钮</div>
+                </div>
+                <div class="process-step" data-step="2">
+                    <div class="process-title">显示确认对话框</div>
+                    <div class="process-desc">系统显示详细的确认信息和警告</div>
+                </div>
+                <div class="process-step" data-step="3">
+                    <div class="process-title">用户确认删除</div>
+                    <div class="process-desc">用户阅读警告信息并确认删除操作</div>
+                </div>
+                <div class="process-step" data-step="4">
+                    <div class="process-title">执行删除操作</div>
+                    <div class="process-desc">系统删除区域及所有相关数据</div>
+                </div>
+                <div class="process-step" data-step="5">
+                    <div class="process-title">更新界面</div>
+                    <div class="process-desc">刷新统计数据和区域列表</div>
+                </div>
+                <div class="process-step" data-step="6">
+                    <div class="process-title">记录日志</div>
+                    <div class="process-desc">在操作日志中记录删除详情</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>💬 确认对话框示例</h3>
+            <div class="confirmation-demo">
+                <h4>🔔 确认对话框内容</h4>
+                <div class="confirmation-text">确定要删除 C1 区域吗？
+
+此操作将：
+• 删除该区域的所有 12 个订单
+• 删除所有相关的生产记录
+• 删除所有相关的发货记录
+
+此操作不可撤销！</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 删除统计信息</h3>
+            <p>删除操作完成后，系统会显示详细的删除统计：</p>
+            <ul class="feature-list">
+                <li><strong>删除的订单数量</strong>：显示删除了多少个订单</li>
+                <li><strong>涉及的规格数量</strong>：显示删除了多少个不同规格</li>
+                <li><strong>计划生产量</strong>：显示删除的总计划生产量</li>
+                <li><strong>已生产量</strong>：显示删除的总已生产量</li>
+                <li><strong>已发货量</strong>：显示删除的总已发货量</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 操作日志记录</h3>
+            <p>每次删除区域操作都会在系统日志中记录详细信息：</p>
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 14px;">
+                <strong>操作类型：</strong>删除区域<br>
+                <strong>操作时间：</strong>2024-12-18 14:30:25<br>
+                <strong>删除区域：</strong>C1<br>
+                <strong>删除订单：</strong>12 个<br>
+                <strong>涉及规格：</strong>8 个<br>
+                <strong>计划生产：</strong>1,250 根<br>
+                <strong>已生产：</strong>892 根<br>
+                <strong>已发货：</strong>650 根
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 技术实现</h3>
+            <ul class="feature-list">
+                <li><strong>数据过滤</strong>：使用Array.filter()方法删除指定区域的所有数据</li>
+                <li><strong>统计计算</strong>：删除前统计相关数据用于日志记录</li>
+                <li><strong>界面更新</strong>：删除后自动刷新所有相关界面组件</li>
+                <li><strong>本地存储</strong>：更新localStorage中的数据</li>
+                <li><strong>区域选项</strong>：更新所有下拉选择框中的区域选项</li>
+                <li><strong>错误处理</strong>：处理删除过程中可能出现的异常情况</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 使用场景</h3>
+            <ul class="feature-list">
+                <li><strong>项目结束</strong>：某个区域的项目完成，需要清理数据</li>
+                <li><strong>数据错误</strong>：错误创建的区域需要删除</li>
+                <li><strong>重新规划</strong>：区域重新划分，需要删除旧区域</li>
+                <li><strong>测试清理</strong>：测试数据需要清理</li>
+                <li><strong>系统维护</strong>：定期清理不需要的历史数据</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ 功能优势</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="padding: 15px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px;">
+                    <h4 style="color: #059669; margin-top: 0;">✅ 操作便捷</h4>
+                    <ul style="font-size: 14px; color: #064e3b;">
+                        <li>一键删除整个区域</li>
+                        <li>无需逐个删除订单</li>
+                        <li>自动处理关联数据</li>
+                        <li>界面自动更新</li>
+                    </ul>
+                </div>
+                <div style="padding: 15px; background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px;">
+                    <h4 style="color: #1d4ed8; margin-top: 0;">🔒 安全可靠</h4>
+                    <ul style="font-size: 14px; color: #1e3a8a;">
+                        <li>多重确认机制</li>
+                        <li>详细警告信息</li>
+                        <li>完整操作日志</li>
+                        <li>数据一致性保证</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

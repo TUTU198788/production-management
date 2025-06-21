@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量保存功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #1e40af;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            color: #059669;
+            margin-top: 0;
+        }
+        
+        .issue-description {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .issue-title {
+            color: #dc2626;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .solution-description {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .solution-title {
+            color: #059669;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .highlight {
+            background: #fbbf24;
+            color: #1f2937;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .step-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+            padding-left: 40px;
+        }
+        
+        .step-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .step-list li::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 0;
+            top: 10px;
+            background: #3b82f6;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .step-list {
+            counter-reset: step-counter;
+        }
+        
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px 5px;
+        }
+        
+        .test-button:hover {
+            background: #2563eb;
+        }
+        
+        .test-button.success {
+            background: #059669;
+        }
+        
+        .test-button.success:hover {
+            background: #047857;
+        }
+        
+        .test-button.danger {
+            background: #dc2626;
+        }
+        
+        .test-button.danger:hover {
+            background: #b91c1c;
+        }
+        
+        .debug-output {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .fix-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f0f9ff;
+            border-radius: 6px;
+        }
+        
+        .fix-item::before {
+            content: '🔧';
+            margin-right: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐛 批量保存功能问题诊断与修复</h1>
+        
+        <div class="test-section">
+            <h3>🔍 问题描述</h3>
+            <div class="issue-description">
+                <div class="issue-title">问题现象</div>
+                <p>在批量模式下，点击"批量保存"按钮无法保存新增的生产数据。</p>
+                <p>用户填写了型号、长度、生产根数等信息，但点击保存后没有任何反应。</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 问题分析</h3>
+            <p>经过代码分析，发现了以下问题：</p>
+            
+            <div class="fix-item">
+                <strong>保存按钮form属性冲突</strong>：保存按钮设置了 <code>form="productionForm"</code> 属性，在批量模式下仍然尝试提交单个模式的表单
+            </div>
+            
+            <div class="fix-item">
+                <strong>事件处理不完整</strong>：批量模式下保存按钮的点击事件处理逻辑不够完善
+            </div>
+            
+            <div class="fix-item">
+                <strong>模式切换状态管理</strong>：在模式切换时，保存按钮的属性没有正确更新
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ 解决方案</h3>
+            <div class="solution-description">
+                <div class="solution-title">修复措施</div>
+                <p>已实施以下修复措施来解决批量保存问题：</p>
+            </div>
+            
+            <ol class="step-list">
+                <li><strong>动态调整保存按钮属性</strong>：在切换到批量模式时，将保存按钮的type改为"button"，移除form属性</li>
+                <li><strong>增强事件监听</strong>：为保存按钮添加专门的点击事件监听器，处理批量模式的保存</li>
+                <li><strong>模式状态管理</strong>：在打开模态框时正确重置保存按钮的属性</li>
+                <li><strong>调试信息添加</strong>：添加console.log调试信息，便于排查问题</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 核心修复代码</h3>
+            
+            <h4>1. 模式切换时的按钮属性调整</h4>
+            <div class="code-block">
+<span class="highlight">// 在 toggleBatchMode() 方法中</span>
+if (batchMode.style.display === 'none') {
+    // 切换到批量模式
+    // ...其他代码...
+    
+    // <span class="highlight">修改保存按钮属性，移除form属性，改为普通按钮</span>
+    if (saveBtn) {
+        saveBtn.type = 'button';
+        saveBtn.removeAttribute('form');
+    }
+} else {
+    // 切换到单个模式
+    // ...其他代码...
+    
+    // <span class="highlight">恢复保存按钮属性，设置为提交按钮</span>
+    if (saveBtn) {
+        saveBtn.type = 'submit';
+        saveBtn.setAttribute('form', 'productionForm');
+    }
+}
+            </div>
+
+            <h4>2. 保存按钮点击事件处理</h4>
+            <div class="code-block">
+<span class="highlight">// 在构造函数中添加保存按钮点击事件</span>
+const saveBtn = document.getElementById('saveBtn');
+if (saveBtn) {
+    saveBtn.addEventListener('click', (e) => {
+        // <span class="highlight">如果是批量模式且按钮类型是button，则手动触发保存</span>
+        if (this.isBatchMode && saveBtn.type === 'button') {
+            e.preventDefault();
+            this.saveProductionData();
+        }
+    });
+}
+            </div>
+
+            <h4>3. 模态框打开时的状态重置</h4>
+            <div class="code-block">
+<span class="highlight">// 在 openProductionModal() 方法中</span>
+// 重置保存按钮为提交模式
+if (saveBtn) {
+    saveBtn.type = 'submit';
+    saveBtn.setAttribute('form', 'productionForm');
+}
+            </div>
+
+            <h4>4. 调试信息添加</h4>
+            <div class="code-block">
+<span class="highlight">// 在 saveProductionData() 和 saveBatchProduction() 中添加调试信息</span>
+saveProductionData() {
+    console.log('保存生产数据，批量模式:', this.isBatchMode);
+    
+    if (this.isBatchMode) {
+        console.log('调用批量保存方法...');
+        this.saveBatchProduction();
+        return;
+    }
+    // ...
+}
+
+saveBatchProduction() {
+    console.log('开始批量保存生产数据...');
+    console.log('批量区域:', batchArea);
+    console.log('批量生产日期:', batchProductionDate);
+    console.log('批量表格行数:', rows.length);
+    // ...
+}
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 测试步骤</h3>
+            <p>请按以下步骤测试批量保存功能：</p>
+            
+            <ol class="step-list">
+                <li>打开生产管理系统，点击"新增生产"按钮</li>
+                <li>在模态框中点击"批量模式"按钮切换到批量模式</li>
+                <li>选择工地区域（或选择"智能分配到紧急区域"）</li>
+                <li>选择生产日期</li>
+                <li>在表格中填写型号、长度、生产根数</li>
+                <li>点击"批量保存"按钮</li>
+                <li>检查是否成功保存数据并更新统计</li>
+                <li>打开浏览器开发者工具的Console查看调试信息</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 预期结果</h3>
+            <div class="solution-description">
+                <div class="solution-title">修复后的预期行为</div>
+                <ul>
+                    <li>✅ 批量模式下点击"批量保存"按钮能够正常触发保存逻辑</li>
+                    <li>✅ 数据能够成功保存到系统中</li>
+                    <li>✅ 保存后自动更新各项统计数据</li>
+                    <li>✅ 显示成功保存的提示信息</li>
+                    <li>✅ 模态框自动关闭</li>
+                    <li>✅ 如果选择智能分配，系统自动分配到紧急区域</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 调试信息</h3>
+            <p>如果问题仍然存在，请查看浏览器Console中的调试信息：</p>
+            
+            <div class="debug-output">
+保存生产数据，批量模式: true
+调用批量保存方法...
+开始批量保存生产数据...
+批量区域: 
+批量生产日期: 2025-06-18
+批量表格行数: 2
+行数据: {type: "H100", length: "3200", quantity: "176"}
+行数据: {type: "H80", length: "4000", quantity: "124"}
+收集到的批量数据: [{type: "H100", length: "3200", quantity: 176, area: ""}, {type: "H80", length: "4000", quantity: 124, area: ""}]
+智能分配结果: [...]
+成功批量添加 2 个规格的生产数据，共 300 根，其中 2 个规格使用了智能分配
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 功能增强</h3>
+            <p>除了修复批量保存问题，还增强了以下功能：</p>
+            
+            <div class="fix-item">
+                <strong>智能分配支持</strong>：批量模式也支持智能分配到紧急区域
+            </div>
+            
+            <div class="fix-item">
+                <strong>生产日期记录</strong>：批量生产时记录具体的生产日期
+            </div>
+            
+            <div class="fix-item">
+                <strong>详细反馈</strong>：保存成功后显示详细的分配结果信息
+            </div>
+            
+            <div class="fix-item">
+                <strong>错误处理</strong>：完善的错误处理和用户提示
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 注意事项</h3>
+            <ul>
+                <li>确保在批量模式下填写了所有必填字段</li>
+                <li>生产日期是必填项，系统会自动设置为当前日期</li>
+                <li>如果选择智能分配，系统会根据区域优先级自动分配</li>
+                <li>保存成功后会自动更新未生产规格统计</li>
+                <li>如果遇到问题，请查看Console中的调试信息</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 简单的测试脚本
+        console.log('批量保存功能测试页面已加载');
+        console.log('请在主系统中测试批量保存功能');
+        
+        // 模拟一些测试按钮的功能
+        function simulateTest() {
+            console.log('模拟测试：批量保存功能');
+            console.log('1. 切换到批量模式');
+            console.log('2. 填写表单数据');
+            console.log('3. 点击批量保存');
+            console.log('4. 检查保存结果');
+        }
+    </script>
+</body>
+</html>

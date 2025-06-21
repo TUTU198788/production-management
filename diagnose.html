@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统诊断</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { border: 1px solid #ccc; margin: 10px 0; padding: 15px; }
+        .test-result { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        button { padding: 8px 16px; margin: 5px; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>梯桁筋与组合肋生产管理系统 - 诊断工具</h1>
+    
+    <div class="test-section">
+        <h3>1. 基础环境检查</h3>
+        <button onclick="checkEnvironment()">检查环境</button>
+        <div id="envResult" class="test-result">等待检查...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. 数据管理器检查</h3>
+        <button onclick="checkDataManager()">检查数据管理器</button>
+        <div id="dataManagerResult" class="test-result">等待检查...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. 仪表板检查</h3>
+        <button onclick="checkDashboard()">检查仪表板</button>
+        <div id="dashboardResult" class="test-result">等待检查...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. localStorage检查</h3>
+        <button onclick="checkLocalStorage()">检查本地存储</button>
+        <button onclick="clearLocalStorage()">清空本地存储</button>
+        <div id="localStorageResult" class="test-result">等待检查...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>5. 原材料采购功能测试</h3>
+        <button onclick="testMaterialFunction()">测试原材料功能</button>
+        <button onclick="simulateMaterialSave()">模拟保存数据</button>
+        <div id="materialResult" class="test-result">等待测试...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>6. 事件绑定检查</h3>
+        <button onclick="checkEventBindings()">检查事件绑定</button>
+        <div id="eventResult" class="test-result">等待检查...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>7. 控制台错误检查</h3>
+        <button onclick="checkConsoleErrors()">检查控制台错误</button>
+        <div id="consoleResult" class="test-result">等待检查...</div>
+    </div>
+
+    <script>
+        // 错误收集
+        window.errors = [];
+        window.addEventListener('error', (e) => {
+            window.errors.push({
+                type: 'error',
+                message: e.message,
+                filename: e.filename,
+                lineno: e.lineno,
+                colno: e.colno,
+                stack: e.error ? e.error.stack : null
+            });
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            window.errors.push({
+                type: 'promise',
+                message: e.reason.toString(),
+                stack: e.reason.stack
+            });
+        });
+
+        function checkEnvironment() {
+            const result = document.getElementById('envResult');
+            let html = '<h4>环境检查结果:</h4>';
+            
+            // 检查基础对象
+            html += `<p>window 对象: ${typeof window !== 'undefined' ? '✅' : '❌'}</p>`;
+            html += `<p>document 对象: ${typeof document !== 'undefined' ? '✅' : '❌'}</p>`;
+            html += `<p>localStorage 支持: ${typeof Storage !== 'undefined' ? '✅' : '❌'}</p>`;
+            html += `<p>JSON 支持: ${typeof JSON !== 'undefined' ? '✅' : '❌'}</p>`;
+            
+            // 检查页面加载状态
+            html += `<p>页面加载状态: ${document.readyState}</p>`;
+            html += `<p>当前URL: ${window.location.href}</p>`;
+            
+            result.innerHTML = html;
+            result.className = 'test-result success';
+        }
+
+        function checkDataManager() {
+            const result = document.getElementById('dataManagerResult');
+            let html = '<h4>数据管理器检查结果:</h4>';
+            
+            html += `<p>window.dataManager 存在: ${!!window.dataManager ? '✅' : '❌'}</p>`;
+            
+            if (window.dataManager) {
+                html += `<p>dataManager 类型: ${typeof window.dataManager}</p>`;
+                html += `<p>materialPurchases 属性: ${window.dataManager.hasOwnProperty('materialPurchases') ? '✅' : '❌'}</p>`;
+                html += `<p>materialPurchases 类型: ${Array.isArray(window.dataManager.materialPurchases) ? 'Array ✅' : typeof window.dataManager.materialPurchases}</p>`;
+                html += `<p>materialPurchases 长度: ${window.dataManager.materialPurchases ? window.dataManager.materialPurchases.length : 'undefined'}</p>`;
+                html += `<p>saveMaterialPurchase 方法: ${typeof window.dataManager.saveMaterialPurchase === 'function' ? '✅' : '❌'}</p>`;
+                html += `<p>openMaterialModal 方法: ${typeof window.dataManager.openMaterialModal === 'function' ? '✅' : '❌'}</p>`;
+                html += `<p>saveToLocalStorage 方法: ${typeof window.dataManager.saveToLocalStorage === 'function' ? '✅' : '❌'}</p>`;
+                html += `<p>updateStats 方法: ${typeof window.dataManager.updateStats === 'function' ? '✅' : '❌'}</p>`;
+            }
+            
+            result.innerHTML = html;
+            result.className = window.dataManager ? 'test-result success' : 'test-result error';
+        }
+
+        function checkDashboard() {
+            const result = document.getElementById('dashboardResult');
+            let html = '<h4>仪表板检查结果:</h4>';
+            
+            html += `<p>window.dashboard 存在: ${!!window.dashboard ? '✅' : '❌'}</p>`;
+            
+            if (window.dashboard) {
+                html += `<p>dashboard 类型: ${typeof window.dashboard}</p>`;
+                html += `<p>data 属性: ${window.dashboard.hasOwnProperty('data') ? '✅' : '❌'}</p>`;
+                if (window.dashboard.data) {
+                    html += `<p>materialTons 值: ${window.dashboard.data.materialTons}</p>`;
+                }
+                html += `<p>updateMetrics 方法: ${typeof window.dashboard.updateMetrics === 'function' ? '✅' : '❌'}</p>`;
+                html += `<p>calculateActualMaterialPurchased 方法: ${typeof window.dashboard.calculateActualMaterialPurchased === 'function' ? '✅' : '❌'}</p>`;
+            }
+            
+            result.innerHTML = html;
+            result.className = window.dashboard ? 'test-result success' : 'test-result error';
+        }
+
+        function checkLocalStorage() {
+            const result = document.getElementById('localStorageResult');
+            let html = '<h4>本地存储检查结果:</h4>';
+            
+            const keys = ['materialPurchases', 'productionData', 'operationLogs'];
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                html += `<p>${key}: ${value ? `存在 (${value.length} 字符)` : '不存在'}</p>`;
+                
+                if (value && key === 'materialPurchases') {
+                    try {
+                        const parsed = JSON.parse(value);
+                        html += `<p>materialPurchases 解析: ${Array.isArray(parsed) ? `✅ ${parsed.length} 条记录` : '❌ 格式错误'}</p>`;
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            html += `<pre>第一条记录: ${JSON.stringify(parsed[0], null, 2)}</pre>`;
+                        }
+                    } catch (e) {
+                        html += `<p>materialPurchases 解析失败: ❌ ${e.message}</p>`;
+                    }
+                }
+            });
+            
+            result.innerHTML = html;
+            result.className = 'test-result';
+        }
+
+        function clearLocalStorage() {
+            const keys = ['materialPurchases', 'productionData', 'operationLogs'];
+            keys.forEach(key => localStorage.removeItem(key));
+            alert('本地存储已清空');
+            checkLocalStorage();
+        }
+
+        function testMaterialFunction() {
+            const result = document.getElementById('materialResult');
+            let html = '<h4>原材料功能测试结果:</h4>';
+            
+            // 检查DOM元素
+            const materialCard = document.getElementById('materialCard');
+            html += `<p>materialCard 元素: ${materialCard ? '✅' : '❌'}</p>`;
+            
+            const materialModal = document.getElementById('materialModal');
+            html += `<p>materialModal 元素: ${materialModal ? '✅' : '❌'}</p>`;
+            
+            const materialForm = document.getElementById('materialForm');
+            html += `<p>materialForm 元素: ${materialForm ? '✅' : '❌'}</p>`;
+            
+            const formFields = ['materialDate', 'materialQuantity', 'materialDiameter', 'materialSupplier'];
+            formFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                html += `<p>${fieldId} 字段: ${field ? '✅' : '❌'}</p>`;
+            });
+            
+            result.innerHTML = html;
+            result.className = 'test-result';
+        }
+
+        function simulateMaterialSave() {
+            const result = document.getElementById('materialResult');
+            
+            if (!window.dataManager) {
+                result.innerHTML = '<p class="error">❌ dataManager 不存在，无法测试</p>';
+                return;
+            }
+            
+            // 创建测试数据
+            const testRecord = {
+                id: Date.now() + Math.random(),
+                date: '2024-01-15',
+                quantity: 10.5,
+                diameter: '6mm',
+                supplier: '鸿穗',
+                price: 3500,
+                totalAmount: 36750,
+                batch: 'TEST001',
+                remarks: '测试记录',
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                // 直接添加到数据管理器
+                window.dataManager.materialPurchases.push(testRecord);
+                window.dataManager.saveToLocalStorage();
+                window.dataManager.updateStats();
+                
+                result.innerHTML = `
+                    <h4>模拟保存成功:</h4>
+                    <p>✅ 测试记录已添加</p>
+                    <p>当前记录数: ${window.dataManager.materialPurchases.length}</p>
+                    <pre>${JSON.stringify(testRecord, null, 2)}</pre>
+                `;
+                result.className = 'test-result success';
+            } catch (e) {
+                result.innerHTML = `<p class="error">❌ 模拟保存失败: ${e.message}</p>`;
+                result.className = 'test-result error';
+            }
+        }
+
+        function checkEventBindings() {
+            const result = document.getElementById('eventResult');
+            let html = '<h4>事件绑定检查结果:</h4>';
+            
+            // 检查原材料卡片点击事件
+            const materialCard = document.getElementById('materialCard');
+            if (materialCard) {
+                html += `<p>materialCard 点击事件: 尝试触发...</p>`;
+                try {
+                    materialCard.click();
+                    html += `<p>✅ 点击事件触发成功</p>`;
+                } catch (e) {
+                    html += `<p>❌ 点击事件触发失败: ${e.message}</p>`;
+                }
+            }
+            
+            result.innerHTML = html;
+            result.className = 'test-result';
+        }
+
+        function checkConsoleErrors() {
+            const result = document.getElementById('consoleResult');
+            let html = '<h4>控制台错误检查结果:</h4>';
+            
+            if (window.errors.length === 0) {
+                html += '<p>✅ 没有发现JavaScript错误</p>';
+            } else {
+                html += `<p>❌ 发现 ${window.errors.length} 个错误:</p>`;
+                window.errors.forEach((error, index) => {
+                    html += `<div style="border: 1px solid #ccc; margin: 5px 0; padding: 10px;">`;
+                    html += `<strong>错误 ${index + 1}:</strong><br>`;
+                    html += `类型: ${error.type}<br>`;
+                    html += `消息: ${error.message}<br>`;
+                    if (error.filename) html += `文件: ${error.filename}:${error.lineno}:${error.colno}<br>`;
+                    if (error.stack) html += `<pre>${error.stack}</pre>`;
+                    html += `</div>`;
+                });
+            }
+            
+            result.innerHTML = html;
+            result.className = window.errors.length === 0 ? 'test-result success' : 'test-result error';
+        }
+
+        // 页面加载完成后自动运行基础检查
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                checkEnvironment();
+                checkDataManager();
+                checkDashboard();
+                checkLocalStorage();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

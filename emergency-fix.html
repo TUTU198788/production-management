@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>紧急数据恢复</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #dc2626;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .status-success {
+            background: #ecfdf5;
+            border: 2px solid #059669;
+            color: #059669;
+        }
+        
+        .status-error {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            color: #dc2626;
+        }
+        
+        .status-info {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .big-button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .big-button:hover {
+            background: #b91c1c;
+        }
+        
+        .data-preview {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f3f4f6;
+            border-radius: 6px;
+        }
+        
+        .step.completed {
+            background: #ecfdf5;
+            border-left: 4px solid #059669;
+        }
+        
+        .step.error {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 紧急数据恢复工具</h1>
+        
+        <div id="status" class="status status-info">
+            正在检查您的数据状态...
+        </div>
+        
+        <div id="dataInfo" style="display: none;">
+            <h3>📊 数据检查结果：</h3>
+            <div id="dataDetails"></div>
+        </div>
+        
+        <div id="dataPreview" class="data-preview" style="display: none;">
+            <h4>数据预览：</h4>
+            <div id="previewContent"></div>
+        </div>
+        
+        <button id="step1Btn" class="big-button" onclick="step1()">
+            第1步：检查localStorage数据
+        </button>
+        
+        <button id="step2Btn" class="big-button" onclick="step2()" style="display: none;">
+            第2步：创建修复脚本
+        </button>
+        
+        <button id="step3Btn" class="big-button" onclick="step3()" style="display: none;">
+            第3步：应用修复并打开主页面
+        </button>
+        
+        <div id="steps"></div>
+        
+        <div id="fixScript" style="display: none;">
+            <h3>修复脚本：</h3>
+            <textarea id="scriptContent" style="width: 100%; height: 200px; font-family: monospace;"></textarea>
+            <button class="big-button" onclick="copyScript()">复制脚本到剪贴板</button>
+        </div>
+    </div>
+
+    <script>
+        let dataFound = false;
+        let productionData = null;
+        
+        // 页面加载时自动检查
+        window.onload = function() {
+            setTimeout(step1, 500);
+        };
+        
+        function addStep(message, status = 'info') {
+            const stepsDiv = document.getElementById('steps');
+            const step = document.createElement('div');
+            step.className = 'step ' + status;
+            step.innerHTML = message;
+            stepsDiv.appendChild(step);
+        }
+        
+        function step1() {
+            const statusDiv = document.getElementById('status');
+            const dataInfoDiv = document.getElementById('dataInfo');
+            const dataDetailsDiv = document.getElementById('dataDetails');
+            const dataPreviewDiv = document.getElementById('dataPreview');
+            const previewContentDiv = document.getElementById('previewContent');
+            
+            addStep('开始检查localStorage数据...', 'info');
+            
+            try {
+                // 检查所有localStorage数据
+                const productionDataStr = localStorage.getItem('productionData');
+                const operationLogsStr = localStorage.getItem('operationLogs');
+                const materialPurchasesStr = localStorage.getItem('materialPurchases');
+                
+                let details = '';
+                
+                if (productionDataStr) {
+                    productionData = JSON.parse(productionDataStr);
+                    dataFound = true;
+                    details += `✅ 生产数据：${productionData.length} 条<br>`;
+                    
+                    // 显示数据预览
+                    previewContentDiv.innerHTML = JSON.stringify(productionData.slice(0, 3), null, 2);
+                    dataPreviewDiv.style.display = 'block';
+                    
+                    addStep(`✅ 找到生产数据：${productionData.length} 条`, 'completed');
+                } else {
+                    details += '❌ 没有找到生产数据<br>';
+                    addStep('❌ 没有找到生产数据', 'error');
+                }
+                
+                if (operationLogsStr) {
+                    const logs = JSON.parse(operationLogsStr);
+                    details += `✅ 操作日志：${logs.length} 条<br>`;
+                    addStep(`✅ 找到操作日志：${logs.length} 条`, 'completed');
+                } else {
+                    details += '❌ 没有找到操作日志<br>';
+                }
+                
+                if (materialPurchasesStr) {
+                    const materials = JSON.parse(materialPurchasesStr);
+                    details += `✅ 原材料记录：${materials.length} 条<br>`;
+                    addStep(`✅ 找到原材料记录：${materials.length} 条`, 'completed');
+                } else {
+                    details += '❌ 没有找到原材料记录<br>';
+                }
+                
+                dataDetailsDiv.innerHTML = details;
+                dataInfoDiv.style.display = 'block';
+                
+                if (dataFound) {
+                    statusDiv.className = 'status status-success';
+                    statusDiv.innerHTML = `🎉 太好了！找到了您的数据！<br>共 ${productionData.length} 条生产记录`;
+                    
+                    document.getElementById('step1Btn').style.display = 'none';
+                    document.getElementById('step2Btn').style.display = 'block';
+                } else {
+                    statusDiv.className = 'status status-error';
+                    statusDiv.innerHTML = '❌ 没有找到任何数据';
+                }
+                
+            } catch (error) {
+                addStep(`❌ 检查数据时出错：${error.message}`, 'error');
+                statusDiv.className = 'status status-error';
+                statusDiv.innerHTML = `❌ 检查数据时出错：${error.message}`;
+            }
+        }
+        
+        function step2() {
+            if (!dataFound) {
+                alert('没有找到数据，无法创建修复脚本');
+                return;
+            }
+            
+            addStep('正在创建修复脚本...', 'info');
+            
+            // 创建修复脚本
+            const fixScript = `
+// 紧急数据修复脚本
+console.log('=== 开始紧急数据修复 ===');
+
+// 强制重新创建DataManager
+if (typeof DataManager !== 'undefined') {
+    try {
+        // 删除现有实例
+        delete window.dataManager;
+        
+        // 创建新实例
+        window.dataManager = new DataManager();
+        console.log('✅ DataManager实例重新创建成功');
+        
+        // 强制加载数据
+        window.dataManager.loadFromLocalStorage();
+        console.log('数据加载完成，条数:', window.dataManager.data.length);
+        
+        // 强制渲染界面
+        if (window.dataManager.data.length > 0) {
+            window.dataManager.renderTable();
+            window.dataManager.updateStats();
+            window.dataManager.renderAreaStats();
+            window.dataManager.renderUnproducedStats();
+            console.log('✅ 界面渲染完成');
+            
+            // 显示成功消息
+            alert('🎉 数据修复成功！找到 ' + window.dataManager.data.length + ' 条记录');
+        } else {
+            console.log('❌ 数据加载失败');
+            alert('❌ 数据加载失败');
+        }
+        
+    } catch (error) {
+        console.error('❌ 修复失败:', error);
+        alert('❌ 修复失败: ' + error.message);
+    }
+} else {
+    console.error('❌ DataManager类不存在');
+    alert('❌ DataManager类不存在');
+}
+`;
+            
+            document.getElementById('scriptContent').value = fixScript;
+            document.getElementById('fixScript').style.display = 'block';
+            
+            addStep('✅ 修复脚本创建完成', 'completed');
+            
+            document.getElementById('step2Btn').style.display = 'none';
+            document.getElementById('step3Btn').style.display = 'block';
+        }
+        
+        function step3() {
+            addStep('正在应用修复...', 'info');
+            
+            // 将修复脚本保存到localStorage
+            const script = document.getElementById('scriptContent').value;
+            localStorage.setItem('emergencyFixScript', script);
+            
+            addStep('✅ 修复脚本已保存', 'completed');
+            addStep('正在打开主页面...', 'info');
+            
+            // 打开主页面
+            window.open('index.html', '_blank');
+            
+            addStep('✅ 主页面已打开，请在控制台运行修复脚本', 'completed');
+            
+            // 显示说明
+            alert('主页面已打开！\n\n请按以下步骤操作：\n1. 在主页面按F12打开控制台\n2. 复制下面的修复脚本\n3. 粘贴到控制台并按回车\n\n修复脚本已自动复制到剪贴板！');
+            
+            // 自动复制脚本
+            copyScript();
+        }
+        
+        function copyScript() {
+            const script = document.getElementById('scriptContent').value;
+            navigator.clipboard.writeText(script).then(() => {
+                alert('✅ 修复脚本已复制到剪贴板！\n\n请到主页面控制台粘贴并运行');
+            }).catch(() => {
+                // 备用复制方法
+                const textarea = document.getElementById('scriptContent');
+                textarea.select();
+                document.execCommand('copy');
+                alert('✅ 修复脚本已复制到剪贴板！\n\n请到主页面控制台粘贴并运行');
+            });
+        }
+    </script>
+</body>
+</html>

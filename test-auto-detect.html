@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel自动识别型号功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #1e40af;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            color: #059669;
+            margin-top: 0;
+        }
+        
+        .test-data {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        .test-data pre {
+            margin: 0;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        
+        .expected-result {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        .expected-result h4 {
+            color: #059669;
+            margin-top: 0;
+        }
+        
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        
+        .test-button:hover {
+            background: #2563eb;
+        }
+        
+        .result-area {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+        }
+        
+        .success {
+            color: #059669;
+            background: #ecfdf5;
+            border-color: #10b981;
+        }
+        
+        .error {
+            color: #dc2626;
+            background: #fef2f2;
+            border-color: #f87171;
+        }
+        
+        .spec-card {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px 15px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .spec-card.h100 {
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .spec-card.h80 {
+            border-left: 4px solid #10b981;
+        }
+        
+        .spec-card.h120 {
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .spec-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .spec-details {
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Excel自动识别型号功能测试</h1>
+        
+        <div class="test-section">
+            <h3>🎯 功能说明</h3>
+            <p>新的Excel导入功能支持自动识别表格中的型号信息：</p>
+            <ul>
+                <li>✅ <strong>自动识别完整规格</strong>：如 H100-1400mm、H80-800mm</li>
+                <li>✅ <strong>自动识别单独型号</strong>：如 H100、H80、H120</li>
+                <li>✅ <strong>智能解析长度</strong>：从数值列中识别长度信息</li>
+                <li>✅ <strong>灵活数量识别</strong>：自动识别数量列</li>
+                <li>✅ <strong>型号选择可选</strong>：可以不选择型号，完全依赖自动识别</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 测试数据格式</h3>
+            
+            <h4>格式1：完整规格格式</h4>
+            <div class="test-data">
+                <pre>序号 | 规格型号      | 数量
+1    | H100-1400mm  | 50
+2    | H80-800mm    | 30
+3    | H120-1600mm  | 25</pre>
+            </div>
+            
+            <h4>格式2：分离型号格式</h4>
+            <div class="test-data">
+                <pre>序号 | 型号  | 长度  | 数量
+1    | H100  | 1400  | 50
+2    | H80   | 800   | 30
+3    | H120  | 1600  | 25</pre>
+            </div>
+            
+            <h4>格式3：混合格式</h4>
+            <div class="test-data">
+                <pre>序号 | 规格/型号     | 长度  | 数量
+1    | H100-1400mm  |       | 50
+2    | H80          | 800   | 30
+3    | H120-1600mm  |       | 25</pre>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 模拟测试</h3>
+            <p>点击下面的按钮测试不同格式的数据解析：</p>
+            
+            <button class="test-button" onclick="testCompleteSpec()">测试完整规格格式</button>
+            <button class="test-button" onclick="testSeparateFormat()">测试分离型号格式</button>
+            <button class="test-button" onclick="testMixedFormat()">测试混合格式</button>
+            <button class="test-button" onclick="testErrorHandling()">测试错误处理</button>
+            
+            <div id="testResults" class="result-area" style="display: none;">
+                <h4>测试结果</h4>
+                <div id="resultContent"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ 预期效果</h3>
+            <div class="expected-result">
+                <h4>自动识别结果示例：</h4>
+                <div class="spec-card h100">
+                    <div class="spec-title">H100-1400mm</div>
+                    <div class="spec-details">50根 (待生产) | 自动识别型号: H100</div>
+                </div>
+                <div class="spec-card h80">
+                    <div class="spec-title">H80-800mm</div>
+                    <div class="spec-details">30根 (待生产) | 自动识别型号: H80</div>
+                </div>
+                <div class="spec-card h120">
+                    <div class="spec-title">H120-1600mm</div>
+                    <div class="spec-details">25根 (待生产) | 自动识别型号: H120</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 使用方法</h3>
+            <ol>
+                <li><strong>打开Excel导入对话框</strong></li>
+                <li><strong>选择工地区域</strong>（必选）</li>
+                <li><strong>型号选择</strong>：
+                    <ul>
+                        <li>选择"自动识别型号"（推荐）</li>
+                        <li>或选择具体型号强制使用</li>
+                    </ul>
+                </li>
+                <li><strong>选择Excel文件</strong></li>
+                <li><strong>预览数据</strong>：检查自动识别结果</li>
+                <li><strong>确认导入</strong></li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // 模拟自动识别功能的测试函数
+        function testCompleteSpec() {
+            const testData = [
+                ['序号', '规格型号', '数量'],
+                [1, 'H100-1400mm', 50],
+                [2, 'H80-800mm', 30],
+                [3, 'H120-1600mm', 25]
+            ];
+            
+            const results = simulateAutoDetection(testData);
+            showTestResults('完整规格格式测试', results, true);
+        }
+        
+        function testSeparateFormat() {
+            const testData = [
+                ['序号', '型号', '长度', '数量'],
+                [1, 'H100', 1400, 50],
+                [2, 'H80', 800, 30],
+                [3, 'H120', 1600, 25]
+            ];
+            
+            const results = simulateAutoDetection(testData);
+            showTestResults('分离型号格式测试', results, true);
+        }
+        
+        function testMixedFormat() {
+            const testData = [
+                ['序号', '规格/型号', '长度', '数量'],
+                [1, 'H100-1400mm', '', 50],
+                [2, 'H80', 800, 30],
+                [3, 'H120-1600mm', '', 25]
+            ];
+            
+            const results = simulateAutoDetection(testData);
+            showTestResults('混合格式测试', results, true);
+        }
+        
+        function testErrorHandling() {
+            const testData = [
+                ['序号', '描述', '其他', '备注'],
+                [1, '无效数据', 'test', '测试'],
+                [2, '', '', ''],
+                [3, 'H100', '', ''] // 缺少数量
+            ];
+            
+            const results = simulateAutoDetection(testData);
+            showTestResults('错误处理测试', results, false);
+        }
+        
+        function simulateAutoDetection(testData) {
+            const results = [];
+            const errors = [];
+            
+            // 跳过标题行，从第二行开始解析
+            for (let i = 1; i < testData.length; i++) {
+                const row = testData[i];
+                let spec = null;
+                let quantity = null;
+                let detectedType = null;
+                
+                // 扫描每一列寻找规格和型号信息
+                for (let j = 0; j < row.length; j++) {
+                    const cell = String(row[j]).trim();
+                    
+                    // 检查完整规格
+                    const fullSpecMatch = cell.match(/^(H\d+)-?(\d+)mm?$/i);
+                    if (fullSpecMatch) {
+                        detectedType = fullSpecMatch[1].toUpperCase();
+                        const length = parseInt(fullSpecMatch[2]);
+                        spec = `${detectedType}-${length}mm`;
+                        break;
+                    }
+                    
+                    // 检查单独型号
+                    const typeMatch = cell.match(/^H(\d+)$/i);
+                    if (typeMatch) {
+                        detectedType = cell.toUpperCase();
+                    }
+                }
+                
+                // 如果没有完整规格，尝试组合型号和长度
+                if (!spec && detectedType) {
+                    for (let j = 0; j < row.length; j++) {
+                        const num = parseInt(row[j]);
+                        if (num >= 200 && num <= 11800 && num % 200 === 0) {
+                            spec = `${detectedType}-${num}mm`;
+                            break;
+                        }
+                    }
+                }
+                
+                // 寻找数量
+                for (let j = 0; j < row.length; j++) {
+                    const num = parseInt(row[j]);
+                    if (num > 0 && num < 100000 && !String(row[j]).includes('mm')) {
+                        quantity = num;
+                        break;
+                    }
+                }
+                
+                if (spec && quantity) {
+                    results.push({
+                        spec: spec,
+                        quantity: quantity,
+                        detectedType: detectedType,
+                        rowIndex: i + 1
+                    });
+                } else {
+                    const missing = [];
+                    if (!spec) missing.push('规格/型号');
+                    if (!quantity) missing.push('数量');
+                    errors.push(`第${i + 1}行: 无法识别${missing.join('和')}`);
+                }
+            }
+            
+            return { results, errors };
+        }
+        
+        function showTestResults(testName, data, isSuccess) {
+            const resultsDiv = document.getElementById('testResults');
+            const contentDiv = document.getElementById('resultContent');
+            
+            let html = `<h5>${testName}</h5>`;
+            
+            if (data.results.length > 0) {
+                html += '<div style="margin: 15px 0;"><strong>✅ 成功识别的数据：</strong></div>';
+                data.results.forEach(item => {
+                    const typeClass = item.detectedType.toLowerCase();
+                    html += `
+                        <div class="spec-card ${typeClass}">
+                            <div class="spec-title">${item.spec}</div>
+                            <div class="spec-details">${item.quantity}根 | 第${item.rowIndex}行 | 识别型号: ${item.detectedType}</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            if (data.errors.length > 0) {
+                html += '<div style="margin: 15px 0;"><strong>❌ 识别失败的行：</strong></div>';
+                html += '<ul>';
+                data.errors.forEach(error => {
+                    html += `<li style="color: #dc2626;">${error}</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            if (data.results.length === 0 && data.errors.length === 0) {
+                html += '<div style="color: #6b7280;">没有找到可识别的数据</div>';
+            }
+            
+            contentDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+            resultsDiv.className = `result-area ${isSuccess && data.results.length > 0 ? 'success' : 'error'}`;
+        }
+    </script>
+</body>
+</html>

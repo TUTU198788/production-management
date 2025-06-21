@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>区域名称编辑功能演示</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .demo-title {
+            color: #1f2937;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .demo-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+        .area-name-demo {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            padding: 8px 12px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+            position: relative;
+        }
+        .area-name-demo:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+        .area-name-demo::after {
+            content: '✏️';
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .area-name-demo:hover::after {
+            opacity: 0.7;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .feature-list li:before {
+            content: '✅';
+            margin-right: 10px;
+        }
+        .instruction {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .instruction h4 {
+            margin: 0 0 10px 0;
+            color: #0369a1;
+        }
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .warning h4 {
+            margin: 0 0 10px 0;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1 class="demo-title">🏗️ 区域名称编辑功能演示</h1>
+        
+        <div class="demo-card">
+            <h3>📝 功能演示</h3>
+            <p>下面是一个模拟的区域卡片，点击区域名称可以编辑：</p>
+            
+            <div style="border: 2px solid #ef4444; border-radius: 8px; padding: 15px; background: #fef2f2;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="area-name-demo" onclick="editAreaNameDemo(this)">D53F右区域</span>
+                    <span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">生产中</span>
+                </div>
+                <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;">
+                    <div>
+                        <div style="font-size: 20px; font-weight: bold; color: #1f2937;">7,411.4</div>
+                        <div style="font-size: 12px; color: #6b7280;">总需求(m)</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 20px; font-weight: bold; color: #10b981;">3,838.6</div>
+                        <div style="font-size: 12px; color: #6b7280;">已生产(m)</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">3,572.8</div>
+                        <div style="font-size: 12px; color: #6b7280;">未生产(m)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="instruction">
+            <h4>🎯 使用说明</h4>
+            <p>1. 鼠标悬停在红框内的区域名称上，会显示蓝色边框和编辑图标</p>
+            <p>2. 点击区域名称，会弹出输入框让您修改名称</p>
+            <p>3. 在实际系统中，修改后会自动更新所有相关数据</p>
+        </div>
+
+        <div class="demo-card">
+            <h3>🔧 系统联动更新</h3>
+            <p>修改区域名称后，系统会自动更新以下内容：</p>
+            <ul class="feature-list">
+                <li>所有订单记录中的区域信息</li>
+                <li>生产记录中的区域信息</li>
+                <li>发货历史中的区域信息</li>
+                <li>区域优先级排序设置</li>
+                <li>所有下拉选择框中的区域选项</li>
+                <li>筛选器中的区域选项</li>
+                <li>Excel导入界面的区域选项</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <h4>⚠️ 注意事项</h4>
+            <p>• 区域名称必须使用字母和数字组合（如D53F、C1、E3等）</p>
+            <p>• 不能与现有区域名称重复</p>
+            <p>• 修改前会显示影响的记录数量，需要确认后才执行</p>
+            <p>• 所有修改操作都会记录在操作日志中</p>
+        </div>
+
+        <div class="demo-card">
+            <h3>🚀 在实际系统中使用</h3>
+            <p>要在生产管理系统中使用此功能：</p>
+            <ol>
+                <li>打开生产管理系统主页面</li>
+                <li>导入一些数据或添加生产计划</li>
+                <li>在"各生产区域统计"部分找到区域卡片</li>
+                <li>点击任意区域名称进行编辑</li>
+                <li>输入新名称并确认修改</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function editAreaNameDemo(element) {
+            const currentName = element.textContent.replace('区域', '');
+            const newName = prompt(`请输入新的区域名称：\n\n当前名称：${currentName}\n\n注意：这只是演示，实际系统中会进行完整的数据更新`, currentName);
+            
+            if (newName && newName.trim() && newName.trim() !== currentName) {
+                const trimmedName = newName.trim().toUpperCase();
+                
+                // 简单的格式验证
+                if (!/^[A-Z0-9]+[A-Z0-9]*$/.test(trimmedName)) {
+                    alert('区域名称格式不正确，请使用字母和数字组合（如D53F、C1、E3等）');
+                    return;
+                }
+                
+                element.textContent = trimmedName + '区域';
+                
+                // 显示成功提示
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #10b981;
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    animation: slideIn 0.3s ease;
+                `;
+                notification.textContent = `区域名称已更新：${currentName} → ${trimmedName}`;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+        }
+        
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

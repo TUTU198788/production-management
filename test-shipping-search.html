@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发货搜索功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #059669;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-info {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .test-info h3 {
+            color: #3b82f6;
+            margin: 0 0 15px 0;
+        }
+        
+        .test-info ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .test-info li {
+            margin: 8px 0;
+        }
+        
+        .search-demo {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group input[type="text"] {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+        }
+        
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn.primary {
+            background: #3b82f6;
+        }
+        
+        .btn.primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn.success {
+            background: #059669;
+        }
+        
+        .btn.success:hover {
+            background: #047857;
+        }
+        
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .inventory-table th,
+        .inventory-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .inventory-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .inventory-table tr:hover {
+            background: #f9fafb;
+        }
+        
+        .spec-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .spec-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .spec-areas {
+            font-size: 12px;
+            color: #6b7280;
+            font-style: italic;
+        }
+        
+        .number-cell {
+            text-align: right;
+            font-weight: 500;
+        }
+        
+        .highlight {
+            background: #fef3c7 !important;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .hidden-row {
+            display: none;
+        }
+        
+        .search-result {
+            background: #ecfdf5;
+            border: 1px solid #059669;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            color: #059669;
+            font-weight: 500;
+        }
+        
+        .no-results {
+            background: #fef2f2;
+            border: 1px solid #dc2626;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            color: #dc2626;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .search-examples {
+            background: #fffbeb;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .search-examples h4 {
+            color: #f59e0b;
+            margin: 0 0 10px 0;
+        }
+        
+        .example-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .example-tag {
+            background: #f59e0b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .example-tag:hover {
+            background: #d97706;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 发货搜索功能测试</h1>
+        
+        <div class="test-info">
+            <h3>🎯 搜索功能特点</h3>
+            <ul>
+                <li><strong>多维度搜索</strong>：支持规格型号、型号类型、尺寸、区域搜索</li>
+                <li><strong>实时过滤</strong>：输入时即时显示搜索结果</li>
+                <li><strong>智能匹配</strong>：支持部分匹配和大小写不敏感</li>
+                <li><strong>快速清空</strong>：一键清空搜索条件</li>
+                <li><strong>回车搜索</strong>：支持回车键重新加载数据</li>
+            </ul>
+        </div>
+        
+        <div class="search-demo">
+            <h4>🔍 搜索演示</h4>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="demoSearchInput">搜索规格型号</label>
+                    <input type="text" id="demoSearchInput" placeholder="输入规格型号进行搜索，如：H100、1200mm等">
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button class="btn" id="demoClearBtn">
+                        <i>✖</i>
+                        清空搜索
+                    </button>
+                </div>
+            </div>
+            
+            <div class="search-examples">
+                <h4>💡 搜索示例（点击试试）</h4>
+                <div class="example-tags">
+                    <span class="example-tag" onclick="setSearchTerm('H100')">H100</span>
+                    <span class="example-tag" onclick="setSearchTerm('H80')">H80</span>
+                    <span class="example-tag" onclick="setSearchTerm('1200mm')">1200mm</span>
+                    <span class="example-tag" onclick="setSearchTerm('1400mm')">1400mm</span>
+                    <span class="example-tag" onclick="setSearchTerm('C1')">C1区域</span>
+                    <span class="example-tag" onclick="setSearchTerm('D6')">D6区域</span>
+                    <span class="example-tag" onclick="setSearchTerm('1200')">1200</span>
+                    <span class="example-tag" onclick="setSearchTerm('mm')">mm</span>
+                </div>
+            </div>
+            
+            <div id="searchResults"></div>
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin: 20px 0;">
+            <button class="btn success" onclick="loadMockData()">
+                📊 加载模拟数据
+            </button>
+            <button class="btn primary" onclick="openMainSystem()">
+                🚀 打开主系统测试
+            </button>
+        </div>
+        
+        <div id="inventoryTable" style="display: none;">
+            <h4>📦 可发货库存（支持搜索过滤）</h4>
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>规格型号</th>
+                        <th>可发货数量</th>
+                        <th>涉及区域</th>
+                        <th>合计米数</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                    <!-- 库存数据将在这里显示 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 模拟库存数据
+        const mockInventoryData = [
+            { spec: 'H80-1200mm', totalAvailable: 150, areas: ['C1', 'C2'], meters: 180 },
+            { spec: 'H80-1400mm', totalAvailable: 200, areas: ['C1', 'E3'], meters: 280 },
+            { spec: 'H80-1600mm', totalAvailable: 80, areas: ['D6'], meters: 128 },
+            { spec: 'H100-1200mm', totalAvailable: 120, areas: ['D6'], meters: 144 },
+            { spec: 'H100-1400mm', totalAvailable: 180, areas: ['A14', 'E3'], meters: 252 },
+            { spec: 'H100-1600mm', totalAvailable: 90, areas: ['C2', 'D6'], meters: 144 },
+            { spec: 'H100-1800mm', totalAvailable: 60, areas: ['A14'], meters: 108 },
+            { spec: 'H120-1200mm', totalAvailable: 40, areas: ['C3'], meters: 48 },
+            { spec: 'H120-1400mm', totalAvailable: 75, areas: ['C3', 'E1'], meters: 105 }
+        ];
+        
+        let currentData = [];
+        
+        function setSearchTerm(term) {
+            const searchInput = document.getElementById('demoSearchInput');
+            searchInput.value = term;
+            filterData();
+        }
+        
+        function loadMockData() {
+            currentData = [...mockInventoryData];
+            showInventoryTable(currentData);
+            showSearchResult(`✅ 加载了 ${currentData.length} 种规格的库存数据`);
+        }
+        
+        function showInventoryTable(data) {
+            const tableDiv = document.getElementById('inventoryTable');
+            const tableBody = document.getElementById('inventoryTableBody');
+            
+            let tableHTML = '';
+            data.forEach(item => {
+                const areasText = item.areas.join(', ');
+                
+                tableHTML += `
+                    <tr class="inventory-row" data-spec="${item.spec.toLowerCase()}" data-areas="${areasText.toLowerCase()}">
+                        <td>
+                            <div class="spec-info">
+                                <div class="spec-name">${item.spec}</div>
+                                <div class="spec-areas">库存分布: ${areasText}</div>
+                            </div>
+                        </td>
+                        <td class="number-cell">${item.totalAvailable.toLocaleString()} 根</td>
+                        <td>${areasText}</td>
+                        <td class="number-cell">${item.meters.toFixed(1)} m</td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = tableHTML;
+            tableDiv.style.display = 'block';
+        }
+        
+        function filterData() {
+            const searchTerm = document.getElementById('demoSearchInput').value.trim().toLowerCase();
+            const rows = document.querySelectorAll('.inventory-row');
+            
+            if (!searchTerm) {
+                // 显示所有行
+                rows.forEach(row => {
+                    row.style.display = '';
+                    row.classList.remove('highlight');
+                });
+                showSearchResult(`📋 显示所有 ${rows.length} 种规格`);
+                return;
+            }
+            
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const spec = row.dataset.spec;
+                const areas = row.dataset.areas;
+                
+                const shouldShow = spec.includes(searchTerm) || areas.includes(searchTerm);
+                
+                if (shouldShow) {
+                    row.style.display = '';
+                    row.classList.add('highlight');
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                    row.classList.remove('highlight');
+                }
+            });
+            
+            if (visibleCount === 0) {
+                showSearchResult(`❌ 没有找到匹配"${searchTerm}"的项目`, 'error');
+            } else {
+                showSearchResult(`🎯 找到 ${visibleCount} 种匹配"${searchTerm}"的规格`);
+            }
+        }
+        
+        function showSearchResult(message, type = 'success') {
+            const resultsDiv = document.getElementById('searchResults');
+            const className = type === 'error' ? 'no-results' : 'search-result';
+            resultsDiv.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+        
+        function clearSearch() {
+            const searchInput = document.getElementById('demoSearchInput');
+            searchInput.value = '';
+            filterData();
+        }
+        
+        function openMainSystem() {
+            window.open('index.html', '_blank');
+            showSearchResult('💡 提示：在主系统的发货界面中，现在可以使用搜索功能快速找到需要的规格！');
+        }
+        
+        // 事件监听器
+        document.getElementById('demoSearchInput').addEventListener('input', filterData);
+        document.getElementById('demoSearchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                filterData();
+            }
+        });
+        document.getElementById('demoClearBtn').addEventListener('click', clearSearch);
+        
+        // 页面加载时自动加载数据
+        window.onload = function() {
+            setTimeout(loadMockData, 500);
+        };
+    </script>
+</body>
+</html>

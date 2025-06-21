@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据导出检查工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #059669;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .result {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #ecfdf5;
+            border: 2px solid #059669;
+            color: #059669;
+        }
+        
+        .error {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            color: #dc2626;
+        }
+        
+        .info {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .warning {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            color: #f59e0b;
+        }
+        
+        .big-button {
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            width: calc(50% - 20px);
+            box-sizing: border-box;
+        }
+        
+        .big-button:hover {
+            background: #047857;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            border: 1px solid #e5e7eb;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        
+        .data-table th {
+            background: #f9fafb;
+            font-weight: bold;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .date-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .date-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .date-card h4 {
+            margin: 0 0 10px 0;
+            color: #374151;
+        }
+        
+        .date-card .count {
+            font-size: 24px;
+            font-weight: bold;
+            color: #059669;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 数据导出检查工具</h1>
+        
+        <div id="results"></div>
+        
+        <div style="display: flex; gap: 20px;">
+            <button class="big-button" onclick="checkData()">
+                🔍 检查数据完整性
+            </button>
+            
+            <button class="big-button" onclick="exportCompleteData()">
+                📥 导出完整数据
+            </button>
+        </div>
+        
+        <div id="dataAnalysis"></div>
+    </div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const result = document.createElement('div');
+            result.className = 'result ' + type;
+            result.innerHTML = message;
+            resultsDiv.appendChild(result);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('dataAnalysis').innerHTML = '';
+        }
+        
+        function checkData() {
+            clearResults();
+            addResult('🔍 开始检查数据完整性...', 'info');
+            
+            // 检查localStorage中的数据
+            const productionDataStr = localStorage.getItem('productionData');
+            if (!productionDataStr) {
+                addResult('❌ 没有找到生产数据', 'error');
+                return;
+            }
+            
+            try {
+                const productionData = JSON.parse(productionDataStr);
+                addResult(`✅ 找到生产数据：${productionData.length} 条记录`, 'success');
+                
+                // 按日期分组统计
+                const dateStats = {};
+                const dateRange = {
+                    earliest: null,
+                    latest: null
+                };
+                
+                productionData.forEach(item => {
+                    // 检查各种可能的日期字段
+                    let itemDate = null;
+                    
+                    if (item.createdAt) {
+                        itemDate = new Date(item.createdAt);
+                    } else if (item.deadline) {
+                        itemDate = new Date(item.deadline);
+                    } else if (item.timestamp) {
+                        itemDate = new Date(item.timestamp);
+                    } else if (item.date) {
+                        itemDate = new Date(item.date);
+                    }
+                    
+                    if (itemDate && !isNaN(itemDate)) {
+                        const dateStr = itemDate.toISOString().split('T')[0];
+                        
+                        if (!dateStats[dateStr]) {
+                            dateStats[dateStr] = 0;
+                        }
+                        dateStats[dateStr]++;
+                        
+                        // 更新日期范围
+                        if (!dateRange.earliest || itemDate < dateRange.earliest) {
+                            dateRange.earliest = itemDate;
+                        }
+                        if (!dateRange.latest || itemDate > dateRange.latest) {
+                            dateRange.latest = itemDate;
+                        }
+                    }
+                });
+                
+                // 显示日期统计
+                const analysisDiv = document.getElementById('dataAnalysis');
+                
+                if (Object.keys(dateStats).length > 0) {
+                    addResult(`📅 数据日期范围：${dateRange.earliest.toLocaleDateString()} 到 ${dateRange.latest.toLocaleDateString()}`, 'info');
+                    
+                    let dateStatsHtml = '<h3>📊 按日期统计：</h3><div class="date-stats">';
+                    
+                    // 按日期排序
+                    const sortedDates = Object.keys(dateStats).sort();
+                    sortedDates.forEach(date => {
+                        dateStatsHtml += `
+                            <div class="date-card">
+                                <h4>${date}</h4>
+                                <div class="count">${dateStats[date]}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    dateStatsHtml += '</div>';
+                    analysisDiv.innerHTML = dateStatsHtml;
+                    
+                    // 检查是否只有6月17日的数据
+                    if (sortedDates.length === 1 && sortedDates[0] === '2024-06-17') {
+                        addResult('⚠️ 警告：只找到6月17日的数据！可能存在数据丢失', 'warning');
+                    } else if (sortedDates.length > 1) {
+                        addResult(`✅ 数据分布正常：共 ${sortedDates.length} 个不同日期`, 'success');
+                    }
+                } else {
+                    addResult('⚠️ 数据中没有找到有效的日期信息', 'warning');
+                    
+                    // 显示前几条数据的结构
+                    let sampleHtml = '<h3>📋 数据样本（前5条）：</h3>';
+                    sampleHtml += '<table class="data-table"><thead><tr>';
+                    
+                    if (productionData.length > 0) {
+                        const firstItem = productionData[0];
+                        Object.keys(firstItem).forEach(key => {
+                            sampleHtml += `<th>${key}</th>`;
+                        });
+                        sampleHtml += '</tr></thead><tbody>';
+                        
+                        productionData.slice(0, 5).forEach(item => {
+                            sampleHtml += '<tr>';
+                            Object.values(item).forEach(value => {
+                                sampleHtml += `<td>${JSON.stringify(value)}</td>`;
+                            });
+                            sampleHtml += '</tr>';
+                        });
+                        sampleHtml += '</tbody></table>';
+                    }
+                    
+                    analysisDiv.innerHTML = sampleHtml;
+                }
+                
+                // 检查操作日志
+                const operationLogsStr = localStorage.getItem('operationLogs');
+                if (operationLogsStr) {
+                    const operationLogs = JSON.parse(operationLogsStr);
+                    addResult(`✅ 找到操作日志：${operationLogs.length} 条记录`, 'success');
+                    
+                    // 检查日志的日期范围
+                    if (operationLogs.length > 0) {
+                        const logDates = operationLogs.map(log => new Date(log.timestamp).toISOString().split('T')[0]);
+                        const uniqueLogDates = [...new Set(logDates)].sort();
+                        addResult(`📅 操作日志日期范围：${uniqueLogDates[0]} 到 ${uniqueLogDates[uniqueLogDates.length - 1]}`, 'info');
+                    }
+                } else {
+                    addResult('⚠️ 没有找到操作日志', 'warning');
+                }
+                
+                // 检查原材料记录
+                const materialPurchasesStr = localStorage.getItem('materialPurchases');
+                if (materialPurchasesStr) {
+                    const materialPurchases = JSON.parse(materialPurchasesStr);
+                    addResult(`✅ 找到原材料记录：${materialPurchases.length} 条记录`, 'success');
+                } else {
+                    addResult('⚠️ 没有找到原材料记录', 'warning');
+                }
+                
+            } catch (error) {
+                addResult(`❌ 数据解析失败：${error.message}`, 'error');
+            }
+        }
+        
+        function exportCompleteData() {
+            addResult('📥 开始导出完整数据...', 'info');
+            
+            try {
+                // 获取所有数据
+                const productionData = JSON.parse(localStorage.getItem('productionData') || '[]');
+                const operationLogs = JSON.parse(localStorage.getItem('operationLogs') || '[]');
+                const materialPurchases = JSON.parse(localStorage.getItem('materialPurchases') || '[]');
+                const customAreas = JSON.parse(localStorage.getItem('customAreas') || '[]');
+                
+                // 创建完整的导出数据
+                const completeExportData = {
+                    exportTime: new Date().toISOString(),
+                    exportVersion: '2.0',
+                    summary: {
+                        productionRecords: productionData.length,
+                        operationLogs: operationLogs.length,
+                        materialPurchases: materialPurchases.length,
+                        customAreas: customAreas.length
+                    },
+                    data: {
+                        productionData: productionData,
+                        operationLogs: operationLogs,
+                        materialPurchases: materialPurchases,
+                        customAreas: customAreas
+                    }
+                };
+                
+                // 创建并下载文件
+                const blob = new Blob([JSON.stringify(completeExportData, null, 2)], {
+                    type: 'application/json'
+                });
+                
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `完整数据备份_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                addResult(`✅ 完整数据导出成功！包含：`, 'success');
+                addResult(`📊 生产记录：${productionData.length} 条`, 'info');
+                addResult(`📝 操作日志：${operationLogs.length} 条`, 'info');
+                addResult(`🏗️ 原材料记录：${materialPurchases.length} 条`, 'info');
+                addResult(`📍 自定义区域：${customAreas.length} 个`, 'info');
+                
+            } catch (error) {
+                addResult(`❌ 导出失败：${error.message}`, 'error');
+            }
+        }
+        
+        // 页面加载时自动检查
+        window.onload = function() {
+            setTimeout(checkData, 500);
+        };
+    </script>
+</body>
+</html>
