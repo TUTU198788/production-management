@@ -238,30 +238,42 @@ class FirebaseSyncManager {
     // 开始实时同步
     startRealtimeSync() {
         if (!this.isInitialized) return;
-        
+
         // 监听生产数据变化
         this.listenToCollection('productionData', (data) => {
             if (window.dataManager) {
                 window.dataManager.handleRemoteDataUpdate(data);
             }
         });
-        
+
         // 监听发货历史变化
         this.listenToCollection('shippingHistory', (data) => {
             if (window.dataManager) {
                 window.dataManager.handleRemoteShippingUpdate(data);
             }
         });
-        
+
         // 监听原材料采购变化
         this.listenToCollection('materialPurchases', (data) => {
             if (window.dataManager) {
                 window.dataManager.handleRemoteMaterialUpdate(data);
             }
         });
-        
+
         // 监听在线用户
         this.listenToOnlineUsers();
+    }
+
+    // 暂停实时同步
+    pauseRealtimeSync() {
+        console.log('⏸️ 暂停实时同步监听器');
+        this.realtimeSyncPaused = true;
+    }
+
+    // 恢复实时同步
+    resumeRealtimeSync() {
+        console.log('▶️ 恢复实时同步监听器');
+        this.realtimeSyncPaused = false;
     }
     
     // 监听集合变化
@@ -288,10 +300,31 @@ class FirebaseSyncManager {
             }
 
             const unsubscribe = window.onSnapshot(q, (snapshot) => {
+                // 检查实时同步是否被暂停
+                if (this.realtimeSyncPaused) {
+                    console.log(`⏸️ 实时同步已暂停，跳过 ${collectionName} 更新`);
+                    return;
+                }
+
+                // 检查是否正在手动同步，如果是则跳过处理
+                if (window.dataManager && window.dataManager.isManualSyncing) {
+                    console.log(`⏸️ 手动同步进行中，跳过 ${collectionName} 实时更新`);
+                    return;
+                }
+
+                // 检查是否刚完成手动同步（10秒内）
+                const timeSinceManualSync = Date.now() - (window.dataManager?.lastManualSyncTime || 0);
+                if (timeSinceManualSync < 10000) {
+                    console.log(`⏸️ 刚完成手动同步，跳过 ${collectionName} 实时更新`);
+                    return;
+                }
+
                 const data = [];
                 snapshot.forEach(doc => {
                     data.push({ id: doc.id, ...doc.data() });
                 });
+
+                console.log(`🔄 ${collectionName} 实时更新:`, data.length, '条记录');
                 callback(data);
             }, (error) => {
                 console.error(`监听 ${collectionName} 失败:`, error);
@@ -333,16 +366,30 @@ class FirebaseSyncManager {
                 materialPurchases: window.dataManager.materialPurchases?.length || 0
             });
 
-            // 1. 首先从云端拉取现有数据
-            console.log('📥 步骤1: 从云端拉取数据');
-            await this.loadDataFromCloud();
+            // 检查本地是否有数据
+            const hasLocalData = (window.dataManager.data && window.dataManager.data.length > 0) ||
+                                (window.dataManager.materialPurchases && window.dataManager.materialPurchases.length > 0) ||
+                                (window.dataManager.shippingHistory && window.dataManager.shippingHistory.length > 0);
 
-            // 等待一下让数据处理完成
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            if (hasLocalData) {
+                console.log('🛡️ 检测到本地有数据，跳过云端数据拉取，直接上传本地数据');
 
-            // 2. 然后将本地数据上传到云端（如果本地有数据的话）
-            console.log('📤 步骤2: 上传本地数据到云端');
-            await this.uploadLocalDataToCloud();
+                // 直接上传本地数据到云端，不拉取云端数据
+                console.log('📤 上传本地数据到云端');
+                await this.uploadLocalDataToCloud();
+            } else {
+                console.log('📥 本地无数据，从云端拉取数据');
+
+                // 1. 首先从云端拉取现有数据
+                await this.loadDataFromCloud();
+
+                // 等待一下让数据处理完成
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // 2. 然后将本地数据上传到云端（如果本地有数据的话）
+                console.log('📤 上传本地数据到云端');
+                await this.uploadLocalDataToCloud();
+            }
 
             console.log('✅ 初始数据同步完成');
 
@@ -409,14 +456,35 @@ class FirebaseSyncManager {
             console.log(`从云端加载 ${collectionName}:`, data.length, '条记录');
 
             // 通知DataManager处理远程数据
-            if (window.dataManager && data.length > 0) {
-                if (collectionName === 'productionData') {
-                    window.dataManager.handleRemoteDataUpdate(data);
-                } else if (collectionName === 'shippingHistory') {
-                    window.dataManager.handleRemoteShippingUpdate(data);
-                } else if (collectionName === 'materialPurchases') {
-                    window.dataManager.handleRemoteMaterialUpdate(data);
+            if (window.dataManager) {
+                // 检查本地是否有数据
+                const hasLocalData = (collectionName === 'productionData' && window.dataManager.data.length > 0) ||
+                                   (collectionName === 'shippingHistory' && window.dataManager.shippingHistory.length > 0) ||
+                                   (collectionName === 'materialPurchases' && window.dataManager.materialPurchases.length > 0);
+
+                // 如果云端有数据，或者本地没有数据，才处理远程数据
+                if (data.length > 0 || !hasLocalData) {
+                    console.log(`处理远程 ${collectionName} 数据: ${data.length} 条记录，本地有数据: ${hasLocalData}`);
+
+                    if (collectionName === 'productionData') {
+                        window.dataManager.handleRemoteDataUpdate(data);
+                    } else if (collectionName === 'shippingHistory') {
+                        window.dataManager.handleRemoteShippingUpdate(data);
+                    } else if (collectionName === 'materialPurchases') {
+                        window.dataManager.handleRemoteMaterialUpdate(data);
+                    }
+                } else {
+                    console.log(`跳过空的远程 ${collectionName} 数据，保护本地数据`);
                 }
+
+                // 强制刷新主界面统计数据
+                setTimeout(() => {
+                    if (window.dashboard) {
+                        console.log('Firebase同步完成，强制刷新主界面');
+                        window.dashboard.updateMetricsFromDataManager();
+                        window.dashboard.updateCharts();
+                    }
+                }, 100);
             }
 
         } catch (error) {
@@ -563,13 +631,17 @@ class FirebaseSyncManager {
                             return;
                         }
 
-                        const docId = item.id || this.generateDocId();
+                        // 确保ID是字符串
+                        const docId = String(item.id || this.generateDocId());
                         const docRef = window.doc(window.collection(this.db, collectionName), docId);
 
                         // 创建文档数据，确保所有字段都是有效的
                         const docData = {
                             ...item,
-                            timestamp,
+                            // 保持原有的时间戳和版本信息，不要覆盖
+                            timestamp: item.timestamp || timestamp,
+                            lastModified: item.lastModified || Date.now(),
+                            version: (item.version || 1) + 1, // 递增版本号
                             lastModifiedBy: this.userConfig.id,
                             lastModifiedByName: this.userConfig.name,
                             syncedAt: Date.now()
@@ -723,7 +795,51 @@ class FirebaseSyncManager {
             userConfig: this.userConfig
         };
     }
+
+    // 断开连接
+    disconnect() {
+        this.isInitialized = false;
+        this.userConfig = null;
+        this.cleanup();
+        console.log('Firebase连接已断开');
+    }
+
+    // 清空集合
+    async clearCollection(collectionName) {
+        if (!this.isInitialized) {
+            throw new Error('Firebase未初始化');
+        }
+
+        try {
+            console.log(`🗑️ 开始清空集合: ${collectionName}`);
+
+            // 获取集合中的所有文档
+            const collectionRef = window.collection(this.db, collectionName);
+            const snapshot = await window.getDocs(collectionRef);
+
+            if (snapshot.empty) {
+                console.log(`集合 ${collectionName} 已经为空`);
+                return;
+            }
+
+            // 批量删除文档
+            const batch = window.writeBatch(this.db);
+            snapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+
+            await batch.commit();
+            console.log(`✅ 集合 ${collectionName} 已清空，删除了 ${snapshot.docs.length} 个文档`);
+
+        } catch (error) {
+            console.error(`❌ 清空集合 ${collectionName} 失败:`, error);
+            throw error;
+        }
+    }
 }
 
 // 全局实例
 window.firebaseSync = new FirebaseSyncManager();
+
+// 版本标识
+console.log('🔄 Firebase同步管理器已加载 - 版本: 2024-12-21-v4 (激进修复：本地数据优先)');

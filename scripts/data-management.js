@@ -230,6 +230,14 @@ class DataManager {
             }
 
             console.log(`从本地存储加载了 ${this.data.length} 条生产数据、${this.operationLogs.length} 条操作日志、${this.materialPurchases.length} 条原材料采购记录和 ${this.shippingHistory.length} 条发货历史记录`);
+
+            // 如果有数据，立即通知主界面更新
+            if (this.data.length > 0) {
+                console.log('✅ 检测到生产数据，立即通知主界面更新');
+                setTimeout(() => {
+                    this.forceUpdateDashboard();
+                }, 100);
+            }
         } catch (error) {
             console.error('加载本地存储数据失败:', error);
             this.data = [];
@@ -1231,12 +1239,44 @@ class DataManager {
         this.renderTable();
     }
     
-    // 保存到本地存储
+    // 保存到本地存储（增强版本控制）
     saveToLocalStorage() {
-        localStorage.setItem('productionData', JSON.stringify(this.data));
+        // 为数据添加版本信息和时间戳
+        const enhancedData = this.data.map(item => ({
+            ...item,
+            lastModified: Date.now(),
+            version: (item.version || 0) + 1,
+            lastModifiedBy: window.firebaseSync?.userConfig?.id || 'local_user',
+            lastModifiedByName: window.firebaseSync?.userConfig?.name || '本地用户'
+        }));
+
+        // 为发货历史添加版本信息
+        const enhancedShipping = this.shippingHistory.map(item => ({
+            ...item,
+            lastModified: item.lastModified || Date.now(),
+            version: (item.version || 0) + 1,
+            lastModifiedBy: window.firebaseSync?.userConfig?.id || 'local_user',
+            lastModifiedByName: window.firebaseSync?.userConfig?.name || '本地用户'
+        }));
+
+        // 为原材料采购添加版本信息
+        const enhancedMaterials = this.materialPurchases.map(item => ({
+            ...item,
+            lastModified: item.lastModified || Date.now(),
+            version: (item.version || 0) + 1,
+            lastModifiedBy: window.firebaseSync?.userConfig?.id || 'local_user',
+            lastModifiedByName: window.firebaseSync?.userConfig?.name || '本地用户'
+        }));
+
+        localStorage.setItem('productionData', JSON.stringify(enhancedData));
         localStorage.setItem('operationLogs', JSON.stringify(this.operationLogs));
-        localStorage.setItem('materialPurchases', JSON.stringify(this.materialPurchases));
-        localStorage.setItem('shippingHistory', JSON.stringify(this.shippingHistory));
+        localStorage.setItem('materialPurchases', JSON.stringify(enhancedMaterials));
+        localStorage.setItem('shippingHistory', JSON.stringify(enhancedShipping));
+
+        // 更新内存中的数据
+        this.data = enhancedData;
+        this.shippingHistory = enhancedShipping;
+        this.materialPurchases = enhancedMaterials;
 
         // 触发云端同步（优先使用 Firebase）
         this.syncToCloud();
@@ -1252,16 +1292,32 @@ class DataManager {
                 生产数据: this.data?.length || 0,
                 发货历史: this.shippingHistory?.length || 0,
                 原材料采购: this.materialPurchases?.length || 0,
-                操作日志: this.operationLogs?.length || 0
+                操作日志: this.operationLogs?.length || 0,
+                是否手动同步: this.isManualSyncing
             });
 
             try {
                 let syncCount = 0;
+                const currentTime = Date.now();
 
                 // 同步生产数据
                 if (this.data && this.data.length > 0) {
                     console.log(`📤 正在同步 ${this.data.length} 条生产数据...`);
-                    await window.firebaseSync.syncToCloud('productionData', this.data);
+
+                    // 如果是手动同步，为数据添加优先级标志
+                    let dataToSync = this.data;
+                    if (this.isManualSyncing) {
+                        dataToSync = this.data.map(item => ({
+                            ...item,
+                            manualSyncFlag: true,
+                            lastModified: currentTime,
+                            version: (item.version || 1) + 1
+                        }));
+                        // 更新本地数据
+                        this.data = dataToSync;
+                    }
+
+                    await window.firebaseSync.syncToCloud('productionData', dataToSync);
                     console.log('✅ 生产数据同步成功');
                     syncCount++;
                 } else {
@@ -1271,7 +1327,19 @@ class DataManager {
                 // 同步发货历史
                 if (this.shippingHistory && this.shippingHistory.length > 0) {
                     console.log(`📤 正在同步 ${this.shippingHistory.length} 条发货历史...`);
-                    await window.firebaseSync.syncToCloud('shippingHistory', this.shippingHistory);
+
+                    let shippingToSync = this.shippingHistory;
+                    if (this.isManualSyncing) {
+                        shippingToSync = this.shippingHistory.map(item => ({
+                            ...item,
+                            manualSyncFlag: true,
+                            lastModified: currentTime,
+                            version: (item.version || 1) + 1
+                        }));
+                        this.shippingHistory = shippingToSync;
+                    }
+
+                    await window.firebaseSync.syncToCloud('shippingHistory', shippingToSync);
                     console.log('✅ 发货历史同步成功');
                     syncCount++;
                 } else {
@@ -1281,7 +1349,19 @@ class DataManager {
                 // 同步原材料采购
                 if (this.materialPurchases && this.materialPurchases.length > 0) {
                     console.log(`📤 正在同步 ${this.materialPurchases.length} 条原材料数据...`);
-                    await window.firebaseSync.syncToCloud('materialPurchases', this.materialPurchases);
+
+                    let materialsToSync = this.materialPurchases;
+                    if (this.isManualSyncing) {
+                        materialsToSync = this.materialPurchases.map(item => ({
+                            ...item,
+                            manualSyncFlag: true,
+                            lastModified: currentTime,
+                            version: (item.version || 1) + 1
+                        }));
+                        this.materialPurchases = materialsToSync;
+                    }
+
+                    await window.firebaseSync.syncToCloud('materialPurchases', materialsToSync);
                     console.log('✅ 原材料数据同步成功');
                     syncCount++;
                 } else {
@@ -1310,7 +1390,7 @@ class DataManager {
         }
     }
 
-    // 执行手动同步
+    // 执行手动同步（优先保护本地数据）
     async performManualSync() {
         if (!window.firebaseSync || !window.firebaseSync.isConnected()) {
             this.showNotification('❌ Firebase未连接，无法执行同步', 'error');
@@ -1336,18 +1416,57 @@ class DataManager {
                 throw new Error('Firebase连接测试失败');
             }
 
-            // 2. 从云端拉取最新数据
-            console.log('📥 从云端拉取最新数据...');
-            await window.firebaseSync.loadDataFromCloud();
+            // 2. 备份当前本地数据
+            console.log('💾 备份本地数据...');
+            const localDataBackup = [...this.data];
+            const localShippingBackup = [...this.shippingHistory];
+            const localMaterialBackup = [...this.materialPurchases];
 
-            // 3. 上传本地数据
-            console.log('📤 上传本地数据到云端...');
+            // 3. 设置标志，暂时禁用自动数据合并
+            this.isManualSyncing = true;
+
+            // 4. 暂停Firebase实时监听器
+            if (window.firebaseSync) {
+                window.firebaseSync.pauseRealtimeSync();
+            }
+
+            // 5. 记录手动同步时间（在上传之前设置，防止实时监听器触发）
+            this.lastManualSyncTime = Date.now();
+
+            // 6. 直接上传本地数据到云端（不先拉取云端数据）
+            console.log('📤 直接上传本地数据到云端...');
             await this.syncToCloud();
 
-            // 4. 等待一下让数据处理完成
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // 7. 等待一下让数据处理完成
+            await new Promise(resolve => setTimeout(resolve, 3000)); // 增加等待时间
 
-            this.showNotification('✅ 手动同步完成！数据已更新', 'success');
+            // 8. 恢复数据合并功能
+            this.isManualSyncing = false;
+
+            // 9. 恢复Firebase实时监听器
+            if (window.firebaseSync) {
+                window.firebaseSync.resumeRealtimeSync();
+            }
+
+            // 保存更新后的数据到本地存储
+            localStorage.setItem('productionData', JSON.stringify(this.data));
+            localStorage.setItem('shippingHistory', JSON.stringify(this.shippingHistory));
+            localStorage.setItem('materialPurchases', JSON.stringify(this.materialPurchases));
+
+            this.showNotification('✅ 手动同步完成！本地数据已上传到云端', 'success');
+
+            // 确保本地数据没有丢失
+            if (this.data.length === 0 && localDataBackup.length > 0) {
+                console.log('⚠️ 检测到数据丢失，恢复备份数据');
+                this.data = localDataBackup;
+                this.shippingHistory = localShippingBackup;
+                this.materialPurchases = localMaterialBackup;
+
+                // 保存到本地存储
+                localStorage.setItem('productionData', JSON.stringify(this.data));
+                localStorage.setItem('shippingHistory', JSON.stringify(this.shippingHistory));
+                localStorage.setItem('materialPurchases', JSON.stringify(this.materialPurchases));
+            }
 
             // 刷新界面
             this.renderTable();
@@ -1359,6 +1478,70 @@ class DataManager {
         } catch (error) {
             console.error('❌ 手动同步失败:', error);
             this.showNotification('❌ 手动同步失败: ' + error.message, 'error');
+
+            // 确保恢复数据合并功能和实时监听器
+            this.isManualSyncing = false;
+            if (window.firebaseSync) {
+                window.firebaseSync.resumeRealtimeSync();
+            }
+        }
+    }
+
+    // 强制上传本地数据到云端（覆盖云端数据）
+    async forceUploadToCloud() {
+        if (!window.firebaseSync || !window.firebaseSync.isConnected()) {
+            this.showNotification('❌ Firebase未连接，无法上传数据', 'error');
+            return;
+        }
+
+        const confirmed = confirm('⚠️ 确定要强制上传本地数据到云端吗？\n\n这将：\n1. 清空云端所有数据\n2. 上传当前本地数据\n\n云端数据将被完全替换！');
+
+        if (!confirmed) return;
+
+        this.showNotification('🚀 开始强制上传本地数据...', 'info');
+
+        try {
+            // 1. 清空云端数据
+            console.log('🗑️ 清空云端数据...');
+            await window.firebaseSync.clearCollection('productionData');
+            await window.firebaseSync.clearCollection('shippingHistory');
+            await window.firebaseSync.clearCollection('materialPurchases');
+
+            // 2. 等待清空完成
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // 3. 上传本地数据
+            console.log('📤 上传本地数据到云端...');
+
+            if (this.data.length > 0) {
+                await window.firebaseSync.syncToCloud('productionData', this.data, 'update');
+                console.log(`✅ 已上传 ${this.data.length} 条生产数据`);
+            }
+
+            if (this.shippingHistory.length > 0) {
+                await window.firebaseSync.syncToCloud('shippingHistory', this.shippingHistory, 'update');
+                console.log(`✅ 已上传 ${this.shippingHistory.length} 条发货历史`);
+            }
+
+            if (this.materialPurchases.length > 0) {
+                await window.firebaseSync.syncToCloud('materialPurchases', this.materialPurchases, 'update');
+                console.log(`✅ 已上传 ${this.materialPurchases.length} 条原材料记录`);
+            }
+
+            // 4. 等待上传完成
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            this.showNotification('✅ 本地数据已成功上传到云端！', 'success');
+
+            console.log('🎉 强制上传完成:', {
+                生产数据: this.data.length,
+                发货历史: this.shippingHistory.length,
+                原材料记录: this.materialPurchases.length
+            });
+
+        } catch (error) {
+            console.error('❌ 强制上传失败:', error);
+            this.showNotification('❌ 强制上传失败: ' + error.message, 'error');
         }
     }
     
@@ -1431,6 +1614,27 @@ class DataManager {
         if (window.dashboard) {
             window.dashboard.showNotification(message, type);
         }
+    }
+
+    // 强制更新主界面统计数据
+    forceUpdateDashboard() {
+        console.log('强制更新主界面统计数据...');
+
+        // 等待一小段时间确保数据已经设置完成
+        setTimeout(() => {
+            if (window.dashboard) {
+                console.log('调用 dashboard.updateMetricsFromDataManager (强制)');
+                window.dashboard.updateMetricsFromDataManager();
+                window.dashboard.updateCharts();
+
+                // 再次延迟确保更新完成
+                setTimeout(() => {
+                    window.dashboard.updateMetrics();
+                }, 100);
+            } else {
+                console.warn('window.dashboard 不存在，无法强制更新');
+            }
+        }, 50);
     }
 
     // 打开生产数据模态框
@@ -2589,8 +2793,13 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
             // 保存到本地存储
             this.saveToLocalStorage();
-            this.saveOperationLogs();
-            this.saveMaterialPurchases();
+            // 保存操作日志和材料采购记录
+            if (this.operationLogs && this.operationLogs.length > 0) {
+                localStorage.setItem('operationLogs', JSON.stringify(this.operationLogs));
+            }
+            if (this.materialPurchases && this.materialPurchases.length > 0) {
+                localStorage.setItem('materialPurchases', JSON.stringify(this.materialPurchases));
+            }
             localStorage.setItem('customAreas', JSON.stringify([...this.customAreas]));
 
             // 更新界面
@@ -7612,8 +7821,27 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
     handleRemoteDataUpdate(remoteData) {
         if (!remoteData || !Array.isArray(remoteData)) return;
 
+        // 如果正在手动同步，跳过远程数据更新，保护本地数据
+        if (this.isManualSyncing) {
+            console.log('⏸️ 手动同步进行中，跳过远程数据更新，保护本地数据');
+            return;
+        }
+
+        // 检查是否刚刚完成手动同步（5秒内）
+        const timeSinceManualSync = Date.now() - (this.lastManualSyncTime || 0);
+        if (timeSinceManualSync < 5000) {
+            console.log('⏸️ 刚完成手动同步，跳过远程数据更新，保护本地数据');
+            return;
+        }
+
         console.log('收到远程生产数据更新:', remoteData.length, '条记录');
         console.log('当前本地数据:', this.data.length, '条记录');
+
+        // 如果远程数据为空且本地有数据，保护本地数据
+        if (remoteData.length === 0 && this.data.length > 0) {
+            console.log('⚠️ 远程生产数据为空，保护本地数据，跳过更新');
+            return;
+        }
 
         // 如果本地没有数据，直接使用远程数据
         if (this.data.length === 0 && remoteData.length > 0) {
@@ -7629,6 +7857,9 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             this.updateStats();
             this.renderAreaStats();
             this.renderUnproducedStats();
+
+            // 强制更新主界面统计数据
+            this.forceUpdateDashboard();
 
             this.showNotification(`已从云端加载 ${remoteData.length} 条生产数据`, 'success');
             return;
@@ -7651,6 +7882,9 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             this.renderAreaStats();
             this.renderUnproducedStats();
 
+            // 强制更新主界面统计数据
+            this.forceUpdateDashboard();
+
             this.showNotification('数据已从云端同步更新', 'info');
         } else {
             console.log('数据无变化，跳过更新');
@@ -7661,8 +7895,20 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
     handleRemoteShippingUpdate(remoteData) {
         if (!remoteData || !Array.isArray(remoteData)) return;
 
+        // 如果正在手动同步，跳过远程数据更新
+        if (this.isManualSyncing) {
+            console.log('⏸️ 手动同步进行中，跳过远程发货历史更新');
+            return;
+        }
+
         console.log('收到远程发货历史更新:', remoteData.length, '条记录');
         console.log('当前本地发货历史:', this.shippingHistory.length, '条记录');
+
+        // 如果远程数据为空且本地有数据，保护本地数据
+        if (remoteData.length === 0 && this.shippingHistory.length > 0) {
+            console.log('⚠️ 远程发货历史为空，保护本地数据，跳过更新');
+            return;
+        }
 
         // 如果本地没有数据，直接使用远程数据
         if (this.shippingHistory.length === 0 && remoteData.length > 0) {
@@ -7670,6 +7916,7 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             this.shippingHistory = [...remoteData];
             localStorage.setItem('shippingHistory', JSON.stringify(this.shippingHistory));
             this.renderCustomerStats();
+            this.forceUpdateDashboard(); // 强制更新主界面
             this.showNotification(`已从云端加载 ${remoteData.length} 条发货记录`, 'success');
             return;
         }
@@ -7682,6 +7929,7 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
             // 更新相关界面
             this.renderCustomerStats();
+            this.forceUpdateDashboard(); // 强制更新主界面
 
             this.showNotification('发货数据已从云端同步更新', 'info');
         }
@@ -7691,14 +7939,27 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
     handleRemoteMaterialUpdate(remoteData) {
         if (!remoteData || !Array.isArray(remoteData)) return;
 
+        // 如果正在手动同步，跳过远程数据更新
+        if (this.isManualSyncing) {
+            console.log('⏸️ 手动同步进行中，跳过远程原材料更新');
+            return;
+        }
+
         console.log('收到远程原材料采购更新:', remoteData.length, '条记录');
         console.log('当前本地原材料采购:', this.materialPurchases.length, '条记录');
+
+        // 如果远程数据为空且本地有数据，保护本地数据
+        if (remoteData.length === 0 && this.materialPurchases.length > 0) {
+            console.log('⚠️ 远程原材料数据为空，保护本地数据，跳过更新');
+            return;
+        }
 
         // 如果本地没有数据，直接使用远程数据
         if (this.materialPurchases.length === 0 && remoteData.length > 0) {
             console.log('本地无原材料数据，直接使用远程数据');
             this.materialPurchases = [...remoteData];
             localStorage.setItem('materialPurchases', JSON.stringify(this.materialPurchases));
+            this.forceUpdateDashboard(); // 强制更新主界面
             this.showNotification(`已从云端加载 ${remoteData.length} 条原材料记录`, 'success');
             return;
         }
@@ -7708,41 +7969,291 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         if (this.hasDataChanged(this.materialPurchases, mergedData)) {
             this.materialPurchases = mergedData;
             localStorage.setItem('materialPurchases', JSON.stringify(this.materialPurchases));
+            this.forceUpdateDashboard(); // 强制更新主界面
 
             this.showNotification('原材料数据已从云端同步更新', 'info');
         }
     }
 
-    // 合并本地和远程数据
+    // 合并本地和远程数据（改进版本）
     mergeDataWithRemote(localData, remoteData) {
+        // 确保输入数据是数组
+        if (!Array.isArray(localData)) localData = [];
+        if (!Array.isArray(remoteData)) remoteData = [];
+
         const merged = new Map();
+        const conflicts = [];
+
+        console.log('🔄 开始智能数据合并...');
+        console.log(`本地数据: ${localData.length} 条，远程数据: ${remoteData.length} 条`);
 
         // 先添加本地数据
         localData.forEach(item => {
-            merged.set(item.id, { ...item, source: 'local' });
+            // 确保item有有效的ID
+            if (!item || !item.id) {
+                console.warn('跳过无效的本地数据项:', item);
+                return;
+            }
+
+            // 确保每个项目都有必要的元数据
+            const enhancedItem = {
+                ...item,
+                source: 'local',
+                lastModified: item.lastModified || item.timestamp || Date.now(),
+                version: item.version || 1
+            };
+            merged.set(String(item.id), enhancedItem);
         });
 
-        // 再添加远程数据，如果时间戳更新则覆盖
+        // 处理远程数据
         remoteData.forEach(item => {
-            const existing = merged.get(item.id);
-            if (!existing || (item.timestamp && existing.timestamp && item.timestamp > existing.timestamp)) {
-                merged.set(item.id, { ...item, source: 'remote' });
+            // 确保item有有效的ID
+            if (!item || !item.id) {
+                console.warn('跳过无效的远程数据项:', item);
+                return;
+            }
+
+            const itemId = String(item.id);
+            const existing = merged.get(itemId);
+            const remoteItem = {
+                ...item,
+                source: 'remote',
+                lastModified: item.lastModified || item.timestamp || Date.now(),
+                version: item.version || 1
+            };
+
+            if (!existing) {
+                // 新的远程数据，直接添加
+                merged.set(itemId, remoteItem);
+                console.log(`➕ 新增远程数据: ID ${itemId}`);
+            } else {
+                // 存在冲突，需要智能合并
+                const mergeResult = this.resolveDataConflict(existing, remoteItem);
+
+                if (mergeResult.hasConflict) {
+                    conflicts.push({
+                        id: itemId,
+                        local: existing,
+                        remote: remoteItem,
+                        resolution: mergeResult.resolution
+                    });
+                    console.log(`⚠️ 数据冲突: ID ${itemId}, 解决方案: ${mergeResult.resolution}`);
+                }
+
+                merged.set(itemId, mergeResult.mergedItem);
             }
         });
 
-        return Array.from(merged.values()).map(item => {
+        // 只显示真正重要的冲突
+        const importantConflicts = conflicts.filter(conflict =>
+            conflict.resolution !== 'data_identical' &&
+            conflict.resolution !== 'minor_differences'
+        );
+
+        if (importantConflicts.length > 0) {
+            this.showConflictNotification(importantConflicts);
+        } else if (conflicts.length > 0) {
+            console.log(`📝 数据同步完成，处理了 ${conflicts.length} 个轻微差异，无需用户关注`);
+        }
+
+        const result = Array.from(merged.values()).map(item => {
             const { source, ...cleanItem } = item;
             return cleanItem;
         });
+
+        console.log(`✅ 数据合并完成: ${result.length} 条记录，${conflicts.length} 个冲突`);
+        return result;
+    }
+
+    // 解决数据冲突
+    resolveDataConflict(localItem, remoteItem) {
+        const localTime = localItem.lastModified || localItem.timestamp || 0;
+        const remoteTime = remoteItem.lastModified || remoteItem.timestamp || 0;
+        const localVersion = localItem.version || 1;
+        const remoteVersion = remoteItem.version || 1;
+
+        // 检查是否是手动同步的数据（优先级最高）
+        const localIsManualSync = localItem.manualSyncFlag === true;
+        const remoteIsManualSync = remoteItem.manualSyncFlag === true;
+
+        // 如果本地数据是手动同步的，优先使用本地数据
+        if (localIsManualSync && !remoteIsManualSync) {
+            return {
+                hasConflict: true,
+                resolution: 'local_manual_sync_priority',
+                mergedItem: { ...localItem, version: Math.max(localVersion, remoteVersion) + 1 }
+            };
+        }
+
+        // 如果远程数据是手动同步的，使用远程数据
+        if (remoteIsManualSync && !localIsManualSync) {
+            return {
+                hasConflict: true,
+                resolution: 'remote_manual_sync_priority',
+                mergedItem: { ...remoteItem, version: Math.max(localVersion, remoteVersion) + 1 }
+            };
+        }
+
+        // 首先检查数据是否实际相同（忽略元数据）
+        const localCore = this.extractCoreData(localItem);
+        const remoteCore = this.extractCoreData(remoteItem);
+        const isCoreDataSame = JSON.stringify(localCore) === JSON.stringify(remoteCore);
+
+        // 如果核心数据相同，只是元数据不同，不算冲突
+        if (isCoreDataSame) {
+            return {
+                hasConflict: false,
+                resolution: 'data_identical',
+                mergedItem: {
+                    ...localItem,
+                    version: Math.max(localVersion, remoteVersion),
+                    lastModified: Math.max(localTime, remoteTime)
+                }
+            };
+        }
+
+        // 策略1: 版本号优先（只有在数据不同时才算冲突）
+        if (remoteVersion > localVersion) {
+            return {
+                hasConflict: true,
+                resolution: 'remote_version_newer',
+                mergedItem: { ...remoteItem, version: remoteVersion + 1 }
+            };
+        }
+
+        if (localVersion > remoteVersion) {
+            return {
+                hasConflict: true,
+                resolution: 'local_version_newer',
+                mergedItem: { ...localItem, version: localVersion + 1 }
+            };
+        }
+
+        // 策略2: 时间戳优先（版本号相同时，增加容错时间到30秒）
+        if (remoteTime > localTime + 30000) { // 30秒容错
+            return {
+                hasConflict: true,
+                resolution: 'remote_time_newer',
+                mergedItem: { ...remoteItem, version: Math.max(localVersion, remoteVersion) + 1 }
+            };
+        }
+
+        if (localTime > remoteTime + 30000) { // 30秒容错
+            return {
+                hasConflict: false,
+                resolution: 'local_time_newer',
+                mergedItem: { ...localItem, version: Math.max(localVersion, remoteVersion) + 1 }
+            };
+        }
+
+        // 策略3: 智能字段合并（时间相近时）
+        const mergedItem = this.smartFieldMerge(localItem, remoteItem);
+        const hasRealChanges = JSON.stringify(this.extractCoreData(mergedItem)) !== JSON.stringify(localCore);
+
+        return {
+            hasConflict: hasRealChanges,
+            resolution: hasRealChanges ? 'smart_merge' : 'minor_differences',
+            mergedItem: { ...mergedItem, version: Math.max(localVersion, remoteVersion) + 1 }
+        };
+    }
+
+    // 提取核心数据（排除元数据）
+    extractCoreData(item) {
+        const {
+            id, timestamp, lastModified, version, source,
+            lastModifiedBy, lastModifiedByName, syncedAt, manualSyncFlag,
+            ...coreData
+        } = item;
+        return coreData;
+    }
+
+    // 智能字段合并
+    smartFieldMerge(localItem, remoteItem) {
+        const merged = { ...localItem };
+
+        // 数量字段：取较大值（通常表示更新的生产进度）
+        const localProduced = Number(localItem.produced) || 0;
+        const remoteProduced = Number(remoteItem.produced) || 0;
+        if (remoteProduced > localProduced) {
+            merged.produced = remoteProduced;
+            merged.lastModifiedBy = remoteItem.lastModifiedBy;
+            merged.lastModifiedByName = remoteItem.lastModifiedByName;
+        }
+
+        // 发货数量：取较大值
+        const localShipped = Number(localItem.shipped) || 0;
+        const remoteShipped = Number(remoteItem.shipped) || 0;
+        if (remoteShipped > localShipped) {
+            merged.shipped = remoteShipped;
+            merged.shippingRecords = remoteItem.shippingRecords || merged.shippingRecords;
+        }
+
+        // 状态：优先级排序
+        const statusPriority = { '未开始': 1, '进行中': 2, '已完成': 3, '已发货': 4 };
+        if ((statusPriority[remoteItem.status] || 0) > (statusPriority[localItem.status] || 0)) {
+            merged.status = remoteItem.status;
+        }
+
+        // 备注：合并（如果不同）
+        if (remoteItem.remarks && remoteItem.remarks !== localItem.remarks) {
+            merged.remarks = `${localItem.remarks || ''} | 远程更新: ${remoteItem.remarks}`.trim();
+        }
+
+        merged.lastModified = Math.max(
+            localItem.lastModified || 0,
+            remoteItem.lastModified || 0
+        );
+
+        return merged;
+    }
+
+    // 显示冲突通知
+    showConflictNotification(conflicts) {
+        // 检查用户是否禁用了冲突通知
+        const isDisabled = localStorage.getItem('disableConflictNotifications') === 'true';
+
+        const conflictCount = conflicts.length;
+
+        // 在控制台显示详细冲突信息（总是显示）
+        console.group('📋 数据冲突详情');
+        conflicts.forEach((conflict, index) => {
+            console.log(`${index + 1}. ID: ${conflict.id}, 解决方案: ${conflict.resolution}`);
+            console.log('   本地数据:', conflict.local);
+            console.log('   远程数据:', conflict.remote);
+        });
+        console.groupEnd();
+
+        // 只有在未禁用时才显示UI通知
+        if (!isDisabled) {
+            const message = `检测到 ${conflictCount} 个数据冲突，已自动合并。详情请查看控制台。`;
+            this.showNotification(message, 'warning');
+        } else {
+            console.log(`📝 检测到 ${conflictCount} 个数据冲突，已自动合并（通知已禁用）`);
+        }
     }
 
     // 检查数据是否有变化
     hasDataChanged(oldData, newData) {
         if (oldData.length !== newData.length) return true;
 
-        // 简单的深度比较（基于 JSON 字符串）
-        return JSON.stringify(oldData.sort((a, b) => a.id.localeCompare(b.id))) !==
-               JSON.stringify(newData.sort((a, b) => a.id.localeCompare(b.id)));
+        // 安全的深度比较（确保ID是字符串）
+        try {
+            const sortedOld = [...oldData].sort((a, b) => {
+                const idA = String(a.id || '');
+                const idB = String(b.id || '');
+                return idA.localeCompare(idB);
+            });
+            const sortedNew = [...newData].sort((a, b) => {
+                const idA = String(a.id || '');
+                const idB = String(b.id || '');
+                return idA.localeCompare(idB);
+            });
+
+            return JSON.stringify(sortedOld) !== JSON.stringify(sortedNew);
+        } catch (error) {
+            console.warn('数据比较出错，使用简单比较:', error);
+            return JSON.stringify(oldData) !== JSON.stringify(newData);
+        }
     }
 
     // 计算产量统计
@@ -9578,3 +10089,59 @@ if (document.readyState === 'loading') {
         }
     }
 }
+
+// 版本标识
+console.log('📊 数据管理器脚本已加载 - 版本: 2024-12-21-v4 (激进修复：本地数据优先)');
+
+// 紧急数据恢复功能
+window.emergencyDataRecovery = function() {
+    console.log('🚨 启动紧急数据恢复...');
+
+    if (!window.dataManager) {
+        console.log('❌ DataManager未加载');
+        return;
+    }
+
+    // 尝试从localStorage恢复数据
+    try {
+        const savedData = localStorage.getItem('productionData');
+        const savedMaterials = localStorage.getItem('materialPurchases');
+        const savedShipping = localStorage.getItem('shippingHistory');
+
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            if (data.length > 0) {
+                window.dataManager.data = data;
+                window.dataManager.filteredData = [...data];
+                console.log(`✅ 恢复生产数据: ${data.length} 条`);
+            }
+        }
+
+        if (savedMaterials) {
+            const materials = JSON.parse(savedMaterials);
+            if (materials.length > 0) {
+                window.dataManager.materialPurchases = materials;
+                console.log(`✅ 恢复原材料数据: ${materials.length} 条`);
+            }
+        }
+
+        if (savedShipping) {
+            const shipping = JSON.parse(savedShipping);
+            if (shipping.length > 0) {
+                window.dataManager.shippingHistory = shipping;
+                console.log(`✅ 恢复发货历史: ${shipping.length} 条`);
+            }
+        }
+
+        // 更新界面
+        window.dataManager.renderTable();
+        window.dataManager.updateStats();
+        window.dataManager.renderAreaStats();
+        window.dataManager.renderUnproducedStats();
+
+        console.log('🎉 紧急数据恢复完成');
+
+    } catch (error) {
+        console.error('❌ 紧急数据恢复失败:', error);
+    }
+};
