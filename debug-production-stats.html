@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生产统计调试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { border-left: 4px solid #28a745; }
+        .error { border-left: 4px solid #dc3545; }
+        .info { border-left: 4px solid #17a2b8; }
+        .warning { border-left: 4px solid #ffc107; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 生产统计调试工具</h1>
+        
+        <div class="section">
+            <h3>📊 数据检查</h3>
+            <button onclick="checkData()">检查本地数据</button>
+            <button onclick="checkProductionRecords()">检查生产记录</button>
+            <button onclick="testStatistics()">测试统计计算</button>
+            <div id="dataResults"></div>
+        </div>
+
+        <div class="section">
+            <h3>🔧 功能测试</h3>
+            <button onclick="testDataManager()">测试数据管理器</button>
+            <button onclick="testExtractFunction()">测试提取函数</button>
+            <button onclick="simulateProductionManagement()">模拟生产管理</button>
+            <div id="functionResults"></div>
+        </div>
+
+        <div class="section">
+            <h3>📋 详细信息</h3>
+            <div id="detailResults"></div>
+        </div>
+    </div>
+
+    <script>
+        function addResult(message, type = 'info', containerId = 'dataResults') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = message;
+            container.appendChild(div);
+        }
+
+        function checkData() {
+            const container = document.getElementById('dataResults');
+            container.innerHTML = '';
+            
+            addResult('🔍 检查本地存储数据...', 'info');
+            
+            const productionData = localStorage.getItem('productionData');
+            if (!productionData) {
+                addResult('❌ 没有找到生产数据', 'error');
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(productionData);
+                addResult(`✅ 找到生产数据，共 ${data.length} 条记录`, 'success');
+                
+                // 检查有生产数量的记录
+                const producedItems = data.filter(item => item.produced > 0);
+                addResult(`📦 有生产数量的记录: ${producedItems.length} 条`, 'info');
+                
+                if (producedItems.length > 0) {
+                    addResult('📝 生产记录样本:', 'info');
+                    producedItems.slice(0, 3).forEach((item, index) => {
+                        addResult(`  ${index + 1}. ${item.spec} (${item.area}) - 已生产: ${item.produced}根`, 'info');
+                    });
+                }
+                
+                // 计算总生产量
+                const totalProduced = data.reduce((sum, item) => sum + (item.produced || 0), 0);
+                addResult(`📊 总生产量: ${totalProduced} 根`, 'success');
+                
+            } catch (error) {
+                addResult(`❌ 数据解析失败: ${error.message}`, 'error');
+            }
+        }
+
+        function checkProductionRecords() {
+            const container = document.getElementById('dataResults');
+            container.innerHTML = '';
+            
+            addResult('🔍 检查详细生产记录...', 'info');
+            
+            const productionData = localStorage.getItem('productionData');
+            if (!productionData) {
+                addResult('❌ 没有找到生产数据', 'error');
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(productionData);
+                let totalDetailedRecords = 0;
+                let itemsWithDetailedRecords = 0;
+                
+                data.forEach(item => {
+                    if (item.productionRecords && Array.isArray(item.productionRecords)) {
+                        itemsWithDetailedRecords++;
+                        totalDetailedRecords += item.productionRecords.length;
+                    }
+                });
+                
+                addResult(`📋 有详细记录的项目: ${itemsWithDetailedRecords} 个`, 'info');
+                addResult(`📊 详细记录总数: ${totalDetailedRecords} 条`, 'info');
+                
+                // 显示详细记录样本
+                if (itemsWithDetailedRecords > 0) {
+                    const itemWithRecords = data.find(item => item.productionRecords && Array.isArray(item.productionRecords));
+                    addResult('📝 详细记录样本:', 'info');
+                    addResult(`  规格: ${itemWithRecords.spec}`, 'info');
+                    addResult(`  记录数: ${itemWithRecords.productionRecords.length}`, 'info');
+                    itemWithRecords.productionRecords.slice(0, 2).forEach((record, index) => {
+                        addResult(`    ${index + 1}. 数量: ${record.quantity}, 日期: ${record.date}`, 'info');
+                    });
+                }
+                
+            } catch (error) {
+                addResult(`❌ 检查失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testStatistics() {
+            const container = document.getElementById('functionResults');
+            container.innerHTML = '';
+            
+            addResult('🧮 测试统计计算...', 'info', 'functionResults');
+            
+            const productionData = localStorage.getItem('productionData');
+            if (!productionData) {
+                addResult('❌ 没有找到生产数据', 'error', 'functionResults');
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(productionData);
+                
+                // 模拟 extractProductionRecords 函数
+                const records = [];
+                let recordId = 1;
+                
+                data.forEach(item => {
+                    if (item.produced > 0) {
+                        if (item.productionRecords && Array.isArray(item.productionRecords)) {
+                            item.productionRecords.forEach(record => {
+                                records.push({
+                                    id: `${item.id}_${recordId++}`,
+                                    spec: item.spec,
+                                    area: item.area,
+                                    quantity: record.quantity || 0
+                                });
+                            });
+                        } else {
+                            records.push({
+                                id: `${item.id}_${recordId++}`,
+                                spec: item.spec,
+                                area: item.area,
+                                quantity: item.produced
+                            });
+                        }
+                    }
+                });
+                
+                // 计算统计
+                const totalRecords = records.length;
+                const totalQuantity = records.reduce((sum, record) => sum + record.quantity, 0);
+                const uniqueSpecs = new Set(records.map(record => record.spec));
+                
+                addResult(`✅ 提取记录数: ${totalRecords}`, 'success', 'functionResults');
+                addResult(`✅ 总生产量: ${totalQuantity} 根`, 'success', 'functionResults');
+                addResult(`✅ 规格种类: ${uniqueSpecs.size} 种`, 'success', 'functionResults');
+                
+                // 按型号统计
+                const typeStats = {};
+                records.forEach(record => {
+                    const typeMatch = record.spec.match(/^(H\d+)/);
+                    const type = typeMatch ? typeMatch[1] : '其他';
+                    
+                    if (!typeStats[type]) {
+                        typeStats[type] = new Set();
+                    }
+                    typeStats[type].add(record.spec);
+                });
+                
+                const typeStatsText = Object.keys(typeStats)
+                    .sort()
+                    .map(type => `${type}: ${typeStats[type].size}种`)
+                    .join(', ');
+                
+                addResult(`✅ 型号统计: ${typeStatsText}`, 'success', 'functionResults');
+                
+            } catch (error) {
+                addResult(`❌ 统计计算失败: ${error.message}`, 'error', 'functionResults');
+            }
+        }
+
+        function testDataManager() {
+            const container = document.getElementById('functionResults');
+            container.innerHTML = '';
+            
+            addResult('🔧 测试数据管理器...', 'info', 'functionResults');
+            
+            if (typeof window.dataManager === 'undefined') {
+                addResult('❌ dataManager 未定义', 'error', 'functionResults');
+                return;
+            }
+            
+            addResult('✅ dataManager 存在', 'success', 'functionResults');
+            
+            // 检查关键方法
+            const methods = ['extractProductionRecords', 'updateProductionStats', 'initProductionManagement'];
+            methods.forEach(method => {
+                if (typeof window.dataManager[method] === 'function') {
+                    addResult(`✅ ${method} 方法存在`, 'success', 'functionResults');
+                } else {
+                    addResult(`❌ ${method} 方法不存在`, 'error', 'functionResults');
+                }
+            });
+            
+            // 检查数据
+            if (window.dataManager.data && Array.isArray(window.dataManager.data)) {
+                addResult(`✅ 数据数组存在，长度: ${window.dataManager.data.length}`, 'success', 'functionResults');
+            } else {
+                addResult('❌ 数据数组不存在或无效', 'error', 'functionResults');
+            }
+        }
+
+        function testExtractFunction() {
+            const container = document.getElementById('functionResults');
+            container.innerHTML = '';
+            
+            addResult('🔍 测试提取函数...', 'info', 'functionResults');
+            
+            if (typeof window.dataManager === 'undefined') {
+                addResult('❌ dataManager 未定义', 'error', 'functionResults');
+                return;
+            }
+            
+            try {
+                const records = window.dataManager.extractProductionRecords();
+                addResult(`✅ 提取成功，记录数: ${records.length}`, 'success', 'functionResults');
+                
+                if (records.length > 0) {
+                    addResult('📝 记录样本:', 'info', 'functionResults');
+                    records.slice(0, 3).forEach((record, index) => {
+                        addResult(`  ${index + 1}. ${record.spec} (${record.area}) - ${record.quantity}根`, 'info', 'functionResults');
+                    });
+                }
+            } catch (error) {
+                addResult(`❌ 提取失败: ${error.message}`, 'error', 'functionResults');
+            }
+        }
+
+        function simulateProductionManagement() {
+            const container = document.getElementById('detailResults');
+            container.innerHTML = '';
+            
+            addResult('🎭 模拟生产管理初始化...', 'info', 'detailResults');
+            
+            if (typeof window.dataManager === 'undefined') {
+                addResult('❌ dataManager 未定义', 'error', 'detailResults');
+                return;
+            }
+            
+            try {
+                // 模拟初始化过程
+                window.dataManager.initProductionManagement();
+                addResult('✅ 初始化完成', 'success', 'detailResults');
+                
+                // 检查页面元素
+                const elements = {
+                    totalProductionRecords: document.getElementById('totalProductionRecords'),
+                    totalProducedQuantity: document.getElementById('totalProducedQuantity'),
+                    totalProductionSpecs: document.getElementById('totalProductionSpecs'),
+                    totalProductionAreas: document.getElementById('totalProductionAreas')
+                };
+                
+                addResult('🎯 页面元素检查:', 'info', 'detailResults');
+                Object.keys(elements).forEach(key => {
+                    if (elements[key]) {
+                        addResult(`  ✅ ${key}: ${elements[key].textContent}`, 'success', 'detailResults');
+                    } else {
+                        addResult(`  ❌ ${key}: 元素不存在`, 'error', 'detailResults');
+                    }
+                });
+                
+            } catch (error) {
+                addResult(`❌ 模拟失败: ${error.message}`, 'error', 'detailResults');
+            }
+        }
+
+        // 页面加载时自动检查
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkData();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统计数据调试工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn.success { background: #28a745; }
+        .btn.danger { background: #dc3545; }
+        .btn.warning { background: #ffc107; color: #333; }
+        .log-area {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .data-table th {
+            background: #f8f9fa;
+        }
+        .status-good { color: #28a745; }
+        .status-warning { color: #ffc107; }
+        .status-error { color: #dc3545; }
+        .metric-display {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+            min-width: 150px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-card">
+        <h1>🔍 统计数据调试工具</h1>
+        <p>专门用于调试主界面统计显示为0的问题</p>
+        <button class="btn success" onclick="runFullDebug()">运行完整调试</button>
+        <button class="btn warning" onclick="forceRecalculate()">强制重新计算</button>
+        <button class="btn danger" onclick="resetData()">重置数据</button>
+        <button class="btn" onclick="clearLog()">清空日志</button>
+    </div>
+
+    <div class="debug-card">
+        <h2>📊 当前统计数据</h2>
+        <div id="currentStats">
+            <!-- 当前统计数据将在这里显示 -->
+        </div>
+        <button class="btn" onclick="refreshStats()">刷新统计</button>
+    </div>
+
+    <div class="debug-card">
+        <h2>🗃️ 数据源分析</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>数据源</th>
+                    <th>状态</th>
+                    <th>记录数</th>
+                    <th>详细信息</th>
+                </tr>
+            </thead>
+            <tbody id="dataSourceAnalysis">
+                <!-- 数据源分析将在这里显示 -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="debug-card">
+        <h2>🔬 计算过程分析</h2>
+        <div id="calculationAnalysis">
+            <!-- 计算过程分析将在这里显示 -->
+        </div>
+        <button class="btn" onclick="analyzeCalculation()">分析计算过程</button>
+    </div>
+
+    <div class="debug-card">
+        <h2>📝 调试日志</h2>
+        <div id="debugLog" class="log-area">
+            <!-- 调试日志将在这里显示 -->
+        </div>
+    </div>
+
+    <script>
+        // 日志记录
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logArea = document.getElementById('debugLog');
+            const color = type === 'error' ? '#dc3545' : type === 'warning' ? '#ffc107' : type === 'success' ? '#28a745' : '#333';
+            logArea.innerHTML += `<span style="color: ${color}">[${timestamp}] ${message}</span>\n`;
+            logArea.scrollTop = logArea.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // 清空日志
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '';
+        }
+
+        // 刷新统计显示
+        function refreshStats() {
+            const statsDiv = document.getElementById('currentStats');
+            
+            if (!window.dashboard) {
+                statsDiv.innerHTML = '<p class="status-error">❌ Dashboard未加载</p>';
+                return;
+            }
+
+            const data = window.dashboard.data || {};
+            statsDiv.innerHTML = `
+                <div class="metric-display">
+                    <div class="metric-value">${(data.totalDemandMeters || 0).toFixed(1)}</div>
+                    <div class="metric-label">总需求量 (米)</div>
+                </div>
+                <div class="metric-display">
+                    <div class="metric-value">${(data.producedMeters || 0).toFixed(1)}</div>
+                    <div class="metric-label">已生产量 (米)</div>
+                </div>
+                <div class="metric-display">
+                    <div class="metric-value">${(data.pendingMeters || 0).toFixed(1)}</div>
+                    <div class="metric-label">待生产量 (米)</div>
+                </div>
+                <div class="metric-display">
+                    <div class="metric-value">${data.completionRate || 0}%</div>
+                    <div class="metric-label">完成率</div>
+                </div>
+                <div class="metric-display">
+                    <div class="metric-value">${(data.shippedMeters || 0).toFixed(1)}</div>
+                    <div class="metric-label">已发货量 (米)</div>
+                </div>
+                <div class="metric-display">
+                    <div class="metric-value">${(data.materialTons || 0).toFixed(1)}</div>
+                    <div class="metric-label">原材料 (吨)</div>
+                </div>
+            `;
+        }
+
+        // 分析数据源
+        function analyzeDataSources() {
+            const tableBody = document.getElementById('dataSourceAnalysis');
+            let html = '';
+
+            // 检查 window.dataManager
+            if (window.dataManager) {
+                const data = window.dataManager.data || [];
+                const status = data.length > 0 ? '正常' : '空数据';
+                html += `
+                    <tr>
+                        <td>window.dataManager.data</td>
+                        <td class="${status === '正常' ? 'status-good' : 'status-warning'}">${status}</td>
+                        <td>${data.length}</td>
+                        <td>生产数据主数组</td>
+                    </tr>
+                `;
+
+                // 检查发货历史
+                const shipping = window.dataManager.shippingHistory || [];
+                html += `
+                    <tr>
+                        <td>window.dataManager.shippingHistory</td>
+                        <td class="${shipping.length > 0 ? 'status-good' : 'status-warning'}">${shipping.length > 0 ? '正常' : '空数据'}</td>
+                        <td>${shipping.length}</td>
+                        <td>发货历史数据</td>
+                    </tr>
+                `;
+
+                // 检查原材料采购
+                const materials = window.dataManager.materialPurchases || [];
+                html += `
+                    <tr>
+                        <td>window.dataManager.materialPurchases</td>
+                        <td class="${materials.length > 0 ? 'status-good' : 'status-warning'}">${materials.length > 0 ? '正常' : '空数据'}</td>
+                        <td>${materials.length}</td>
+                        <td>原材料采购数据</td>
+                    </tr>
+                `;
+            } else {
+                html += `
+                    <tr>
+                        <td>window.dataManager</td>
+                        <td class="status-error">不存在</td>
+                        <td>-</td>
+                        <td>数据管理器未加载</td>
+                    </tr>
+                `;
+            }
+
+            // 检查 window.dashboard
+            if (window.dashboard) {
+                const dashData = window.dashboard.data || {};
+                html += `
+                    <tr>
+                        <td>window.dashboard.data</td>
+                        <td class="${Object.keys(dashData).length > 0 ? 'status-good' : 'status-warning'}">已加载</td>
+                        <td>${Object.keys(dashData).length} 个属性</td>
+                        <td>仪表板统计数据</td>
+                    </tr>
+                `;
+            } else {
+                html += `
+                    <tr>
+                        <td>window.dashboard</td>
+                        <td class="status-error">不存在</td>
+                        <td>-</td>
+                        <td>仪表板未加载</td>
+                    </tr>
+                `;
+            }
+
+            // 检查本地存储
+            const localData = localStorage.getItem('productionData');
+            if (localData) {
+                try {
+                    const parsed = JSON.parse(localData);
+                    html += `
+                        <tr>
+                            <td>localStorage.productionData</td>
+                            <td class="status-good">正常</td>
+                            <td>${parsed.length}</td>
+                            <td>本地存储的生产数据</td>
+                        </tr>
+                    `;
+                } catch (error) {
+                    html += `
+                        <tr>
+                            <td>localStorage.productionData</td>
+                            <td class="status-error">解析错误</td>
+                            <td>-</td>
+                            <td>数据格式异常</td>
+                        </tr>
+                    `;
+                }
+            } else {
+                html += `
+                    <tr>
+                        <td>localStorage.productionData</td>
+                        <td class="status-warning">不存在</td>
+                        <td>0</td>
+                        <td>本地存储为空</td>
+                    </tr>
+                `;
+            }
+
+            tableBody.innerHTML = html;
+        }
+
+        // 分析计算过程
+        function analyzeCalculation() {
+            const analysisDiv = document.getElementById('calculationAnalysis');
+            
+            if (!window.dataManager || !window.dataManager.data) {
+                analysisDiv.innerHTML = '<p class="status-error">❌ 无法分析：DataManager或数据不存在</p>';
+                return;
+            }
+
+            const data = window.dataManager.data;
+            log(`开始分析计算过程，数据条数: ${data.length}`, 'info');
+
+            let html = '<h3>计算过程详细分析</h3>';
+            
+            // 模拟主界面的计算逻辑
+            let totalDemandMeters = 0;
+            let producedMeters = 0;
+            let calculationDetails = [];
+
+            data.forEach((item, index) => {
+                if (index < 10) { // 只显示前10条的详细计算
+                    const length = extractLengthFromSpec(item.spec);
+                    const demandMeter = item.planned * length / 1000;
+                    const producedMeter = item.produced * length / 1000;
+                    
+                    totalDemandMeters += demandMeter;
+                    producedMeters += producedMeter;
+                    
+                    calculationDetails.push({
+                        index: index + 1,
+                        spec: item.spec,
+                        area: item.area,
+                        planned: item.planned,
+                        produced: item.produced,
+                        length: length,
+                        demandMeter: demandMeter,
+                        producedMeter: producedMeter
+                    });
+                } else {
+                    // 对于其余数据，只累加不显示详情
+                    const length = extractLengthFromSpec(item.spec);
+                    totalDemandMeters += item.planned * length / 1000;
+                    producedMeters += item.produced * length / 1000;
+                }
+            });
+
+            html += '<table class="data-table">';
+            html += '<thead><tr><th>序号</th><th>规格</th><th>区域</th><th>计划(根)</th><th>已产(根)</th><th>长度(mm)</th><th>需求(米)</th><th>已产(米)</th></tr></thead>';
+            html += '<tbody>';
+            
+            calculationDetails.forEach(detail => {
+                html += `
+                    <tr>
+                        <td>${detail.index}</td>
+                        <td>${detail.spec}</td>
+                        <td>${detail.area}</td>
+                        <td>${detail.planned}</td>
+                        <td>${detail.produced}</td>
+                        <td>${detail.length}</td>
+                        <td>${detail.demandMeter.toFixed(1)}</td>
+                        <td>${detail.producedMeter.toFixed(1)}</td>
+                    </tr>
+                `;
+            });
+            
+            if (data.length > 10) {
+                html += `<tr><td colspan="8">... 还有 ${data.length - 10} 条数据</td></tr>`;
+            }
+            
+            html += '</tbody></table>';
+            
+            html += `
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                    <h4>计算结果汇总</h4>
+                    <p><strong>总需求量:</strong> ${totalDemandMeters.toFixed(1)} 米</p>
+                    <p><strong>已生产量:</strong> ${producedMeters.toFixed(1)} 米</p>
+                    <p><strong>待生产量:</strong> ${(totalDemandMeters - producedMeters).toFixed(1)} 米</p>
+                    <p><strong>完成率:</strong> ${totalDemandMeters > 0 ? ((producedMeters / totalDemandMeters) * 100).toFixed(1) : 0}%</p>
+                </div>
+            `;
+
+            analysisDiv.innerHTML = html;
+            
+            log(`计算完成 - 总需求: ${totalDemandMeters.toFixed(1)}米, 已生产: ${producedMeters.toFixed(1)}米`, 'success');
+        }
+
+        // 提取规格中的长度信息
+        function extractLengthFromSpec(spec) {
+            if (!spec) return 0;
+            
+            // 匹配各种长度格式
+            const patterns = [
+                /L=(\d+)/,           // L=6000
+                /长度[：:]\s*(\d+)/,   // 长度：6000
+                /(\d+)mm/,           // 6000mm
+                /(\d+)MM/,           // 6000MM
+                /L(\d+)/,            // L6000
+                /-(\d+)$/,           // 规格-6000
+                /×(\d+)/,            // 规格×6000
+                /\*(\d+)/,           // 规格*6000
+                /(\d{4,})/           // 直接的4位以上数字
+            ];
+            
+            for (const pattern of patterns) {
+                const match = spec.match(pattern);
+                if (match) {
+                    const length = parseInt(match[1]);
+                    if (length >= 1000 && length <= 20000) { // 合理的长度范围
+                        return length;
+                    }
+                }
+            }
+            
+            return 6000; // 默认长度
+        }
+
+        // 运行完整调试
+        function runFullDebug() {
+            log('开始运行完整调试...', 'info');
+            
+            // 1. 分析数据源
+            log('1. 分析数据源...', 'info');
+            analyzeDataSources();
+            
+            // 2. 刷新统计
+            log('2. 刷新当前统计...', 'info');
+            refreshStats();
+            
+            // 3. 分析计算过程
+            log('3. 分析计算过程...', 'info');
+            setTimeout(() => {
+                analyzeCalculation();
+                log('完整调试完成', 'success');
+            }, 1000);
+        }
+
+        // 强制重新计算
+        function forceRecalculate() {
+            log('开始强制重新计算...', 'warning');
+            
+            if (!window.dashboard) {
+                log('❌ Dashboard不存在', 'error');
+                return;
+            }
+            
+            if (!window.dataManager) {
+                log('❌ DataManager不存在', 'error');
+                return;
+            }
+            
+            // 强制重新加载数据
+            log('重新加载本地数据...', 'info');
+            window.dataManager.loadFromLocalStorage();
+            
+            setTimeout(() => {
+                // 强制重新计算统计
+                log('强制重新计算统计...', 'info');
+                window.dashboard.updateMetricsFromDataManager();
+                
+                setTimeout(() => {
+                    // 强制更新界面
+                    log('强制更新界面...', 'info');
+                    window.dashboard.updateMetrics();
+                    
+                    setTimeout(() => {
+                        refreshStats();
+                        log('强制重新计算完成', 'success');
+                    }, 500);
+                }, 500);
+            }, 500);
+        }
+
+        // 重置数据
+        function resetData() {
+            if (confirm('确定要重置数据吗？这将重新加载所有数据。')) {
+                log('开始重置数据...', 'warning');
+                location.reload();
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            log('调试工具已加载', 'success');
+            setTimeout(() => {
+                runFullDebug();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

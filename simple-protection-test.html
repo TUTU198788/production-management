@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简化数据保护测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn.success { background: #28a745; }
+        .btn.danger { background: #dc3545; }
+        .btn.warning { background: #ffc107; color: #333; }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .data-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+        .protected { border-left: 4px solid #28a745; }
+        .normal { border-left: 4px solid #007bff; }
+        .old { border-left: 4px solid #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>🛡️ 数据保护机制验证</h1>
+        <p>这是一个简化的测试工具，用于验证数据保护逻辑是否正常工作。</p>
+        <div id="connectionStatus" class="status info">检查系统连接状态...</div>
+    </div>
+
+    <div class="test-card">
+        <h2>📊 当前数据状态</h2>
+        <div id="dataStatus">
+            <p>正在分析数据...</p>
+        </div>
+        <button class="btn" onclick="analyzeData()">重新分析</button>
+    </div>
+
+    <div class="test-card">
+        <h2>🧪 快速测试</h2>
+        <button class="btn success" onclick="quickProtectionTest()">快速保护测试</button>
+        <button class="btn warning" onclick="createTestData()">创建测试数据</button>
+        <button class="btn danger" onclick="clearTestData()">清空测试数据</button>
+        <div id="testResults"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>📋 数据列表</h2>
+        <div id="dataList">
+            <!-- 数据列表将在这里显示 -->
+        </div>
+    </div>
+
+    <script>
+        // 简化的数据保护逻辑
+        const DataProtection = {
+            protectionWindow: 60 * 60 * 1000, // 1小时
+            freshThreshold: 30 * 60 * 1000,   // 30分钟
+
+            isProtected(item) {
+                const age = Date.now() - (item.lastModified || item.timestamp || 0);
+                return age < this.protectionWindow;
+            },
+
+            isFresh(item) {
+                const age = Date.now() - (item.lastModified || item.timestamp || 0);
+                return age < this.freshThreshold;
+            },
+
+            shouldUseLocal(localItem, remoteItem) {
+                // 如果本地数据受保护，使用本地数据
+                if (this.isProtected(localItem)) {
+                    return { useLocal: true, reason: '本地数据受保护' };
+                }
+
+                // 比较版本号
+                const localVersion = localItem.version || 1;
+                const remoteVersion = remoteItem.version || 1;
+                if (localVersion > remoteVersion) {
+                    return { useLocal: true, reason: '本地版本更新' };
+                }
+                if (remoteVersion > localVersion) {
+                    return { useLocal: false, reason: '远程版本更新' };
+                }
+
+                // 比较时间戳
+                const localTime = localItem.lastModified || localItem.timestamp || 0;
+                const remoteTime = remoteItem.lastModified || remoteItem.timestamp || 0;
+                const timeDiff = Math.abs(localTime - remoteTime);
+                
+                if (timeDiff < 2 * 60 * 1000) { // 2分钟容错
+                    return { useLocal: true, reason: '时间相近，保持本地' };
+                }
+
+                if (localTime > remoteTime) {
+                    return { useLocal: true, reason: '本地时间更新' };
+                } else {
+                    return { useLocal: false, reason: '远程时间更新' };
+                }
+            }
+        };
+
+        // 获取或创建本地数据
+        function getLocalData() {
+            try {
+                const saved = localStorage.getItem('testProductionData');
+                return saved ? JSON.parse(saved) : [];
+            } catch (error) {
+                console.error('读取本地数据失败:', error);
+                return [];
+            }
+        }
+
+        // 保存本地数据
+        function saveLocalData(data) {
+            try {
+                localStorage.setItem('testProductionData', JSON.stringify(data));
+                return true;
+            } catch (error) {
+                console.error('保存本地数据失败:', error);
+                return false;
+            }
+        }
+
+        // 分析数据状态
+        function analyzeData() {
+            const data = getLocalData();
+            const now = Date.now();
+            
+            let protected = 0;
+            let fresh = 0;
+            let old = 0;
+
+            data.forEach(item => {
+                if (DataProtection.isProtected(item)) {
+                    protected++;
+                } else if (DataProtection.isFresh(item)) {
+                    fresh++;
+                } else {
+                    old++;
+                }
+            });
+
+            const statusDiv = document.getElementById('dataStatus');
+            statusDiv.innerHTML = `
+                <p><strong>总数据量:</strong> ${data.length} 条</p>
+                <p><strong>受保护数据:</strong> ${protected} 条 (1小时内修改)</p>
+                <p><strong>新鲜数据:</strong> ${fresh} 条 (30分钟内修改)</p>
+                <p><strong>陈旧数据:</strong> ${old} 条 (可被覆盖)</p>
+            `;
+
+            updateDataList(data);
+        }
+
+        // 更新数据列表显示
+        function updateDataList(data) {
+            const listDiv = document.getElementById('dataList');
+            
+            if (data.length === 0) {
+                listDiv.innerHTML = '<p>暂无数据</p>';
+                return;
+            }
+
+            let html = '';
+            data.forEach((item, index) => {
+                const age = Math.round((Date.now() - (item.lastModified || item.timestamp || 0)) / 60000);
+                let className = 'old';
+                let status = '陈旧';
+                
+                if (DataProtection.isProtected(item)) {
+                    className = 'protected';
+                    status = '受保护';
+                } else if (DataProtection.isFresh(item)) {
+                    className = 'normal';
+                    status = '新鲜';
+                }
+
+                html += `
+                    <div class="data-item ${className}">
+                        <strong>${item.spec || 'N/A'}</strong> - ${item.area || 'N/A'}
+                        <br>计划: ${item.planned || 0}, 已产: ${item.produced || 0}
+                        <br>状态: ${status} (${age}分钟前修改)
+                        <br>版本: ${item.version || 1}
+                    </div>
+                `;
+            });
+
+            listDiv.innerHTML = html;
+        }
+
+        // 创建测试数据
+        function createTestData() {
+            const data = getLocalData();
+            const now = Date.now();
+            
+            const newItem = {
+                id: 'test_' + now,
+                spec: 'H100-测试数据',
+                area: '测试区域',
+                planned: 100,
+                produced: Math.floor(Math.random() * 100),
+                shipped: 0,
+                status: '进行中',
+                timestamp: now,
+                lastModified: now,
+                version: 1,
+                lastModifiedBy: 'test_user',
+                lastModifiedByName: '测试用户'
+            };
+
+            data.push(newItem);
+            saveLocalData(data);
+            
+            showResult('✅ 创建测试数据成功', 'success');
+            analyzeData();
+        }
+
+        // 快速保护测试
+        function quickProtectionTest() {
+            const data = getLocalData();
+            
+            if (data.length === 0) {
+                showResult('⚠️ 请先创建测试数据', 'warning');
+                return;
+            }
+
+            // 选择最新的数据项进行测试
+            const latestItem = data.reduce((latest, item) => {
+                const itemTime = item.lastModified || item.timestamp || 0;
+                const latestTime = latest.lastModified || latest.timestamp || 0;
+                return itemTime > latestTime ? item : latest;
+            });
+
+            // 创建模拟的远程数据（尝试覆盖）
+            const fakeRemoteItem = {
+                ...latestItem,
+                spec: latestItem.spec + '-被覆盖',
+                area: latestItem.area + '-被覆盖',
+                produced: 999,
+                lastModified: Date.now() - 60000, // 1分钟前
+                version: latestItem.version || 1
+            };
+
+            // 测试保护逻辑
+            const decision = DataProtection.shouldUseLocal(latestItem, fakeRemoteItem);
+            
+            let resultHtml = `
+                <h3>保护测试结果</h3>
+                <p><strong>本地数据:</strong> ${latestItem.spec} (${latestItem.area})</p>
+                <p><strong>远程数据:</strong> ${fakeRemoteItem.spec} (${fakeRemoteItem.area})</p>
+                <p><strong>决策:</strong> ${decision.useLocal ? '使用本地数据' : '使用远程数据'}</p>
+                <p><strong>原因:</strong> ${decision.reason}</p>
+            `;
+
+            if (decision.useLocal && DataProtection.isProtected(latestItem)) {
+                resultHtml += '<p class="status success">✅ 数据保护机制正常工作！</p>';
+            } else if (!decision.useLocal && !DataProtection.isProtected(latestItem)) {
+                resultHtml += '<p class="status success">✅ 数据更新逻辑正常工作！</p>';
+            } else {
+                resultHtml += '<p class="status warning">⚠️ 需要检查保护逻辑</p>';
+            }
+
+            document.getElementById('testResults').innerHTML = resultHtml;
+        }
+
+        // 清空测试数据
+        function clearTestData() {
+            if (confirm('确定要清空所有测试数据吗？')) {
+                localStorage.removeItem('testProductionData');
+                showResult('🗑️ 测试数据已清空', 'info');
+                analyzeData();
+            }
+        }
+
+        // 显示结果
+        function showResult(message, type) {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            document.getElementById('testResults').appendChild(div);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                if (div.parentNode) {
+                    div.parentNode.removeChild(div);
+                }
+            }, 3000);
+        }
+
+        // 检查连接状态
+        function checkConnectionStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            // 检查是否在主系统中
+            if (window.dataManager) {
+                statusDiv.innerHTML = '✅ 已连接到主系统 DataManager';
+                statusDiv.className = 'status success';
+            } else if (window.DataManager) {
+                statusDiv.innerHTML = '⚠️ 检测到 DataManager 类，但未实例化';
+                statusDiv.className = 'status warning';
+            } else {
+                statusDiv.innerHTML = '📱 独立测试模式 (使用本地存储)';
+                statusDiv.className = 'status info';
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            checkConnectionStatus();
+            analyzeData();
+        });
+    </script>
+</body>
+</html>

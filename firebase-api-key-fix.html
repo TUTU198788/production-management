@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase API密钥修复工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .alert-error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .alert-success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .alert-info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .step {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .step h3 {
+            color: #3b82f6;
+            margin-top: 0;
+        }
+        .config-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            min-height: 150px;
+        }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .btn-success {
+            background: #10b981;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+        .btn-danger {
+            background: #ef4444;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .code-output {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .instructions {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .instructions h4 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        .instructions ol {
+            color: #92400e;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 Firebase API密钥修复工具</h1>
+        
+        <div class="alert alert-error">
+            <strong>检测到问题：</strong> API密钥无效 (auth/api-key-not-valid)
+            <br>需要从Firebase控制台获取新的配置来修复此问题。
+        </div>
+
+        <div class="step">
+            <h3>步骤1：获取新的Firebase配置</h3>
+            <div class="instructions">
+                <h4>📋 操作指南：</h4>
+                <ol>
+                    <li>访问 <a href="https://console.firebase.google.com/" target="_blank">Firebase控制台</a></li>
+                    <li>选择项目 <strong>zhlscglxt</strong></li>
+                    <li>点击项目设置（齿轮图标）</li>
+                    <li>选择"项目设置"</li>
+                    <li>滚动到"您的应用"部分</li>
+                    <li>点击Web应用的配置图标 <code>&lt;/&gt;</code></li>
+                    <li>复制完整的配置对象</li>
+                </ol>
+            </div>
+            <button class="btn" onclick="openFirebaseConsole()">打开Firebase控制台</button>
+        </div>
+
+        <div class="step">
+            <h3>步骤2：粘贴新配置</h3>
+            <p>将从Firebase控制台复制的配置粘贴到下面的文本框中：</p>
+            <textarea class="config-input" id="newConfig" placeholder="请粘贴完整的Firebase配置，例如：
+
+const firebaseConfig = {
+  apiKey: &quot;your-new-api-key&quot;,
+  authDomain: &quot;zhlscglxt.firebaseapp.com&quot;,
+  projectId: &quot;zhlscglxt&quot;,
+  storageBucket: &quot;zhlscglxt.firebasestorage.app&quot;,
+  messagingSenderId: &quot;36495989654&quot;,
+  appId: &quot;1:36495989654:web:your-new-app-id&quot;
+};
+
+或者JSON格式：
+{
+  &quot;apiKey&quot;: &quot;your-new-api-key&quot;,
+  &quot;authDomain&quot;: &quot;zhlscglxt.firebaseapp.com&quot;,
+  &quot;projectId&quot;: &quot;zhlscglxt&quot;,
+  &quot;storageBucket&quot;: &quot;zhlscglxt.firebasestorage.app&quot;,
+  &quot;messagingSenderId&quot;: &quot;36495989654&quot;,
+  &quot;appId&quot;: &quot;1:36495989654:web:your-new-app-id&quot;
+}"></textarea>
+            <button class="btn" onclick="validateNewConfig()">验证配置</button>
+            <button class="btn btn-success" onclick="testNewConfig()">测试新配置</button>
+        </div>
+
+        <div class="step">
+            <h3>步骤3：生成修复代码</h3>
+            <p>验证成功后，点击下面的按钮生成修复代码：</p>
+            <button class="btn btn-success" onclick="generateFixCode()">生成修复代码</button>
+            <button class="btn btn-danger" onclick="downloadFixedFiles()">下载修复文件</button>
+            
+            <div id="fixedCode" style="display: none;">
+                <h4>修复代码：</h4>
+                <div class="code-output" id="codeOutput"></div>
+                <div class="instructions">
+                    <h4>🔧 应用修复：</h4>
+                    <ol>
+                        <li>复制上面的代码</li>
+                        <li>打开 <code>index.html</code> 文件</li>
+                        <li>找到第1672-1679行的Firebase配置</li>
+                        <li>替换为新的配置</li>
+                        <li>保存文件并刷新页面</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let validatedConfig = null;
+
+        function showResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `alert alert-${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function openFirebaseConsole() {
+            window.open('https://console.firebase.google.com/project/zhlscglxt/settings/general/', '_blank');
+        }
+
+        function validateNewConfig() {
+            const configText = document.getElementById('newConfig').value.trim();
+            
+            if (!configText) {
+                showResult('❌ 请输入Firebase配置', 'error');
+                return;
+            }
+
+            try {
+                let config;
+                
+                // 尝试解析不同格式的配置
+                if (configText.includes('const firebaseConfig')) {
+                    // JavaScript格式
+                    const match = configText.match(/const firebaseConfig\s*=\s*({[\s\S]*?});/);
+                    if (match) {
+                        config = eval('(' + match[1] + ')');
+                    } else {
+                        throw new Error('无法解析JavaScript配置格式');
+                    }
+                } else if (configText.startsWith('{')) {
+                    // JSON格式
+                    config = JSON.parse(configText);
+                } else {
+                    // 尝试直接解析为JavaScript对象
+                    config = eval('(' + configText + ')');
+                }
+
+                // 验证必需的字段
+                const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+                const missingFields = requiredFields.filter(field => !config[field]);
+
+                if (missingFields.length > 0) {
+                    showResult(`❌ 配置缺少必需字段: ${missingFields.join(', ')}`, 'error');
+                    return;
+                }
+
+                // 验证项目ID是否匹配
+                if (config.projectId !== 'zhlscglxt') {
+                    showResult(`⚠️ 警告：项目ID不匹配。当前: ${config.projectId}，期望: zhlscglxt`, 'error');
+                    return;
+                }
+
+                validatedConfig = config;
+                showResult('✅ 配置验证成功！', 'success');
+                showResult(`项目ID: ${config.projectId}`, 'info');
+                showResult(`新API密钥: ${config.apiKey.substring(0, 20)}...`, 'info');
+
+            } catch (error) {
+                showResult(`❌ 配置格式错误: ${error.message}`, 'error');
+                showResult('💡 请确保粘贴完整的配置对象', 'info');
+            }
+        }
+
+        async function testNewConfig() {
+            if (!validatedConfig) {
+                showResult('❌ 请先验证配置', 'error');
+                return;
+            }
+
+            showResult('🔄 正在测试新配置...', 'info');
+
+            try {
+                // 动态加载Firebase SDK并测试
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+                const { getAuth, signInAnonymously } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                const { getFirestore, collection, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+                const testApp = initializeApp(validatedConfig, 'test-app');
+                const testAuth = getAuth(testApp);
+                const testDB = getFirestore(testApp);
+
+                // 先测试基本连接
+                showResult('🔄 测试基本连接...', 'info');
+
+                try {
+                    await signInAnonymously(testAuth);
+                    showResult('✅ 新配置测试成功！API密钥有效', 'success');
+                    showResult(`✅ 匿名登录成功，用户ID: ${testAuth.currentUser.uid}`, 'success');
+
+                    // 测试数据库连接
+                    showResult('🔄 测试数据库连接...', 'info');
+                    const testDocRef = doc(collection(testDB, 'test'), 'connection');
+                    await getDoc(testDocRef);
+                    showResult('✅ 数据库连接正常', 'success');
+
+                } catch (authError) {
+                    if (authError.code === 'auth/admin-restricted-operation') {
+                        showResult('⚠️ 检测到管理员限制错误', 'error');
+                        showResult('🔧 正在提供解决方案...', 'info');
+                        showAdminRestrictedSolution();
+                    } else {
+                        throw authError;
+                    }
+                }
+
+            } catch (error) {
+                showResult(`❌ 新配置测试失败: ${error.message}`, 'error');
+
+                if (error.message.includes('api-key-not-valid')) {
+                    showResult('💡 API密钥仍然无效，请检查是否复制了正确的配置', 'error');
+                } else if (error.message.includes('auth/domain-not-authorized')) {
+                    showResult('💡 域名未授权，请在Firebase控制台添加当前域名到授权域名列表', 'error');
+                } else if (error.code === 'auth/admin-restricted-operation') {
+                    showAdminRestrictedSolution();
+                }
+            }
+        }
+
+        function showAdminRestrictedSolution() {
+            const solutionHTML = `
+                <div class="alert alert-error">
+                    <strong>🚨 检测到问题：</strong> Firebase项目设置了管理员限制 (auth/admin-restricted-operation)
+                </div>
+                <div class="instructions">
+                    <h4>🔧 解决方案：启用匿名登录</h4>
+                    <ol>
+                        <li>访问 <a href="https://console.firebase.google.com/project/zhlscglxt/authentication/providers" target="_blank">Firebase身份验证设置</a></li>
+                        <li>在"登录方法"标签页中找到"匿名"选项</li>
+                        <li>点击"匿名"行，然后点击"启用"开关</li>
+                        <li>点击"保存"按钮</li>
+                        <li>返回此页面，重新点击"测试新配置"</li>
+                    </ol>
+                    <p><strong>或者，使用以下替代方案：</strong></p>
+                    <button class="btn btn-success" onclick="generateNoAuthConfig()">生成无需认证的配置</button>
+                    <button class="btn" onclick="window.open('https://console.firebase.google.com/project/zhlscglxt/authentication/providers', '_blank')">打开身份验证设置</button>
+                </div>
+            `;
+
+            showResult(solutionHTML, 'error');
+        }
+
+        function generateNoAuthConfig() {
+            if (!validatedConfig) {
+                showResult('❌ 请先验证配置', 'error');
+                return;
+            }
+
+            showResult('🔄 生成无需认证的配置...', 'info');
+
+            // 生成修改后的Firebase同步脚本，跳过认证步骤
+            const noAuthSyncCode = `// 修改后的Firebase同步管理器 - 无需认证版本
+// 将此代码替换到 scripts/firebase-sync.js 文件中的 initialize 方法
+
+async initialize(config) {
+    try {
+        console.log('开始初始化Firebase（无认证模式），配置:', config);
+
+        // 等待Firebase SDK加载
+        let retries = 0;
+        while (!window.firebaseDB && retries < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retries++;
+        }
+
+        if (!window.firebaseDB) {
+            throw new Error('Firebase SDK 未加载，请确保已引入 Firebase 脚本');
+        }
+
+        console.log('Firebase SDK v10已加载');
+
+        // 使用全局Firebase实例
+        this.db = window.firebaseDB;
+        this.auth = window.firebaseAuth;
+        console.log('Firebase服务获取成功');
+
+        // 跳过认证，直接设置为已初始化
+        this.isInitialized = true;
+        this.currentUser = { uid: 'anonymous_' + Date.now() }; // 模拟用户
+        console.log('✅ Firebase 初始化完成（无认证模式）');
+
+        // 开始监听数据变化（仅读取，不写入）
+        this.startRealtimeSync();
+
+        return true;
+    } catch (error) {
+        console.error('❌ Firebase 初始化失败:', error);
+        this.showNotification('云端同步初始化失败，将使用本地存储', 'warning');
+        return false;
+    }
+}`;
+
+            document.getElementById('codeOutput').textContent = noAuthSyncCode;
+            document.getElementById('fixedCode').style.display = 'block';
+
+            showResult('✅ 无需认证的配置已生成！', 'success');
+            showResult('📋 代码已显示在下方，请按说明应用', 'info');
+            showResult('⚠️ 注意：此模式下只能读取数据，无法写入云端', 'error');
+        }
+
+        function generateFixCode() {
+            if (!validatedConfig) {
+                showResult('❌ 请先验证配置', 'error');
+                return;
+            }
+
+            const fixedConfigCode = `        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "${validatedConfig.apiKey}",
+            authDomain: "${validatedConfig.authDomain}",
+            projectId: "${validatedConfig.projectId}",
+            storageBucket: "${validatedConfig.storageBucket}",
+            messagingSenderId: "${validatedConfig.messagingSenderId}",
+            appId: "${validatedConfig.appId}"
+        };`;
+
+            document.getElementById('codeOutput').textContent = fixedConfigCode;
+            document.getElementById('fixedCode').style.display = 'block';
+            
+            // 复制到剪贴板
+            navigator.clipboard.writeText(fixedConfigCode).then(() => {
+                showResult('📋 修复代码已复制到剪贴板', 'success');
+            });
+
+            showResult('✅ 修复代码已生成！', 'success');
+        }
+
+        function downloadFixedFiles() {
+            if (!validatedConfig) {
+                showResult('❌ 请先验证配置', 'error');
+                return;
+            }
+
+            const instructions = `Firebase API密钥修复说明
+============================
+
+问题：API密钥无效 (auth/api-key-not-valid)
+解决方案：更新Firebase配置
+
+修复步骤：
+1. 打开 index.html 文件
+2. 找到第1672-1679行的Firebase配置部分
+3. 将以下代码替换原有配置：
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "${validatedConfig.apiKey}",
+            authDomain: "${validatedConfig.authDomain}",
+            projectId: "${validatedConfig.projectId}",
+            storageBucket: "${validatedConfig.storageBucket}",
+            messagingSenderId: "${validatedConfig.messagingSenderId}",
+            appId: "${validatedConfig.appId}"
+        };
+
+4. 保存文件
+5. 刷新浏览器页面
+6. 检查Firebase连接状态
+
+修复完成后，系统应该显示：
+- ✅ Firebase连接状态：已连接
+- ✅ 实时同步功能正常
+- ✅ 多用户协作功能可用
+
+如有问题，请运行 firebase-diagnostic.html 进行进一步诊断。
+`;
+
+            const blob = new Blob([instructions], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'firebase-api-key-fix-instructions.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showResult('📁 修复说明文件已下载', 'success');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据同步诊断工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .diagnostic-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-good { color: #28a745; }
+        .status-warning { color: #ffc107; }
+        .status-error { color: #dc3545; }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn.success { background: #28a745; }
+        .btn.danger { background: #dc3545; }
+        .btn.warning { background: #ffc107; color: #333; }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .data-table th {
+            background: #f8f9fa;
+        }
+        .log-area {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .metric-display {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 4px;
+            min-width: 120px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="diagnostic-card">
+        <h1>🔍 数据同步诊断工具</h1>
+        <p>此工具用于诊断和修复主界面统计显示为0的问题。</p>
+        <button class="btn success" onclick="runFullDiagnostic()">运行完整诊断</button>
+        <button class="btn warning" onclick="forceDataSync()">强制数据同步</button>
+        <button class="btn danger" onclick="resetAndReload()">重置并重新加载</button>
+    </div>
+
+    <div class="diagnostic-card">
+        <h2>📊 当前状态概览</h2>
+        <div id="statusOverview">
+            <p>正在检查系统状态...</p>
+        </div>
+        <button class="btn" onclick="refreshStatus()">刷新状态</button>
+    </div>
+
+    <div class="diagnostic-card">
+        <h2>📈 主界面统计数据</h2>
+        <div id="metricsDisplay">
+            <!-- 统计数据将在这里显示 -->
+        </div>
+    </div>
+
+    <div class="diagnostic-card">
+        <h2>🗃️ 数据源详情</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>数据源</th>
+                    <th>记录数</th>
+                    <th>最后修改</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="dataSourceTable">
+                <!-- 数据源信息将在这里显示 -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="diagnostic-card">
+        <h2>📝 诊断日志</h2>
+        <div id="diagnosticLog" class="log-area">
+            <!-- 诊断日志将在这里显示 -->
+        </div>
+        <button class="btn warning" onclick="clearLog()">清空日志</button>
+    </div>
+
+    <script>
+        // 日志记录
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logArea = document.getElementById('diagnosticLog');
+            const logEntry = document.createElement('div');
+            logEntry.style.color = type === 'error' ? '#dc3545' : type === 'warning' ? '#ffc107' : type === 'success' ? '#28a745' : '#333';
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // 清空日志
+        function clearLog() {
+            document.getElementById('diagnosticLog').innerHTML = '';
+        }
+
+        // 刷新状态
+        function refreshStatus() {
+            log('刷新系统状态...', 'info');
+            checkSystemStatus();
+            updateMetricsDisplay();
+            updateDataSourceTable();
+        }
+
+        // 检查系统状态
+        function checkSystemStatus() {
+            const statusDiv = document.getElementById('statusOverview');
+            let statusHtml = '';
+
+            // 检查DataManager
+            if (window.dataManager) {
+                statusHtml += '<p class="status-good">✅ DataManager: 已加载</p>';
+                statusHtml += `<p>生产数据: ${window.dataManager.data?.length || 0} 条</p>`;
+                statusHtml += `<p>发货历史: ${window.dataManager.shippingHistory?.length || 0} 条</p>`;
+                statusHtml += `<p>原材料: ${window.dataManager.materialPurchases?.length || 0} 条</p>`;
+            } else {
+                statusHtml += '<p class="status-error">❌ DataManager: 未加载</p>';
+            }
+
+            // 检查Dashboard
+            if (window.dashboard) {
+                statusHtml += '<p class="status-good">✅ Dashboard: 已加载</p>';
+                const metrics = window.dashboard.data;
+                if (metrics && metrics.totalDemandMeters > 0) {
+                    statusHtml += '<p class="status-good">✅ 主界面统计: 正常显示</p>';
+                } else {
+                    statusHtml += '<p class="status-error">❌ 主界面统计: 显示为0</p>';
+                }
+            } else {
+                statusHtml += '<p class="status-error">❌ Dashboard: 未加载</p>';
+            }
+
+            // 检查Firebase
+            if (window.firebaseSync && window.firebaseSync.isConnected()) {
+                statusHtml += '<p class="status-good">✅ Firebase: 已连接</p>';
+            } else {
+                statusHtml += '<p class="status-warning">⚠️ Firebase: 未连接或未配置</p>';
+            }
+
+            statusDiv.innerHTML = statusHtml;
+        }
+
+        // 更新统计显示
+        function updateMetricsDisplay() {
+            const metricsDiv = document.getElementById('metricsDisplay');
+            
+            if (!window.dashboard || !window.dashboard.data) {
+                metricsDiv.innerHTML = '<p class="status-error">❌ 无法获取统计数据</p>';
+                return;
+            }
+
+            const data = window.dashboard.data;
+            metricsDiv.innerHTML = `
+                <div class="metric-display">
+                    <div class="metric-value">${(data.totalDemandMeters || 0).toFixed(1)}</div>
+                    <div class="metric-label">总需求量 (米)</div>
+                </div>
+                <div class="metric-display">
+                    <div class="metric-value">${(data.producedMeters || 0).toFixed(1)}</div>
+                    <div class="metric-label">已生产量 (米)</div>
+                </div>
+                <div class="metric-display">
+                    <div class="metric-value">${(data.shippedMeters || 0).toFixed(1)}</div>
+                    <div class="metric-label">已发货量 (米)</div>
+                </div>
+                <div class="metric-display">
+                    <div class="metric-value">${(data.pendingMeters || 0).toFixed(1)}</div>
+                    <div class="metric-label">待生产量 (米)</div>
+                </div>
+                <div class="metric-display">
+                    <div class="metric-value">${data.completionRate || 0}%</div>
+                    <div class="metric-label">完成率</div>
+                </div>
+            `;
+        }
+
+        // 更新数据源表格
+        function updateDataSourceTable() {
+            const tableBody = document.getElementById('dataSourceTable');
+            let html = '';
+
+            // 检查本地存储
+            const localData = localStorage.getItem('productionData');
+            const localShipping = localStorage.getItem('shippingHistory');
+            const localMaterial = localStorage.getItem('materialPurchases');
+
+            // 生产数据
+            if (localData) {
+                try {
+                    const data = JSON.parse(localData);
+                    const lastModified = data.length > 0 ? Math.max(...data.map(item => item.lastModified || item.timestamp || 0)) : 0;
+                    const status = data.length > 0 ? '正常' : '空数据';
+                    html += `
+                        <tr>
+                            <td>生产数据 (本地存储)</td>
+                            <td>${data.length}</td>
+                            <td>${lastModified ? new Date(lastModified).toLocaleString() : '无'}</td>
+                            <td class="${status === '正常' ? 'status-good' : 'status-warning'}">${status}</td>
+                            <td><button class="btn" onclick="reloadProductionData()">重新加载</button></td>
+                        </tr>
+                    `;
+                } catch (error) {
+                    html += `
+                        <tr>
+                            <td>生产数据 (本地存储)</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td class="status-error">解析错误</td>
+                            <td><button class="btn danger" onclick="clearProductionData()">清除</button></td>
+                        </tr>
+                    `;
+                }
+            } else {
+                html += `
+                    <tr>
+                        <td>生产数据 (本地存储)</td>
+                        <td>0</td>
+                        <td>-</td>
+                        <td class="status-warning">无数据</td>
+                        <td>-</td>
+                    </tr>
+                `;
+            }
+
+            // DataManager中的数据
+            if (window.dataManager) {
+                const dmData = window.dataManager.data || [];
+                const status = dmData.length > 0 ? '正常' : '空数据';
+                html += `
+                    <tr>
+                        <td>生产数据 (DataManager)</td>
+                        <td>${dmData.length}</td>
+                        <td>-</td>
+                        <td class="${status === '正常' ? 'status-good' : 'status-warning'}">${status}</td>
+                        <td><button class="btn" onclick="refreshDataManager()">刷新</button></td>
+                    </tr>
+                `;
+            }
+
+            tableBody.innerHTML = html;
+        }
+
+        // 运行完整诊断
+        function runFullDiagnostic() {
+            log('开始运行完整诊断...', 'info');
+            
+            // 1. 检查系统状态
+            log('1. 检查系统组件状态...', 'info');
+            checkSystemStatus();
+            
+            // 2. 检查数据一致性
+            log('2. 检查数据一致性...', 'info');
+            checkDataConsistency();
+            
+            // 3. 检查统计计算
+            log('3. 检查统计计算逻辑...', 'info');
+            checkStatisticsCalculation();
+            
+            // 4. 更新显示
+            setTimeout(() => {
+                updateMetricsDisplay();
+                updateDataSourceTable();
+                log('诊断完成', 'success');
+            }, 1000);
+        }
+
+        // 检查数据一致性
+        function checkDataConsistency() {
+            if (!window.dataManager) {
+                log('❌ DataManager不存在，无法检查数据一致性', 'error');
+                return;
+            }
+
+            const localData = localStorage.getItem('productionData');
+            const dmData = window.dataManager.data || [];
+            
+            if (!localData) {
+                log('⚠️ 本地存储中无生产数据', 'warning');
+                return;
+            }
+
+            try {
+                const parsedLocal = JSON.parse(localData);
+                if (parsedLocal.length !== dmData.length) {
+                    log(`⚠️ 数据不一致: 本地存储${parsedLocal.length}条，DataManager${dmData.length}条`, 'warning');
+                    log('尝试同步数据...', 'info');
+                    window.dataManager.loadFromLocalStorage();
+                } else {
+                    log('✅ 数据一致性检查通过', 'success');
+                }
+            } catch (error) {
+                log('❌ 本地存储数据解析失败: ' + error.message, 'error');
+            }
+        }
+
+        // 检查统计计算
+        function checkStatisticsCalculation() {
+            if (!window.dashboard || !window.dataManager) {
+                log('❌ Dashboard或DataManager不存在，无法检查统计计算', 'error');
+                return;
+            }
+
+            const dataLength = window.dataManager.data?.length || 0;
+            const metrics = window.dashboard.data?.totalDemandMeters || 0;
+
+            if (dataLength > 0 && metrics === 0) {
+                log('❌ 检测到统计计算异常：有数据但统计为0', 'error');
+                log('尝试重新计算统计...', 'info');
+                window.dashboard.updateMetricsFromDataManager();
+                
+                setTimeout(() => {
+                    const newMetrics = window.dashboard.data?.totalDemandMeters || 0;
+                    if (newMetrics > 0) {
+                        log('✅ 统计重新计算成功', 'success');
+                    } else {
+                        log('❌ 统计重新计算失败', 'error');
+                    }
+                }, 1000);
+            } else {
+                log('✅ 统计计算检查通过', 'success');
+            }
+        }
+
+        // 强制数据同步
+        function forceDataSync() {
+            log('开始强制数据同步...', 'info');
+            
+            if (window.dataManager) {
+                log('重新加载本地存储数据...', 'info');
+                window.dataManager.loadFromLocalStorage();
+            }
+            
+            if (window.dashboard) {
+                log('强制更新主界面统计...', 'info');
+                window.dashboard.updateMetricsFromDataManager();
+                
+                setTimeout(() => {
+                    if (window.dashboard.deepDataSync) {
+                        log('执行深度数据同步...', 'info');
+                        window.dashboard.deepDataSync();
+                    }
+                }, 1000);
+            }
+            
+            setTimeout(() => {
+                refreshStatus();
+                log('强制同步完成', 'success');
+            }, 2000);
+        }
+
+        // 重置并重新加载
+        function resetAndReload() {
+            if (confirm('确定要重置并重新加载吗？这将刷新页面。')) {
+                log('重置并重新加载...', 'warning');
+                location.reload();
+            }
+        }
+
+        // 重新加载生产数据
+        function reloadProductionData() {
+            if (window.dataManager) {
+                log('重新加载生产数据...', 'info');
+                window.dataManager.loadFromLocalStorage();
+                setTimeout(() => {
+                    refreshStatus();
+                    log('生产数据重新加载完成', 'success');
+                }, 500);
+            }
+        }
+
+        // 刷新DataManager
+        function refreshDataManager() {
+            if (window.dataManager) {
+                log('刷新DataManager...', 'info');
+                window.dataManager.forceUpdateDashboard();
+                setTimeout(() => {
+                    refreshStatus();
+                    log('DataManager刷新完成', 'success');
+                }, 500);
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            log('数据同步诊断工具已加载', 'success');
+            setTimeout(() => {
+                refreshStatus();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

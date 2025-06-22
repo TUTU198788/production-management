@@ -1,0 +1,16 @@
+{
+  "name": "production-management-system",
+  "version": "1.0.0",
+  "description": "梯桁筋与组合肋生产管理系统",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python3 -m http.server 3000",
+    "build": "echo 'Static build complete'",
+    "start": "python3 -m http.server 3000"
+  },
+  "keywords": ["production", "management", "system"],
+  "author": "Your Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}

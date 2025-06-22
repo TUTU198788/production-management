@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最终测试 - 统计修复验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn.success { background: #28a745; }
+        .btn.warning { background: #ffc107; color: #333; }
+        .btn.danger { background: #dc3545; }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .metric {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+            min-width: 140px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+        }
+        .status-good { color: #28a745; font-weight: bold; }
+        .status-warning { color: #ffc107; font-weight: bold; }
+        .status-error { color: #dc3545; font-weight: bold; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>🎯 最终测试 - 统计修复验证</h1>
+        <p>这是最终的测试工具，用于验证统计显示为0的问题是否已经解决。</p>
+        
+        <div style="margin: 20px 0;">
+            <button class="btn success" onclick="runCompleteTest()">🚀 运行完整测试</button>
+            <button class="btn warning" onclick="testMainPageFix()">🔧 测试主页修复</button>
+            <button class="btn" onclick="openMainPage()">📊 打开主页</button>
+            <button class="btn danger" onclick="clearAll()">🗑️ 清空所有</button>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>📊 测试结果</h2>
+        <div id="testResults">
+            <p>点击"运行完整测试"开始验证</p>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>📝 测试日志</h2>
+        <div id="testLog" class="log">
+            <!-- 测试日志将在这里显示 -->
+        </div>
+    </div>
+
+    <script>
+        // 日志记录
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logArea = document.getElementById('testLog');
+            const color = type === 'error' ? '#dc3545' : type === 'warning' ? '#ffc107' : type === 'success' ? '#28a745' : '#333';
+            logArea.innerHTML += `<span style="color: ${color}">[${timestamp}] ${message}</span>\n`;
+            logArea.scrollTop = logArea.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // 清空所有
+        function clearAll() {
+            document.getElementById('testResults').innerHTML = '<p>点击"运行完整测试"开始验证</p>';
+            document.getElementById('testLog').innerHTML = '';
+        }
+
+        // 打开主页
+        function openMainPage() {
+            window.open('/', '_blank');
+        }
+
+        // 运行完整测试
+        function runCompleteTest() {
+            log('=== 🎯 开始完整测试 ===', 'info');
+            
+            // 1. 检查本地存储数据
+            log('1️⃣ 检查本地存储数据...', 'info');
+            const dataCheck = checkLocalStorageData();
+            
+            // 2. 测试计算逻辑
+            log('2️⃣ 测试计算逻辑...', 'info');
+            const calcCheck = testCalculationLogic();
+            
+            // 3. 模拟主页面修复
+            log('3️⃣ 模拟主页面修复...', 'info');
+            const fixCheck = simulateMainPageFix();
+            
+            // 4. 生成测试报告
+            setTimeout(() => {
+                generateTestReport(dataCheck, calcCheck, fixCheck);
+                log('=== ✅ 完整测试完成 ===', 'success');
+            }, 1000);
+        }
+
+        // 检查本地存储数据
+        function checkLocalStorageData() {
+            const productionData = localStorage.getItem('productionData');
+            
+            if (!productionData) {
+                log('❌ 本地存储中没有生产数据', 'error');
+                return { status: 'error', message: '没有生产数据' };
+            }
+
+            try {
+                const data = JSON.parse(productionData);
+                log(`✅ 本地存储数据正常: ${data.length} 条记录`, 'success');
+                
+                // 检查数据格式
+                if (data.length > 0) {
+                    const sample = data[0];
+                    const hasRequiredFields = sample.spec && sample.area && 
+                                            (sample.planned !== undefined) && 
+                                            (sample.produced !== undefined);
+                    
+                    if (hasRequiredFields) {
+                        log('✅ 数据格式验证通过', 'success');
+                        return { status: 'success', count: data.length, data: data };
+                    } else {
+                        log('⚠️ 数据格式可能有问题', 'warning');
+                        return { status: 'warning', count: data.length, data: data };
+                    }
+                } else {
+                    log('⚠️ 数据为空', 'warning');
+                    return { status: 'warning', count: 0 };
+                }
+            } catch (error) {
+                log(`❌ 数据解析失败: ${error.message}`, 'error');
+                return { status: 'error', message: error.message };
+            }
+        }
+
+        // 测试计算逻辑
+        function testCalculationLogic() {
+            const dataCheck = checkLocalStorageData();
+            
+            if (dataCheck.status === 'error' || !dataCheck.data) {
+                log('❌ 无法测试计算逻辑：数据不可用', 'error');
+                return { status: 'error', message: '数据不可用' };
+            }
+
+            try {
+                const data = dataCheck.data;
+                log(`开始测试 ${data.length} 条数据的计算...`, 'info');
+
+                // 使用改进的规格解析函数
+                function extractLengthFromSpec(spec) {
+                    if (!spec) return 6000;
+                    
+                    const patterns = [
+                        /L=(\d+)/,
+                        /长度[：:]\s*(\d+)/,
+                        /(\d+)mm/i,
+                        /(\d+)MM/,
+                        /L(\d+)/,
+                        /-(\d+)$/,
+                        /×(\d+)/,
+                        /\*(\d+)/,
+                        /(\d{4,})/
+                    ];
+                    
+                    for (const pattern of patterns) {
+                        const match = spec.match(pattern);
+                        if (match) {
+                            const length = parseInt(match[1]);
+                            if (length >= 1000 && length <= 20000) {
+                                return length;
+                            }
+                        }
+                    }
+                    
+                    return 6000;
+                }
+
+                let totalDemandMeters = 0;
+                let producedMeters = 0;
+                let shippedMeters = 0;
+                let validRecords = 0;
+
+                data.forEach((item, index) => {
+                    const length = extractLengthFromSpec(item.spec);
+                    const planned = parseInt(item.planned) || 0;
+                    const produced = parseInt(item.produced) || 0;
+                    const shipped = parseInt(item.shipped) || 0;
+                    
+                    if (length > 0 && planned > 0) {
+                        validRecords++;
+                        totalDemandMeters += planned * length / 1000;
+                        producedMeters += produced * length / 1000;
+                        shippedMeters += shipped * length / 1000;
+                    }
+
+                    if (index < 3) {
+                        log(`样本${index + 1}: ${item.spec} -> ${length}mm, 计划${planned}根`, 'info');
+                    }
+                });
+
+                const completionRate = totalDemandMeters > 0 ? 
+                    ((producedMeters / totalDemandMeters) * 100).toFixed(1) : 0;
+
+                log(`计算结果: 总需求${totalDemandMeters.toFixed(1)}米, 已产${producedMeters.toFixed(1)}米`, 'success');
+                log(`有效记录: ${validRecords}/${data.length}, 完成率: ${completionRate}%`, 'success');
+
+                if (totalDemandMeters > 0) {
+                    log('✅ 计算逻辑测试通过', 'success');
+                    return {
+                        status: 'success',
+                        totalDemandMeters,
+                        producedMeters,
+                        shippedMeters,
+                        completionRate,
+                        validRecords,
+                        totalRecords: data.length
+                    };
+                } else {
+                    log('❌ 计算结果为0，可能存在问题', 'error');
+                    return { status: 'error', message: '计算结果为0' };
+                }
+
+            } catch (error) {
+                log(`❌ 计算测试失败: ${error.message}`, 'error');
+                return { status: 'error', message: error.message };
+            }
+        }
+
+        // 模拟主页面修复
+        function simulateMainPageFix() {
+            log('模拟主页面的修复过程...', 'info');
+            
+            // 检查是否可以访问主页面的对象
+            if (window.opener && window.opener.dashboard) {
+                log('✅ 检测到主页面Dashboard对象', 'success');
+                
+                try {
+                    // 尝试触发修复
+                    log('尝试触发主页面修复...', 'info');
+                    window.opener.dashboard.quickSyncFix();
+                    
+                    setTimeout(() => {
+                        const metrics = window.opener.dashboard.data?.totalDemandMeters || 0;
+                        if (metrics > 0) {
+                            log(`✅ 主页面修复成功: ${metrics.toFixed(1)}米`, 'success');
+                            return { status: 'success', metrics };
+                        } else {
+                            log('⚠️ 主页面修复后仍为0', 'warning');
+                            return { status: 'warning', metrics: 0 };
+                        }
+                    }, 2000);
+                    
+                } catch (error) {
+                    log(`❌ 主页面修复失败: ${error.message}`, 'error');
+                    return { status: 'error', message: error.message };
+                }
+            } else {
+                log('⚠️ 无法访问主页面对象，建议手动测试', 'warning');
+                return { status: 'warning', message: '无法访问主页面' };
+            }
+        }
+
+        // 测试主页修复
+        function testMainPageFix() {
+            log('=== 🔧 测试主页修复功能 ===', 'info');
+            
+            // 打开主页并等待加载
+            const mainWindow = window.open('/', 'mainPage');
+            
+            log('主页已打开，等待加载完成...', 'info');
+            
+            setTimeout(() => {
+                try {
+                    if (mainWindow.dashboard) {
+                        log('✅ 主页Dashboard已加载', 'success');
+                        log('触发同步修复...', 'info');
+                        
+                        mainWindow.dashboard.quickSyncFix();
+                        
+                        setTimeout(() => {
+                            const metrics = mainWindow.dashboard.data?.totalDemandMeters || 0;
+                            log(`修复结果: ${metrics.toFixed(1)}米`, metrics > 0 ? 'success' : 'warning');
+                            
+                            if (metrics > 0) {
+                                alert(`修复成功！总需求量: ${metrics.toFixed(1)}米`);
+                            } else {
+                                alert('修复后仍显示0，请检查数据格式');
+                            }
+                        }, 3000);
+                        
+                    } else {
+                        log('❌ 主页Dashboard未加载', 'error');
+                        alert('主页Dashboard未加载，请等待页面完全加载后再试');
+                    }
+                } catch (error) {
+                    log(`❌ 访问主页失败: ${error.message}`, 'error');
+                    alert('无法访问主页，请确保主页已正确加载');
+                }
+            }, 3000);
+        }
+
+        // 生成测试报告
+        function generateTestReport(dataCheck, calcCheck, fixCheck) {
+            const resultsDiv = document.getElementById('testResults');
+            
+            let html = '<h3>🎯 测试报告</h3>';
+            
+            // 数据检查结果
+            html += '<div class="result">';
+            html += '<h4>1. 数据检查</h4>';
+            if (dataCheck.status === 'success') {
+                html += `<p class="status-good">✅ 通过 - 发现 ${dataCheck.count} 条有效数据</p>`;
+            } else if (dataCheck.status === 'warning') {
+                html += `<p class="status-warning">⚠️ 警告 - ${dataCheck.message || '数据格式可能有问题'}</p>`;
+            } else {
+                html += `<p class="status-error">❌ 失败 - ${dataCheck.message}</p>`;
+            }
+            html += '</div>';
+            
+            // 计算逻辑测试结果
+            html += '<div class="result">';
+            html += '<h4>2. 计算逻辑测试</h4>';
+            if (calcCheck.status === 'success') {
+                html += `<p class="status-good">✅ 通过 - 计算逻辑正常工作</p>`;
+                html += `
+                    <div class="metric">
+                        <div class="metric-value">${calcCheck.totalDemandMeters.toFixed(1)}</div>
+                        <div class="metric-label">总需求量 (米)</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">${calcCheck.producedMeters.toFixed(1)}</div>
+                        <div class="metric-label">已生产量 (米)</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">${calcCheck.completionRate}%</div>
+                        <div class="metric-label">完成率</div>
+                    </div>
+                `;
+            } else {
+                html += `<p class="status-error">❌ 失败 - ${calcCheck.message}</p>`;
+            }
+            html += '</div>';
+            
+            // 总结
+            html += '<div class="result">';
+            html += '<h4>3. 测试总结</h4>';
+            if (dataCheck.status === 'success' && calcCheck.status === 'success') {
+                html += '<p class="status-good">🎉 所有测试通过！统计计算功能正常。</p>';
+                html += '<p><strong>建议操作：</strong></p>';
+                html += '<ul>';
+                html += '<li>在主页点击"🔧 同步修复"按钮</li>';
+                html += '<li>如果仍显示0，点击"🐛 调试"按钮查看详细信息</li>';
+                html += '<li>必要时刷新页面重新加载</li>';
+                html += '</ul>';
+            } else {
+                html += '<p class="status-error">❌ 测试发现问题，需要进一步排查。</p>';
+                html += '<p><strong>建议操作：</strong></p>';
+                html += '<ul>';
+                html += '<li>检查数据格式是否正确</li>';
+                html += '<li>确认规格字段包含长度信息</li>';
+                html += '<li>联系技术支持获取帮助</li>';
+                html += '</ul>';
+            }
+            html += '</div>';
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            log('最终测试工具已加载', 'success');
+            log('请点击"运行完整测试"开始验证修复效果', 'info');
+        });
+    </script>
+</body>
+</html>

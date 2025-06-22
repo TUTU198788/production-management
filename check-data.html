@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据检查工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .check-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn.success { background: #28a745; }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .status-good { color: #28a745; }
+        .status-warning { color: #ffc107; }
+        .status-error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="check-card">
+        <h1>🔍 数据检查工具</h1>
+        <p>检查本地存储中的实际数据格式和内容</p>
+        <button class="btn success" onclick="checkAllData()">检查所有数据</button>
+        <button class="btn" onclick="checkProductionData()">检查生产数据</button>
+        <button class="btn" onclick="testCalculation()">测试计算</button>
+        <button class="btn" onclick="clearLog()">清空日志</button>
+    </div>
+
+    <div class="check-card">
+        <h2>📊 数据概览</h2>
+        <div id="dataOverview">
+            <!-- 数据概览将在这里显示 -->
+        </div>
+    </div>
+
+    <div class="check-card">
+        <h2>📋 数据样本</h2>
+        <div id="dataSample">
+            <!-- 数据样本将在这里显示 -->
+        </div>
+    </div>
+
+    <div class="check-card">
+        <h2>📝 检查日志</h2>
+        <div id="checkLog" class="log">
+            <!-- 检查日志将在这里显示 -->
+        </div>
+    </div>
+
+    <script>
+        // 日志记录
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logArea = document.getElementById('checkLog');
+            const color = type === 'error' ? '#dc3545' : type === 'warning' ? '#ffc107' : type === 'success' ? '#28a745' : '#333';
+            logArea.innerHTML += `<span style="color: ${color}">[${timestamp}] ${message}</span>\n`;
+            logArea.scrollTop = logArea.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // 清空日志
+        function clearLog() {
+            document.getElementById('checkLog').innerHTML = '';
+        }
+
+        // 检查所有数据
+        function checkAllData() {
+            log('=== 开始检查所有数据 ===', 'info');
+            
+            // 检查本地存储
+            checkLocalStorage();
+            
+            // 检查生产数据
+            checkProductionData();
+            
+            // 检查发货数据
+            checkShippingData();
+            
+            // 检查原材料数据
+            checkMaterialData();
+            
+            // 更新概览
+            updateDataOverview();
+            
+            log('=== 数据检查完成 ===', 'success');
+        }
+
+        // 检查本地存储
+        function checkLocalStorage() {
+            log('检查本地存储...', 'info');
+            
+            const keys = ['productionData', 'shippingHistory', 'materialPurchases'];
+            keys.forEach(key => {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        log(`✅ ${key}: ${Array.isArray(parsed) ? parsed.length : 'N/A'} 条记录`, 'success');
+                    } catch (error) {
+                        log(`❌ ${key}: 解析失败 - ${error.message}`, 'error');
+                    }
+                } else {
+                    log(`⚠️ ${key}: 不存在`, 'warning');
+                }
+            });
+        }
+
+        // 检查生产数据
+        function checkProductionData() {
+            log('检查生产数据详情...', 'info');
+            
+            const data = localStorage.getItem('productionData');
+            if (!data) {
+                log('❌ 生产数据不存在', 'error');
+                return;
+            }
+
+            try {
+                const productionData = JSON.parse(data);
+                log(`📊 生产数据总数: ${productionData.length} 条`, 'info');
+                
+                if (productionData.length === 0) {
+                    log('⚠️ 生产数据为空', 'warning');
+                    return;
+                }
+
+                // 分析数据结构
+                const firstItem = productionData[0];
+                log('📋 数据结构分析:', 'info');
+                log(`  字段: ${Object.keys(firstItem).join(', ')}`, 'info');
+                
+                // 检查关键字段
+                const requiredFields = ['spec', 'area', 'planned', 'produced'];
+                const missingFields = requiredFields.filter(field => !(field in firstItem));
+                if (missingFields.length > 0) {
+                    log(`❌ 缺少关键字段: ${missingFields.join(', ')}`, 'error');
+                } else {
+                    log('✅ 关键字段完整', 'success');
+                }
+
+                // 分析规格格式
+                log('🔍 规格格式分析:', 'info');
+                const specs = productionData.slice(0, 10).map(item => item.spec).filter(spec => spec);
+                specs.forEach((spec, index) => {
+                    log(`  ${index + 1}. "${spec}"`, 'info');
+                });
+
+                // 统计数据
+                const totalPlanned = productionData.reduce((sum, item) => sum + (item.planned || 0), 0);
+                const totalProduced = productionData.reduce((sum, item) => sum + (item.produced || 0), 0);
+                const totalShipped = productionData.reduce((sum, item) => sum + (item.shipped || 0), 0);
+                
+                log('📈 数据统计:', 'info');
+                log(`  总计划量: ${totalPlanned} 根`, 'info');
+                log(`  总生产量: ${totalProduced} 根`, 'info');
+                log(`  总发货量: ${totalShipped} 根`, 'info');
+
+                // 显示数据样本
+                displayDataSample(productionData.slice(0, 5));
+
+            } catch (error) {
+                log(`❌ 生产数据解析失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 检查发货数据
+        function checkShippingData() {
+            log('检查发货数据...', 'info');
+            
+            const data = localStorage.getItem('shippingHistory');
+            if (!data) {
+                log('⚠️ 发货数据不存在', 'warning');
+                return;
+            }
+
+            try {
+                const shippingData = JSON.parse(data);
+                log(`📦 发货数据总数: ${shippingData.length} 条`, 'info');
+            } catch (error) {
+                log(`❌ 发货数据解析失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 检查原材料数据
+        function checkMaterialData() {
+            log('检查原材料数据...', 'info');
+            
+            const data = localStorage.getItem('materialPurchases');
+            if (!data) {
+                log('⚠️ 原材料数据不存在', 'warning');
+                return;
+            }
+
+            try {
+                const materialData = JSON.parse(data);
+                log(`🏭 原材料数据总数: ${materialData.length} 条`, 'info');
+            } catch (error) {
+                log(`❌ 原材料数据解析失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 显示数据样本
+        function displayDataSample(sampleData) {
+            const sampleDiv = document.getElementById('dataSample');
+            
+            if (!sampleData || sampleData.length === 0) {
+                sampleDiv.innerHTML = '<p>没有数据样本</p>';
+                return;
+            }
+
+            let html = '<table class="data-table">';
+            html += '<thead><tr>';
+            
+            // 表头
+            const fields = Object.keys(sampleData[0]);
+            fields.forEach(field => {
+                html += `<th>${field}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            // 数据行
+            sampleData.forEach(item => {
+                html += '<tr>';
+                fields.forEach(field => {
+                    const value = item[field];
+                    html += `<td>${value !== null && value !== undefined ? value : ''}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            sampleDiv.innerHTML = html;
+        }
+
+        // 更新数据概览
+        function updateDataOverview() {
+            const overviewDiv = document.getElementById('dataOverview');
+            
+            const productionData = localStorage.getItem('productionData');
+            const shippingData = localStorage.getItem('shippingHistory');
+            const materialData = localStorage.getItem('materialPurchases');
+
+            let html = '<div style="display: flex; gap: 20px; flex-wrap: wrap;">';
+
+            // 生产数据概览
+            if (productionData) {
+                try {
+                    const data = JSON.parse(productionData);
+                    const status = data.length > 0 ? 'good' : 'warning';
+                    html += `
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; min-width: 150px;">
+                            <h4>生产数据</h4>
+                            <p class="status-${status}">${data.length} 条记录</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    html += `
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; min-width: 150px;">
+                            <h4>生产数据</h4>
+                            <p class="status-error">解析错误</p>
+                        </div>
+                    `;
+                }
+            } else {
+                html += `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; min-width: 150px;">
+                        <h4>生产数据</h4>
+                        <p class="status-error">不存在</p>
+                    </div>
+                `;
+            }
+
+            // 发货数据概览
+            if (shippingData) {
+                try {
+                    const data = JSON.parse(shippingData);
+                    html += `
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; min-width: 150px;">
+                            <h4>发货数据</h4>
+                            <p class="status-good">${data.length} 条记录</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    html += `
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; min-width: 150px;">
+                            <h4>发货数据</h4>
+                            <p class="status-error">解析错误</p>
+                        </div>
+                    `;
+                }
+            } else {
+                html += `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; min-width: 150px;">
+                        <h4>发货数据</h4>
+                        <p class="status-warning">不存在</p>
+                    </div>
+                `;
+            }
+
+            // 原材料数据概览
+            if (materialData) {
+                try {
+                    const data = JSON.parse(materialData);
+                    html += `
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; min-width: 150px;">
+                            <h4>原材料数据</h4>
+                            <p class="status-good">${data.length} 条记录</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    html += `
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; min-width: 150px;">
+                            <h4>原材料数据</h4>
+                            <p class="status-error">解析错误</p>
+                        </div>
+                    `;
+                }
+            } else {
+                html += `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; min-width: 150px;">
+                        <h4>原材料数据</h4>
+                        <p class="status-warning">不存在</p>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+            overviewDiv.innerHTML = html;
+        }
+
+        // 测试计算
+        function testCalculation() {
+            log('=== 测试统计计算 ===', 'info');
+            
+            const data = localStorage.getItem('productionData');
+            if (!data) {
+                log('❌ 没有生产数据可供测试', 'error');
+                return;
+            }
+
+            try {
+                const productionData = JSON.parse(data);
+                log(`开始测试 ${productionData.length} 条数据的计算...`, 'info');
+
+                // 使用改进的规格解析函数
+                function extractLengthFromSpec(spec) {
+                    if (!spec) return 6000;
+                    
+                    const patterns = [
+                        /L=(\d+)/,
+                        /长度[：:]\s*(\d+)/,
+                        /(\d+)mm/i,
+                        /(\d+)MM/,
+                        /L(\d+)/,
+                        /-(\d+)$/,
+                        /×(\d+)/,
+                        /\*(\d+)/,
+                        /(\d{4,})/
+                    ];
+                    
+                    for (const pattern of patterns) {
+                        const match = spec.match(pattern);
+                        if (match) {
+                            const length = parseInt(match[1]);
+                            if (length >= 1000 && length <= 20000) {
+                                return length;
+                            }
+                        }
+                    }
+                    
+                    return 6000;
+                }
+
+                let totalDemandMeters = 0;
+                let producedMeters = 0;
+                let shippedMeters = 0;
+                let validRecords = 0;
+                let invalidRecords = 0;
+
+                // 测试前5条数据的详细计算
+                log('详细计算过程 (前5条):', 'info');
+                productionData.slice(0, 5).forEach((item, index) => {
+                    const length = extractLengthFromSpec(item.spec);
+                    const planned = item.planned || 0;
+                    const produced = item.produced || 0;
+                    const shipped = item.shipped || 0;
+                    
+                    const demandMeter = planned * length / 1000;
+                    const producedMeter = produced * length / 1000;
+                    const shippedMeter = shipped * length / 1000;
+
+                    log(`第${index + 1}条: ${item.spec}`, 'info');
+                    log(`  解析长度: ${length}mm`, 'info');
+                    log(`  需求: ${planned}根 × ${length}mm ÷ 1000 = ${demandMeter.toFixed(1)}米`, 'info');
+                    log(`  已产: ${produced}根 × ${length}mm ÷ 1000 = ${producedMeter.toFixed(1)}米`, 'info');
+                    log(`  已发: ${shipped}根 × ${length}mm ÷ 1000 = ${shippedMeter.toFixed(1)}米`, 'info');
+                });
+
+                // 计算所有数据
+                productionData.forEach(item => {
+                    const length = extractLengthFromSpec(item.spec);
+                    const planned = item.planned || 0;
+                    const produced = item.produced || 0;
+                    const shipped = item.shipped || 0;
+                    
+                    if (length > 0 && planned > 0) {
+                        validRecords++;
+                        totalDemandMeters += planned * length / 1000;
+                        producedMeters += produced * length / 1000;
+                        shippedMeters += shipped * length / 1000;
+                    } else {
+                        invalidRecords++;
+                    }
+                });
+
+                const pendingMeters = totalDemandMeters - producedMeters;
+                const completionRate = totalDemandMeters > 0 ? ((producedMeters / totalDemandMeters) * 100).toFixed(1) : 0;
+
+                log('=== 计算结果 ===', 'success');
+                log(`有效记录: ${validRecords} 条`, 'info');
+                log(`无效记录: ${invalidRecords} 条`, 'warning');
+                log(`总需求量: ${totalDemandMeters.toFixed(1)} 米`, 'success');
+                log(`已生产量: ${producedMeters.toFixed(1)} 米`, 'success');
+                log(`待生产量: ${pendingMeters.toFixed(1)} 米`, 'success');
+                log(`已发货量: ${shippedMeters.toFixed(1)} 米`, 'success');
+                log(`完成率: ${completionRate}%`, 'success');
+
+                if (totalDemandMeters === 0) {
+                    log('⚠️ 计算结果为0，可能的原因:', 'warning');
+                    log('  1. 规格格式无法识别', 'warning');
+                    log('  2. 计划数量为0或空', 'warning');
+                    log('  3. 数据结构异常', 'warning');
+                }
+
+            } catch (error) {
+                log(`❌ 计算测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载完成后自动检查
+        document.addEventListener('DOMContentLoaded', () => {
+            log('数据检查工具已加载', 'success');
+            setTimeout(() => {
+                checkAllData();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

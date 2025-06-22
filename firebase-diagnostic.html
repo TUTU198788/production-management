@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase连接诊断工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .diagnostic-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .diagnostic-section h3 {
+            color: #3b82f6;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-success { background: #10b981; }
+        .status-warning { background: #f59e0b; }
+        .status-error { background: #ef4444; }
+        .status-unknown { background: #6b7280; }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .btn-success {
+            background: #10b981;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+        .result {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .result.success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .result.error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .result.warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+        .result.info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .config-display {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Firebase连接诊断工具</h1>
+        
+        <div class="diagnostic-section">
+            <h3>
+                <span class="status-indicator status-unknown" id="overallStatus"></span>
+                总体状态
+            </h3>
+            <p>正在检查Firebase连接状态...</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <button class="btn" onclick="runFullDiagnostic()">开始完整诊断</button>
+            <button class="btn btn-success" onclick="runQuickTest()">快速测试</button>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>
+                <span class="status-indicator status-unknown" id="configStatus"></span>
+                配置检查
+            </h3>
+            <div class="config-display" id="configDisplay">等待检查...</div>
+            <button class="btn" onclick="checkConfig()">检查配置</button>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>
+                <span class="status-indicator status-unknown" id="networkStatus"></span>
+                网络连接
+            </h3>
+            <div id="networkInfo">等待检查...</div>
+            <button class="btn" onclick="checkNetwork()">检查网络</button>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>
+                <span class="status-indicator status-unknown" id="authStatus"></span>
+                身份验证
+            </h3>
+            <div id="authInfo">等待检查...</div>
+            <button class="btn" onclick="checkAuth()">检查认证</button>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>
+                <span class="status-indicator status-unknown" id="firestoreStatus"></span>
+                Firestore数据库
+            </h3>
+            <div id="firestoreInfo">等待检查...</div>
+            <button class="btn" onclick="checkFirestore()">检查数据库</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Firebase配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyDAtk4_1580AfAQYh0aGeykavDYfnflbKc",
+            authDomain: "zhlscglxt.firebaseapp.com",
+            projectId: "zhlscglxt",
+            storageBucket: "zhlscglxt.firebasestorage.app",
+            messagingSenderId: "36495989654",
+            appId: "1:36495989654:web:3ad7266c9832ff25569185"
+        };
+
+        // 全局变量
+        window.firebaseConfig = firebaseConfig;
+        window.firebaseApp = null;
+        window.firebaseDB = null;
+        window.firebaseAuth = null;
+        window.diagnosticResults = {};
+
+        // 初始化Firebase
+        try {
+            window.firebaseApp = initializeApp(firebaseConfig);
+            window.firebaseDB = getFirestore(window.firebaseApp);
+            window.firebaseAuth = getAuth(window.firebaseApp);
+            
+            // 导出函数到全局
+            window.collection = collection;
+            window.doc = doc;
+            window.getDoc = getDoc;
+            window.setDoc = setDoc;
+            window.serverTimestamp = serverTimestamp;
+            window.signInAnonymously = signInAnonymously;
+            
+            console.log('Firebase SDK 加载成功');
+        } catch (error) {
+            console.error('Firebase SDK 加载失败:', error);
+        }
+    </script>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateStatus(elementId, status) {
+            const element = document.getElementById(elementId);
+            element.className = `status-indicator status-${status}`;
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressFill').style.width = percent + '%';
+        }
+
+        async function checkConfig() {
+            showResult('🔍 检查Firebase配置...', 'info');
+            
+            try {
+                const config = window.firebaseConfig;
+                const configText = JSON.stringify(config, null, 2);
+                document.getElementById('configDisplay').textContent = configText;
+                
+                // 验证必需字段
+                const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+                const missingFields = requiredFields.filter(field => !config[field]);
+                
+                if (missingFields.length > 0) {
+                    updateStatus('configStatus', 'error');
+                    showResult(`❌ 配置缺少必需字段: ${missingFields.join(', ')}`, 'error');
+                    return false;
+                } else {
+                    updateStatus('configStatus', 'success');
+                    showResult('✅ Firebase配置验证成功', 'success');
+                    return true;
+                }
+            } catch (error) {
+                updateStatus('configStatus', 'error');
+                showResult(`❌ 配置检查失败: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function checkNetwork() {
+            showResult('🌐 检查网络连接...', 'info');
+            
+            try {
+                // 检查基本网络连接
+                const response = await fetch('https://www.google.com/favicon.ico', { 
+                    mode: 'no-cors',
+                    cache: 'no-cache'
+                });
+                
+                // 检查Firebase服务连接
+                const firebaseResponse = await fetch('https://firebase.googleapis.com/', {
+                    mode: 'no-cors',
+                    cache: 'no-cache'
+                });
+                
+                updateStatus('networkStatus', 'success');
+                showResult('✅ 网络连接正常，可以访问Firebase服务', 'success');
+                
+                document.getElementById('networkInfo').innerHTML = `
+                    <div>✅ 基本网络连接: 正常</div>
+                    <div>✅ Firebase服务连接: 正常</div>
+                    <div>🌐 在线状态: ${navigator.onLine ? '在线' : '离线'}</div>
+                `;
+                
+                return true;
+            } catch (error) {
+                updateStatus('networkStatus', 'error');
+                showResult(`❌ 网络连接检查失败: ${error.message}`, 'error');
+                
+                document.getElementById('networkInfo').innerHTML = `
+                    <div>❌ 网络连接: 失败</div>
+                    <div>🌐 在线状态: ${navigator.onLine ? '在线' : '离线'}</div>
+                    <div>错误: ${error.message}</div>
+                `;
+                
+                return false;
+            }
+        }
+
+        async function checkAuth() {
+            showResult('🔐 检查身份验证...', 'info');
+            
+            try {
+                if (!window.firebaseAuth) {
+                    throw new Error('Firebase Auth 未初始化');
+                }
+                
+                // 尝试匿名登录
+                await window.signInAnonymously(window.firebaseAuth);
+                const user = window.firebaseAuth.currentUser;
+                
+                if (user) {
+                    updateStatus('authStatus', 'success');
+                    showResult(`✅ 匿名登录成功，用户ID: ${user.uid}`, 'success');
+                    
+                    document.getElementById('authInfo').innerHTML = `
+                        <div>✅ 认证状态: 已登录</div>
+                        <div>👤 用户ID: ${user.uid}</div>
+                        <div>🔐 认证方式: 匿名登录</div>
+                    `;
+                    
+                    return true;
+                } else {
+                    throw new Error('登录成功但未获取到用户信息');
+                }
+            } catch (error) {
+                updateStatus('authStatus', 'error');
+                showResult(`❌ 身份验证失败: ${error.message}`, 'error');
+                
+                document.getElementById('authInfo').innerHTML = `
+                    <div>❌ 认证状态: 失败</div>
+                    <div>错误: ${error.message}</div>
+                `;
+                
+                return false;
+            }
+        }
+
+        async function checkFirestore() {
+            showResult('🗄️ 检查Firestore数据库...', 'info');
+            
+            try {
+                if (!window.firebaseDB) {
+                    throw new Error('Firestore 未初始化');
+                }
+                
+                // 尝试读取测试文档
+                const testDocRef = window.doc(window.collection(window.firebaseDB, 'test'), 'connection');
+                await window.getDoc(testDocRef);
+                
+                // 尝试写入测试文档
+                await window.setDoc(testDocRef, {
+                    test: true,
+                    timestamp: window.serverTimestamp(),
+                    userAgent: navigator.userAgent
+                });
+                
+                updateStatus('firestoreStatus', 'success');
+                showResult('✅ Firestore数据库连接成功，读写操作正常', 'success');
+                
+                document.getElementById('firestoreInfo').innerHTML = `
+                    <div>✅ 数据库连接: 正常</div>
+                    <div>✅ 读取权限: 正常</div>
+                    <div>✅ 写入权限: 正常</div>
+                    <div>📊 项目ID: ${window.firebaseConfig.projectId}</div>
+                `;
+                
+                return true;
+            } catch (error) {
+                updateStatus('firestoreStatus', 'error');
+                showResult(`❌ Firestore数据库检查失败: ${error.message}`, 'error');
+                
+                document.getElementById('firestoreInfo').innerHTML = `
+                    <div>❌ 数据库连接: 失败</div>
+                    <div>错误: ${error.message}</div>
+                `;
+                
+                return false;
+            }
+        }
+
+        async function runQuickTest() {
+            showResult('🚀 开始快速测试...', 'info');
+            updateProgress(0);
+            
+            const configOk = await checkConfig();
+            updateProgress(50);
+            
+            if (configOk) {
+                const authOk = await checkAuth();
+                updateProgress(100);
+                
+                if (authOk) {
+                    updateStatus('overallStatus', 'success');
+                    showResult('🎉 快速测试完成！Firebase基本功能正常', 'success');
+                } else {
+                    updateStatus('overallStatus', 'warning');
+                    showResult('⚠️ 快速测试完成，但身份验证有问题', 'warning');
+                }
+            } else {
+                updateStatus('overallStatus', 'error');
+                showResult('❌ 快速测试失败，配置有问题', 'error');
+            }
+        }
+
+        async function runFullDiagnostic() {
+            showResult('🔍 开始完整诊断...', 'info');
+            updateProgress(0);
+            
+            const configOk = await checkConfig();
+            updateProgress(25);
+            
+            const networkOk = await checkNetwork();
+            updateProgress(50);
+            
+            const authOk = await checkAuth();
+            updateProgress(75);
+            
+            const firestoreOk = await checkFirestore();
+            updateProgress(100);
+            
+            // 综合评估
+            const allOk = configOk && networkOk && authOk && firestoreOk;
+            const partialOk = configOk && networkOk;
+            
+            if (allOk) {
+                updateStatus('overallStatus', 'success');
+                showResult('🎉 完整诊断完成！所有功能正常，Firebase可以正常使用', 'success');
+            } else if (partialOk) {
+                updateStatus('overallStatus', 'warning');
+                showResult('⚠️ 完整诊断完成，基本功能正常但部分功能有问题', 'warning');
+            } else {
+                updateStatus('overallStatus', 'error');
+                showResult('❌ 完整诊断完成，发现严重问题需要修复', 'error');
+            }
+        }
+
+        // 页面加载时自动运行快速测试
+        window.addEventListener('load', () => {
+            setTimeout(runQuickTest, 1000);
+        });
+    </script>
+</body>
+</html>
