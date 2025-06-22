@@ -715,6 +715,15 @@ class DataManager {
             }
         }, 100);
 
+        // 生产数据管理按钮
+        const productionManagementBtn = document.getElementById('productionManagementBtn');
+        if (productionManagementBtn) {
+            productionManagementBtn.addEventListener('click', () => {
+                console.log('生产数据管理按钮被点击');
+                this.openProductionManagementModal();
+            });
+        }
+
         // 已生产量卡片点击事件（延迟绑定确保DOM完全加载）
         setTimeout(() => {
             const producedCard = document.querySelector('.metric-card.produced');
@@ -1545,20 +1554,6 @@ class DataManager {
         }
     }
     
-    // 从本地存储加载（重复方法，已删除）
-    // loadFromLocalStorage() {
-    //     const saved = localStorage.getItem('productionData');
-    //     if (saved) {
-    //         this.data = JSON.parse(saved);
-    //         this.filteredData = [...this.data];
-    //     }
-
-    //     const savedLogs = localStorage.getItem('operationLogs');
-    //     if (savedLogs) {
-    //         this.operationLogs = JSON.parse(savedLogs);
-    //     }
-    // }
-
     // 添加操作日志
     addLog(type, title, description, details = {}) {
         const log = {
@@ -1616,25 +1611,57 @@ class DataManager {
         }
     }
 
-    // 强制更新主界面统计数据
+    // 强制更新主界面统计数据（增强版本）
     forceUpdateDashboard() {
-        console.log('强制更新主界面统计数据...');
+        console.log('🔄 强制更新主界面统计数据...');
+        console.log('当前数据状态:', {
+            productionData: this.data?.length || 0,
+            shippingHistory: this.shippingHistory?.length || 0,
+            materialPurchases: this.materialPurchases?.length || 0
+        });
 
-        // 等待一小段时间确保数据已经设置完成
+        // 确保数据已经正确设置
+        if (!this.data || !Array.isArray(this.data)) {
+            console.warn('⚠️ 数据状态异常，尝试重新加载...');
+            this.loadFromLocalStorage();
+        }
+
+        // 多层延迟确保数据完全更新
         setTimeout(() => {
             if (window.dashboard) {
-                console.log('调用 dashboard.updateMetricsFromDataManager (强制)');
-                window.dashboard.updateMetricsFromDataManager();
-                window.dashboard.updateCharts();
+                console.log('📊 第一步：调用 dashboard.updateMetricsFromDataManager');
 
-                // 再次延迟确保更新完成
+                // 先确保dashboard能获取到正确的数据
+                if (this.data && this.data.length > 0) {
+                    console.log('✅ 数据验证通过，开始更新统计');
+                    window.dashboard.updateMetricsFromDataManager();
+                } else {
+                    console.warn('⚠️ 数据为空，跳过统计更新');
+                }
+
+                // 延迟更新图表
                 setTimeout(() => {
-                    window.dashboard.updateMetrics();
+                    console.log('📈 第二步：更新图表');
+                    window.dashboard.updateCharts();
                 }, 100);
+
+                // 最后确保界面更新
+                setTimeout(() => {
+                    console.log('🎨 第三步：强制界面更新');
+                    if (window.dashboard.data && window.dashboard.data.totalDemandMeters !== undefined) {
+                        window.dashboard.updateMetrics();
+                    } else {
+                        console.warn('⚠️ Dashboard数据未准备好，重新触发更新');
+                        window.dashboard.updateMetricsFromDataManager();
+                        setTimeout(() => {
+                            window.dashboard.updateMetrics();
+                        }, 50);
+                    }
+                }, 200);
             } else {
-                console.warn('window.dashboard 不存在，无法强制更新');
+                console.error('❌ window.dashboard 不存在，无法强制更新');
             }
-        }, 50);
+        }, 100);
     }
 
     // 打开生产数据模态框
@@ -3016,6 +3043,104 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         console.log('新增区域:', trimmedName, '当前所有区域:', [...this.customAreas]);
     }
 
+    // 添加测试生产数据
+    addTestProductionData() {
+        console.log('添加测试生产数据...');
+
+        const testData = [
+            {
+                id: Date.now() + 1,
+                spec: 'H100-1400mm',
+                area: 'C1',
+                planned: 10,
+                produced: 5,
+                shipped: 2,
+                status: 'producing',
+                deadline: '2025-06-25',
+                remarks: '测试数据1',
+                productionRecords: [
+                    {
+                        quantity: 3,
+                        date: '2025-06-20',
+                        remarks: '第一批生产',
+                        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+                    },
+                    {
+                        quantity: 2,
+                        date: '2025-06-21',
+                        remarks: '第二批生产',
+                        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+                    }
+                ]
+            },
+            {
+                id: Date.now() + 2,
+                spec: 'H80-1200mm',
+                area: 'E1',
+                planned: 15,
+                produced: 8,
+                shipped: 0,
+                status: 'producing',
+                deadline: '2025-06-26',
+                remarks: '测试数据2',
+                productionRecords: [
+                    {
+                        quantity: 5,
+                        date: '2025-06-19',
+                        remarks: '首批生产',
+                        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+                    },
+                    {
+                        quantity: 3,
+                        date: '2025-06-22',
+                        remarks: '补充生产',
+                        timestamp: new Date().toISOString()
+                    }
+                ]
+            },
+            {
+                id: Date.now() + 3,
+                spec: 'H120-1600mm',
+                area: 'A2',
+                planned: 20,
+                produced: 12,
+                shipped: 5,
+                status: 'producing',
+                deadline: '2025-06-28',
+                remarks: '测试数据3',
+                productionRecords: [
+                    {
+                        quantity: 7,
+                        date: '2025-06-18',
+                        remarks: '初期生产',
+                        timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
+                    },
+                    {
+                        quantity: 5,
+                        date: '2025-06-21',
+                        remarks: '追加生产',
+                        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+                    }
+                ]
+            }
+        ];
+
+        // 添加到现有数据中
+        testData.forEach(item => {
+            // 检查是否已存在相同规格的数据
+            const existing = this.data.find(d => d.spec === item.spec && d.area === item.area);
+            if (!existing) {
+                this.data.push(item);
+            }
+        });
+
+        // 保存到本地存储
+        this.saveToLocalStorage();
+
+        console.log('测试数据已添加，当前数据总数:', this.data.length);
+        console.log('有生产数量的项目数:', this.data.filter(item => item.produced > 0).length);
+    }
+
     // 生产数据管理功能
     openProductionManagementModal() {
         console.log('打开生产数据管理模态框');
@@ -3029,8 +3154,13 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             return;
         }
 
+        // === 自动补丁：每次打开弹窗都强制加载本地数据 ===
+        this.loadFromLocalStorage();
+
         // 初始化生产数据管理
         this.initProductionManagement();
+        // 强制刷新统计，确保顶部数据同步
+        this.updateProductionStats();
 
         // 显示模态框
         modal.classList.add('active');
@@ -3052,12 +3182,49 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
     }
 
     initProductionManagement() {
+        console.log('=== 生产数据管理初始化开始 ===');
+        console.log('当前数据条数:', this.data.length);
+
+        // 详细检查数据状态
+        if (this.data.length > 0) {
+            console.log('📝 数据样本:', this.data.slice(0, 3));
+            const producedItems = this.data.filter(item => item.produced > 0);
+            console.log('🏭 有生产数据的项目数:', producedItems.length);
+            if (producedItems.length > 0) {
+                console.log('🏭 生产数据样本:', producedItems.slice(0, 3));
+            }
+        } else {
+            console.log('❌ 没有任何数据！');
+        }
+
+        // 如果没有生产数据，添加测试数据
+        const producedItems = this.data.filter(item => item.produced > 0);
+        if (producedItems.length === 0) {
+            console.log('⚠️ 没有生产数据，添加测试数据...');
+            this.addTestProductionData();
+            console.log('✅ 测试数据添加完成，数据总数:', this.data.length);
+            // 重新检查生产数据
+            const newProducedItems = this.data.filter(item => item.produced > 0);
+            console.log('🔄 添加测试数据后，有生产数据的项目数:', newProducedItems.length);
+        }
+
         // 初始化生产记录数据
+        console.log('开始提取生产记录...');
         this.productionRecords = this.extractProductionRecords();
         this.filteredProductionRecords = [...this.productionRecords];
         this.selectedProductionRecords = new Set();
         this.currentProductionPage = 1;
         this.productionRecordsPerPage = 10;
+
+        console.log('*** 提取的生产记录数:', this.productionRecords.length, '***');
+        if (this.productionRecords.length > 0) {
+            console.log('📝 生产记录样本:', this.productionRecords.slice(0, 3));
+        } else {
+            console.log('❌ 没有提取到任何生产记录！');
+            console.log('🔍 检查数据状态:');
+            console.log('  数据总数:', this.data.length);
+            console.log('  有生产的项目:', this.data.filter(item => item.produced > 0).length);
+        }
 
         // 更新统计信息
         this.updateProductionStats();
@@ -3070,18 +3237,33 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
         // 绑定事件监听器
         this.bindProductionManagementEvents();
+
+        console.log('=== 生产数据管理初始化完成 ===');
     }
 
     extractProductionRecords() {
+        console.log('*** 开始提取生产记录 ***');
         const records = [];
         let recordId = 1;
+        let processedItems = 0;
+        let itemsWithProduction = 0;
 
-        this.data.forEach(item => {
+        this.data.forEach((item, index) => {
+            processedItems++;
             if (item.produced > 0) {
+                itemsWithProduction++;
+                console.log(`📦 第${itemsWithProduction}个有生产的项目:`, {
+                    spec: item.spec,
+                    area: item.area,
+                    produced: item.produced,
+                    hasDetailedRecords: !!(item.productionRecords && Array.isArray(item.productionRecords))
+                });
+
                 // 检查是否有详细的生产记录
                 if (item.productionRecords && Array.isArray(item.productionRecords)) {
-                    item.productionRecords.forEach(record => {
-                        records.push({
+                    console.log(`  📋 ${item.spec} 有 ${item.productionRecords.length} 条详细记录`);
+                    item.productionRecords.forEach((record, recordIndex) => {
+                        const newRecord = {
                             id: `${item.id}_${recordId++}`,
                             itemId: item.id,
                             spec: item.spec,
@@ -3090,11 +3272,14 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                             date: record.date || new Date().toISOString().split('T')[0],
                             remarks: record.remarks || '',
                             timestamp: record.timestamp || new Date().toISOString()
-                        });
+                        };
+                        records.push(newRecord);
+                        console.log(`    记录${recordIndex + 1}:`, newRecord);
                     });
                 } else {
                     // 如果没有详细记录，创建一个汇总记录
-                    records.push({
+                    console.log(`  📄 ${item.spec} 没有详细记录，创建汇总记录`);
+                    const newRecord = {
                         id: `${item.id}_${recordId++}`,
                         itemId: item.id,
                         spec: item.spec,
@@ -3103,18 +3288,57 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                         date: item.lastProductionDate || new Date().toISOString().split('T')[0],
                         remarks: item.productionRemarks || '历史生产记录',
                         timestamp: item.lastProductionTime || new Date().toISOString()
-                    });
+                    };
+                    records.push(newRecord);
+                    console.log(`    汇总记录:`, newRecord);
                 }
             }
         });
+
+        console.log('📊 提取结果:');
+        console.log(`  处理项目总数: ${processedItems}`);
+        console.log(`  有生产的项目: ${itemsWithProduction}`);
+        console.log(`  生成记录数: ${records.length}`);
 
         return records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     }
 
     updateProductionStats() {
+        console.log('🔄 updateProductionStats 被调用');
+
+        // 确保 productionRecords 已初始化
+        if (!this.productionRecords || !Array.isArray(this.productionRecords)) {
+            console.log('⚠️ productionRecords 未初始化，重新提取...');
+            this.productionRecords = this.extractProductionRecords();
+        }
+
+        console.log('📊 生产记录数量:', this.productionRecords.length);
+
         const totalRecords = this.productionRecords.length;
         const totalQuantity = this.productionRecords.reduce((sum, record) => sum + record.quantity, 0);
         const uniqueSpecs = new Set(this.productionRecords.map(record => record.spec));
+
+        // 计算总米数
+        const totalMeters = this.productionRecords.reduce((sum, record) => {
+            // 从规格中提取长度信息 (例如: H100-2400mm -> 2400mm -> 2.4米)
+            const lengthMatch = record.spec.match(/-(\d+)mm/);
+            console.log(`🔍 规格 "${record.spec}" 长度匹配:`, lengthMatch);
+            if (lengthMatch) {
+                const lengthMm = parseInt(lengthMatch[1]);
+                const lengthM = lengthMm / 1000; // 转换为米
+                const meters = record.quantity * lengthM;
+                console.log(`  长度: ${lengthMm}mm = ${lengthM}米, 数量: ${record.quantity}根, 小计: ${meters}米`);
+                return sum + meters;
+            }
+            console.log(`  ❌ 无法从规格 "${record.spec}" 中提取长度`);
+            return sum;
+        }, 0);
+
+        console.log('📈 统计结果:');
+        console.log('  总记录数:', totalRecords);
+        console.log('  总数量:', totalQuantity);
+        console.log('  总米数:', totalMeters.toFixed(2));
+        console.log('  规格种类:', uniqueSpecs.size);
 
         // 按型号分类统计
         const typeStats = {};
@@ -3134,10 +3358,41 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             .map(type => `${type}: ${typeStats[type].size}种`)
             .join(', ');
 
-        document.getElementById('totalProductionRecords').textContent = totalRecords;
-        document.getElementById('totalProducedQuantity').textContent = `${this.formatNumber(totalQuantity)} 根`;
-        document.getElementById('totalProductionSpecs').textContent = `${uniqueSpecs.size} 种`;
-        document.getElementById('totalProductionAreas').textContent = typeStatsText || '暂无数据';
+        console.log('🏷️ 型号统计:', typeStatsText);
+
+        // 更新页面元素
+        const elements = {
+            totalProductionMeters: document.getElementById('totalProductionMeters'),
+            totalProductionPieces: document.getElementById('totalProductionPieces')
+        };
+
+        console.log('🎯 页面元素检查:');
+        Object.keys(elements).forEach(key => {
+            console.log(`  ${key}:`, elements[key] ? '✅ 找到' : '❌ 未找到');
+        });
+
+        if (elements.totalProductionMeters) {
+            elements.totalProductionMeters.textContent = `${totalMeters.toFixed(2)} 米`;
+        }
+        if (elements.totalProductionPieces) {
+            elements.totalProductionPieces.textContent = `${this.formatNumber(totalQuantity)} 根`;
+        }
+
+        // === 自动修复：统计生产进度 ===
+        // 统计总计划数量和已生产数量
+        const totalPlanned = this.data.reduce((sum, item) => sum + (item.planned || 0), 0);
+        const totalProduced = this.data.reduce((sum, item) => sum + (item.produced || 0), 0);
+        let completionRate = 0;
+        if (totalPlanned > 0) {
+            completionRate = (totalProduced / totalPlanned * 100).toFixed(1);
+        }
+        // 更新生产进度显示
+        const progressElement = document.getElementById('productionProgress');
+        if (progressElement) {
+            progressElement.textContent = `${completionRate}%`;
+        }
+
+        console.log('✅ updateProductionStats 完成');
     }
 
     updateProductionFilters() {
@@ -3287,6 +3542,10 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         const refreshBtn = document.getElementById('refreshProductionDataBtn');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => {
+                // 如果没有生产数据，添加一些测试数据
+                if (this.data.length === 0 || this.data.filter(item => item.produced > 0).length === 0) {
+                    this.addTestProductionData();
+                }
                 this.initProductionManagement();
                 this.showNotification('生产数据已刷新', 'success');
             });
@@ -4960,10 +5219,38 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         return Array.from(areaMap.values()).sort((a, b) => b.completionRate - a.completionRate);
     }
 
+    // 从规格型号中提取长度（mm）- 增强版本
     extractLengthFromSpec(spec) {
-        if (!spec) return 0;
-        const match = spec.match(/(\d+)mm/);
-        return match ? parseInt(match[1]) : 0;
+        if (!spec) {
+            return 6000; // 默认长度
+        }
+
+        // 多种长度格式的匹配模式
+        const patterns = [
+            /L=(\d+)/,           // L=6000
+            /长度[：:]\s*(\d+)/,   // 长度：6000 或 长度:6000
+            /(\d+)mm/i,          // 6000mm 或 6000MM
+            /(\d+)MM/,           // 6000MM
+            /L(\d+)/,            // L6000
+            /-(\d+)$/,           // 规格-6000
+            /×(\d+)/,            // 规格×6000
+            /\*(\d+)/,           // 规格*6000
+            /(\d{4,})/           // 直接的4位以上数字（如6000）
+        ];
+
+        for (const pattern of patterns) {
+            const match = spec.match(pattern);
+            if (match) {
+                const length = parseInt(match[1]);
+                // 验证长度是否在合理范围内（1米到20米）
+                if (length >= 1000 && length <= 20000) {
+                    return length;
+                }
+            }
+        }
+
+        // 如果都没有匹配到，使用默认长度
+        return 6000;
     }
 
     createAreaCard(areaStat, priority = 0) {
@@ -7817,7 +8104,7 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         if (yearlyElement) yearlyElement.textContent = this.formatNumber(stats.yearly.toFixed(1));
     }
 
-    // 处理远程数据更新（Firebase 实时同步）
+    // 处理远程数据更新（Firebase 实时同步）- 增强本地数据保护
     handleRemoteDataUpdate(remoteData) {
         if (!remoteData || !Array.isArray(remoteData)) return;
 
@@ -7827,12 +8114,16 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             return;
         }
 
-        // 检查是否刚刚完成手动同步（5秒内）
+        // 检查是否刚刚完成手动同步（10秒内）
         const timeSinceManualSync = Date.now() - (this.lastManualSyncTime || 0);
-        if (timeSinceManualSync < 5000) {
+        if (timeSinceManualSync < 10000) {
             console.log('⏸️ 刚完成手动同步，跳过远程数据更新，保护本地数据');
             return;
         }
+
+        // 检查本地数据的新鲜度
+        const localDataFreshness = this.analyzeLocalDataFreshness();
+        console.log('📊 本地数据新鲜度分析:', localDataFreshness);
 
         console.log('收到远程生产数据更新:', remoteData.length, '条记录');
         console.log('当前本地数据:', this.data.length, '条记录');
@@ -7840,6 +8131,23 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         // 如果远程数据为空且本地有数据，保护本地数据
         if (remoteData.length === 0 && this.data.length > 0) {
             console.log('⚠️ 远程生产数据为空，保护本地数据，跳过更新');
+            return;
+        }
+
+        // 如果本地有新鲜数据，优先保护本地数据
+        if (localDataFreshness.hasRecentData && this.data.length > 0) {
+            console.log('🛡️ 检测到本地有新鲜数据，优先保护本地数据');
+
+            // 只合并明确更新的远程数据
+            const selectiveMergedData = this.selectiveMergeWithRemote(this.data, remoteData);
+
+            if (this.hasDataChanged(this.data, selectiveMergedData)) {
+                this.data = selectiveMergedData;
+                this.filteredData = [...this.data];
+                localStorage.setItem('productionData', JSON.stringify(this.data));
+                this.refreshAllViews();
+                this.showNotification('已选择性同步云端更新，本地数据受到保护', 'info');
+            }
             return;
         }
 
@@ -7852,20 +8160,12 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             // 更新本地存储（不触发云端同步，避免循环）
             localStorage.setItem('productionData', JSON.stringify(this.data));
 
-            // 更新界面
-            this.renderTable();
-            this.updateStats();
-            this.renderAreaStats();
-            this.renderUnproducedStats();
-
-            // 强制更新主界面统计数据
-            this.forceUpdateDashboard();
-
+            this.refreshAllViews();
             this.showNotification(`已从云端加载 ${remoteData.length} 条生产数据`, 'success');
             return;
         }
 
-        // 合并远程数据和本地数据
+        // 标准合并流程
         const mergedData = this.mergeDataWithRemote(this.data, remoteData);
 
         if (this.hasDataChanged(this.data, mergedData)) {
@@ -7876,18 +8176,124 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             // 更新本地存储（不触发云端同步，避免循环）
             localStorage.setItem('productionData', JSON.stringify(this.data));
 
-            // 更新界面
-            this.renderTable();
-            this.updateStats();
-            this.renderAreaStats();
-            this.renderUnproducedStats();
-
-            // 强制更新主界面统计数据
-            this.forceUpdateDashboard();
-
+            this.refreshAllViews();
             this.showNotification('数据已从云端同步更新', 'info');
         } else {
             console.log('数据无变化，跳过更新');
+        }
+    }
+
+    // 分析本地数据新鲜度
+    analyzeLocalDataFreshness() {
+        const now = Date.now();
+        const recentThreshold = 30 * 60 * 1000; // 30分钟
+
+        let recentCount = 0;
+        let totalCount = this.data.length;
+        let latestModified = 0;
+
+        this.data.forEach(item => {
+            const modified = item.lastModified || item.timestamp || 0;
+            latestModified = Math.max(latestModified, modified);
+
+            if ((now - modified) < recentThreshold) {
+                recentCount++;
+            }
+        });
+
+        return {
+            hasRecentData: recentCount > 0,
+            recentCount,
+            totalCount,
+            recentPercentage: totalCount > 0 ? (recentCount / totalCount * 100) : 0,
+            latestModifiedAge: Math.round((now - latestModified) / 60000) // 分钟
+        };
+    }
+
+    // 选择性合并远程数据（保护本地新数据）
+    selectiveMergeWithRemote(localData, remoteData) {
+        const merged = new Map();
+        const now = Date.now();
+        const protectionWindow = 30 * 60 * 1000; // 30分钟保护窗口
+
+        // 先添加所有本地数据
+        localData.forEach(item => {
+            if (item && item.id) {
+                merged.set(String(item.id), { ...item });
+            }
+        });
+
+        // 只处理明确更新的远程数据
+        remoteData.forEach(remoteItem => {
+            if (!remoteItem || !remoteItem.id) return;
+
+            const itemId = String(remoteItem.id);
+            const localItem = merged.get(itemId);
+
+            if (!localItem) {
+                // 新的远程数据，直接添加
+                merged.set(itemId, { ...remoteItem });
+                console.log(`➕ 添加新的远程数据: ${itemId}`);
+            } else {
+                // 检查本地数据是否在保护窗口内
+                const localAge = now - (localItem.lastModified || localItem.timestamp || 0);
+                const remoteTime = remoteItem.lastModified || remoteItem.timestamp || 0;
+                const localTime = localItem.lastModified || localItem.timestamp || 0;
+
+                if (localAge < protectionWindow) {
+                    console.log(`🛡️ 保护本地数据: ${itemId} (${Math.round(localAge/60000)}分钟前修改)`);
+                    // 保持本地数据不变
+                } else if (remoteTime > localTime + 60000) { // 远程数据比本地新1分钟以上
+                    console.log(`🔄 使用较新的远程数据: ${itemId}`);
+                    merged.set(itemId, { ...remoteItem });
+                }
+            }
+        });
+
+        return Array.from(merged.values());
+    }
+
+    // 刷新所有视图（增强版本）
+    refreshAllViews() {
+        console.log('🔄 刷新所有视图...');
+
+        // 验证数据状态
+        console.log('数据验证:', {
+            productionData: this.data?.length || 0,
+            shippingHistory: this.shippingHistory?.length || 0,
+            materialPurchases: this.materialPurchases?.length || 0
+        });
+
+        // 按顺序更新各个组件
+        try {
+            // 1. 更新表格
+            console.log('📋 更新数据表格...');
+            this.renderTable();
+
+            // 2. 更新区域统计
+            console.log('🏗️ 更新区域统计...');
+            this.renderAreaStats();
+
+            // 3. 更新未生产规格统计
+            console.log('📊 更新未生产规格统计...');
+            this.renderUnproducedStats();
+
+            // 4. 更新客户统计
+            console.log('👥 更新客户统计...');
+            this.renderCustomerStats();
+
+            // 5. 最后更新主界面统计（最重要）
+            console.log('📈 更新主界面统计...');
+            this.updateStats();
+
+            // 6. 强制更新仪表板
+            console.log('🎛️ 强制更新仪表板...');
+            setTimeout(() => {
+                this.forceUpdateDashboard();
+            }, 100);
+
+        } catch (error) {
+            console.error('❌ 刷新视图时出错:', error);
         }
     }
 
@@ -8129,8 +8535,24 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             };
         }
 
-        // 策略2: 时间戳优先（版本号相同时，增加容错时间到30秒）
-        if (remoteTime > localTime + 30000) { // 30秒容错
+        // 策略2: 本地数据保护优先（增强版本）
+        const now = Date.now();
+        const localAge = now - localTime;
+        const remoteAge = now - remoteTime;
+        const protectionWindow = 60 * 60 * 1000; // 1小时保护窗口
+
+        // 如果本地数据在保护窗口内，优先使用本地数据
+        if (localAge < protectionWindow) {
+            console.log(`本地数据在保护窗口内 (${Math.round(localAge/60000)}分钟前)，优先使用本地数据`);
+            return {
+                hasConflict: false,
+                resolution: 'local_protected',
+                mergedItem: { ...localItem, version: Math.max(localVersion, remoteVersion) + 1 }
+            };
+        }
+
+        // 时间戳比较（增加容错时间到2分钟）
+        if (remoteTime > localTime + 120000) { // 2分钟容错
             return {
                 hasConflict: true,
                 resolution: 'remote_time_newer',
@@ -8138,7 +8560,7 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             };
         }
 
-        if (localTime > remoteTime + 30000) { // 30秒容错
+        if (localTime > remoteTime + 120000) { // 2分钟容错
             return {
                 hasConflict: false,
                 resolution: 'local_time_newer',

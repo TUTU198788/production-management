@@ -1,4 +1,5 @@
 // 图表配置和管理 - Chart.js集成
+// 版本: 2024-12-21-v2 (修复规格图表显示不全问题)
 
 // 全局图表配置
 Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif';
@@ -197,6 +198,8 @@ function initCharts() {
             },
             options: {
                 ...commonChartOptions,
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     ...commonChartOptions.plugins,
                     legend: {
@@ -210,7 +213,7 @@ function initCharts() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: '需求量 (根)',
+                            text: '需求量 (m)',
                             color: chartColors.gray
                         }
                     },
@@ -220,7 +223,30 @@ function initCharts() {
                             display: true,
                             text: '规格型号',
                             color: chartColors.gray
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0,
+                            font: {
+                                size: 11
+                            },
+                            callback: function(value, index, values) {
+                                const label = this.getLabelForValue(value);
+                                // 如果标签太长，进行截断
+                                if (label && label.length > 12) {
+                                    return label.substring(0, 12) + '...';
+                                }
+                                return label;
+                            }
                         }
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 10,
+                        bottom: 20
                     }
                 }
             }
@@ -384,7 +410,7 @@ function updateSpecChart(chart, data) {
         chart.data.labels = ['暂无数据'];
         chart.data.datasets[0].data = [0];
         chart.options.scales.y.title.text = '需求量 (m)';
-        chart.update('none'); // 使用 'none' 模式强制立即更新
+        chart.update('active');
         return;
     }
 
@@ -392,9 +418,12 @@ function updateSpecChart(chart, data) {
     const specStats = {};
 
     data.forEach(item => {
-        const spec = item.spec;
+        const spec = item.spec || item.specification;
+        if (!spec) return;
+
         const length = extractLengthFromSpec(spec);
-        const meters = item.planned * length / 1000;
+        const planned = item.planned || 0;
+        const meters = planned * length / 1000;
 
         if (specStats[spec]) {
             specStats[spec] += meters;
@@ -403,23 +432,45 @@ function updateSpecChart(chart, data) {
         }
     });
 
-    // 按需求量排序，取前8个规格
+    // 过滤掉值为0的规格，按需求量排序，取前10个规格
     const sortedSpecs = Object.entries(specStats)
+        .filter(([_, meters]) => meters > 0)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 8);
+        .slice(0, 10);
 
-    const labels = sortedSpecs.map(([spec, _]) => spec);
+    if (sortedSpecs.length === 0) {
+        // 如果没有有效数据
+        chart.data.labels = ['暂无有效数据'];
+        chart.data.datasets[0].data = [0];
+        chart.options.scales.y.title.text = '需求量 (m)';
+        chart.update('active');
+        return;
+    }
+
+    const labels = sortedSpecs.map(([spec, _]) => {
+        // 简化标签显示，避免过长
+        if (spec.length > 15) {
+            return spec.substring(0, 15) + '...';
+        }
+        return spec;
+    });
     const values = sortedSpecs.map(([_, meters]) => parseFloat(meters.toFixed(1)));
 
-    // 强制清除旧数据并设置新数据
+    console.log('规格图表数据:', { labels, values });
+
+    // 更新图表数据
     chart.data.labels = labels;
     chart.data.datasets[0].data = values;
     chart.data.datasets[0].label = '需求量 (m)';
     chart.options.scales.y.title.text = '需求量 (m)';
 
-    // 强制重新渲染
-    chart.update('none');
-    chart.render();
+    // 更新图表
+    chart.update('active');
+
+    // 确保图表容器有正确的尺寸
+    setTimeout(() => {
+        chart.resize();
+    }, 100);
 }
 
 // 从规格中提取长度的辅助函数
@@ -510,6 +561,75 @@ function exportChart(chart, filename = 'chart') {
     link.click();
 }
 
+// 强制刷新所有图表
+function refreshAllCharts() {
+    console.log('🔄 强制刷新所有图表...');
+
+    // 获取当前数据
+    const data = window.dataManager ? window.dataManager.data : [];
+
+    // 刷新每个图表
+    if (window.charts) {
+        if (window.charts.productionChart) {
+            updateProductionChart(window.charts.productionChart, data);
+            console.log('✅ 生产状态图表已刷新');
+        }
+
+        if (window.charts.shippingChart) {
+            updateShippingChart(window.charts.shippingChart, data);
+            console.log('✅ 发货状态图表已刷新');
+        }
+
+        if (window.charts.specChart) {
+            updateSpecChart(window.charts.specChart, data);
+            console.log('✅ 规格型号图表已刷新');
+        }
+
+        if (window.charts.areaChart) {
+            updateAreaChart(window.charts.areaChart, data);
+            console.log('✅ 区域分布图表已刷新');
+        }
+    }
+
+    // 强制重新计算图表尺寸
+    setTimeout(() => {
+        Chart.instances.forEach(chart => {
+            chart.resize();
+            chart.update('active');
+        });
+        console.log('✅ 所有图表尺寸已重新计算');
+    }, 200);
+}
+
+// 修复图表显示问题的工具函数
+function fixChartDisplay() {
+    console.log('🔧 修复图表显示问题...');
+
+    // 检查图表容器
+    const chartContainers = document.querySelectorAll('.chart-content');
+    chartContainers.forEach((container, index) => {
+        const canvas = container.querySelector('canvas');
+        if (canvas) {
+            console.log(`检查图表容器 ${index + 1}:`, {
+                容器宽度: container.offsetWidth,
+                容器高度: container.offsetHeight,
+                画布宽度: canvas.width,
+                画布高度: canvas.height
+            });
+        }
+    });
+
+    // 强制重新渲染所有图表
+    Chart.instances.forEach((chart, index) => {
+        console.log(`重新渲染图表 ${index + 1}:`, chart.config.type);
+        chart.resize();
+        chart.update('none');
+        chart.render();
+    });
+
+    console.log('🎉 图表显示修复完成');
+}
+
 // 全局暴露函数
 window.initCharts = initCharts;
 window.updateProductionChart = updateProductionChart;
@@ -518,3 +638,5 @@ window.updateSpecChart = updateSpecChart;
 window.updateAreaChart = updateAreaChart;
 window.switchChartTheme = switchChartTheme;
 window.exportChart = exportChart;
+window.refreshAllCharts = refreshAllCharts;
+window.fixChartDisplay = fixChartDisplay;
