@@ -864,8 +864,28 @@ body {
 
 .chart-content {
     padding: var(--spacing-lg);
-    height: 300px;
+    height: 350px;
+    min-height: 300px;
     position: relative;
+}
+
+/* 规格型号图表需要更多空间 */
+.chart-content:has(#specChart) {
+    height: 400px;
+    min-height: 350px;
+}
+
+/* 响应式图表高度 */
+@media (max-width: 768px) {
+    .chart-content {
+        height: 280px;
+        min-height: 250px;
+    }
+
+    .chart-content:has(#specChart) {
+        height: 320px;
+        min-height: 280px;
+    }
 }
 
 .chart-content canvas {
