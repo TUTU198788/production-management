@@ -1445,43 +1445,20 @@
                     </ul>
 
                     <div style="margin-top: 12px;">
-                        <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                            <button type="button" class="btn info" id="refreshFirebaseStatusBtn" style="font-size: 12px; padding: 6px 12px;">
-                                <i class="fas fa-refresh"></i> 刷新状态
-                            </button>
-                            <button type="button" class="btn secondary" id="testFirebaseConnectionBtn" style="font-size: 12px; padding: 6px 12px;">
-                                <i class="fas fa-vial"></i> 测试连接
-                            </button>
-                            <button type="button" class="btn primary" id="manualSyncBtn" style="font-size: 12px; padding: 6px 12px;">
-                                <i class="fas fa-sync-alt"></i> 手动同步
-                            </button>
-                            <button type="button" class="btn danger" onclick="clearFirebaseData()" style="font-size: 12px; padding: 6px 12px; background: #dc3545; color: white; margin-left: 5px;">
-                                <i class="fas fa-trash-alt"></i> 清除云数据
-                            </button>
-                            <button class="cloud-sync-btn" id="dataProtectionBtn" title="数据保护设置" style="background: #28a745; font-size: 12px; padding: 6px 12px; color: white;">
-                                <i class="fas fa-shield-alt"></i> 数据保护
-                            </button>
-                            <button class="cloud-sync-btn" id="syncFixBtn" title="修复数据同步问题" style="background: #ffc107; color: #333; font-size: 12px; padding: 6px 12px;">
-                                <i class="fas fa-tools"></i> 同步修复
-                            </button>
-                            <button class="cloud-sync-btn" id="debugBtn" title="调试统计计算" style="background: #6f42c1; color: white; font-size: 12px; padding: 6px 12px;">
-                                <i class="fas fa-bug"></i> 调试
-                            </button>
-                            <button type="button" class="btn secondary" onclick="debugDataStatus()" style="font-size: 12px; padding: 6px 12px; background: #6c757d;">
-                                <i class="fas fa-bug"></i> 调试数据
-                            </button>
-                            <button type="button" class="btn secondary" onclick="testFirebaseWrite()" style="font-size: 12px; padding: 6px 12px; background: #28a745;">
-                                <i class="fas fa-vial"></i> 测试写入
-                            </button>
-                            <button type="button" class="btn secondary" onclick="testSyncLogic()" style="font-size: 12px; padding: 6px 12px; background: #ffc107; color: #212529;">
-                                <i class="fas fa-sync-alt"></i> 测试同步
-                            </button>
+                        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px;">
+                            <button class="btn info" id="refreshFirebaseStatusBtn"><i class="fas fa-refresh"></i> 刷新状态</button>
+                            <button class="btn secondary" id="testFirebaseConnectionBtn"><i class="fas fa-vial"></i> 测试连接</button>
+                            <button class="btn primary" id="manualSyncBtn"><i class="fas fa-sync-alt"></i> 手动同步</button>
+                            <button class="btn danger" onclick="clearFirebaseData()"><i class="fas fa-trash-alt"></i> 清除云数据</button>
+                            <button class="btn warning" id="syncFixBtn"><i class="fas fa-tools"></i> 同步修复</button>
+                            <button class="btn success" onclick="testFirebaseWrite()"><i class="fas fa-vial"></i> 测试写入</button>
+                            <button class="btn warning" onclick="testSyncLogic()"><i class="fas fa-sync-alt"></i> 测试同步</button>
                         </div>
-                        <div style="padding: 8px; background: #f3f4f6; border-radius: 4px; font-size: 11px; color: #6b7280;">
-                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                                <input type="checkbox" id="disableFirebaseCheckbox" style="margin: 0;">
-                                <span>禁用Firebase，只使用本地存储（如果连接有问题可勾选此项）</span>
-                            </label>
+                        <!-- 云同步模式切换按钮，确保在弹窗内可见 -->
+                        <div style="margin-top: 16px; text-align: left;">
+                            <button id="toggleFirebaseSyncBtn" class="btn secondary" style="font-size: 13px; padding: 8px 18px; min-width: 120px;">
+                                切换中...
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -2770,12 +2747,22 @@
     </script>
 
     <script>
-        window.addEventListener('load', function() {
+        // 等待 dataManager 加载的通用函数
+        function waitForDataManager(callback, retries = 50) {
+            if (window.dataManager) {
+                callback();
+            } else if (retries > 0) {
+                setTimeout(() => waitForDataManager(callback, retries - 1), 100);
+            } else {
+                alert('dataManager 未加载！');
+            }
+        }
+    </script>
+
+    <script>
+        // 自动生成生产明细、同步 productionRecords
+        waitForDataManager(function() {
             setTimeout(function() {
-                if (!window.dataManager || !window.dataManager.data) {
-                    console.warn('dataManager 未加载，稍后再试');
-                    return;
-                }
                 const detailRecords = [];
                 window.dataManager.data.forEach(item => {
                     if (item.produced && item.produced > 0) {
@@ -2793,7 +2780,47 @@
                 if (window.dataManager.updateProductionStats) window.dataManager.updateProductionStats();
                 if (window.dataManager.renderProductionTable) window.dataManager.renderProductionTable();
                 console.log('✅ 已自动生成生产明细，弹窗数据已同步！');
-            }, 2000); // 延迟2秒，确保dataManager已加载
+            }, 2000);
+        });
+    </script>
+
+    <script>
+        // 自动清理无效区域数据，只执行一次
+        waitForDataManager(function() {
+            // 检查是否已清理过
+            if (localStorage.getItem('areaCleaned') === 'true') return;
+
+            const before = window.dataManager.data.length;
+            window.dataManager.data = window.dataManager.data.filter(item => !!item.area && item.area !== 'undefined' && item.area !== null && item.area.trim() !== '');
+            window.dataManager.saveToLocalStorage();
+            window.dataManager.renderTable && window.dataManager.renderTable();
+            window.dataManager.renderAreaStats && window.dataManager.renderAreaStats();
+            window.dataManager.updateStats && window.dataManager.updateStats();
+            alert(`已清理无效区域数据，剩余 ${window.dataManager.data.length} 条（原${before}条）`);
+            // 设置已清理标记
+            localStorage.setItem('areaCleaned', 'true');
+        });
+    </script>
+
+    <script>
+        function toggleFirebaseSync() {
+            const isDisabled = localStorage.getItem('disableFirebase') === 'true';
+            if (isDisabled) {
+                localStorage.removeItem('disableFirebase');
+                alert('✅ 云同步已启用，页面将自动刷新');
+            } else {
+                localStorage.setItem('disableFirebase', 'true');
+                alert('✅ 已切换为本地模式，页面将自动刷新');
+            }
+            setTimeout(() => location.reload(), 800);
+        }
+        // 初始化按钮文案
+        window.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('toggleFirebaseSyncBtn');
+            if (!btn) return;
+            const isDisabled = localStorage.getItem('disableFirebase') === 'true';
+            btn.textContent = isDisabled ? '启用云同步' : '禁用云同步（仅本地）';
+            btn.onclick = toggleFirebaseSync;
         });
     </script>
 </body>
