@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原材料模态框调试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #007bff;
+            border: 1px solid #007bff;
+        }
+        .btn-outline:hover {
+            background: #007bff;
+            color: white;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .modal-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .modal-close {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .material-mode {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            flex: 1;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .fas {
+            margin-right: 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>原材料模态框调试</h1>
+        <p>此页面用于调试原材料采购管理模态框中"查看记录"按钮的问题</p>
+
+        <div class="test-section">
+            <h3>测试操作</h3>
+            <button class="btn" onclick="openMaterialModal()">打开原材料模态框</button>
+            <button class="btn" onclick="testToggleFunction()">直接测试切换功能</button>
+            <button class="btn" onclick="checkElements()">检查DOM元素</button>
+        </div>
+
+        <div class="test-section">
+            <h3>调试日志</h3>
+            <div class="log" id="logOutput"></div>
+        </div>
+    </div>
+
+    <!-- 原材料采购管理模态框 -->
+    <div class="modal" id="materialModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="materialModalTitle">原材料采购管理</h3>
+                <div class="modal-header-actions">
+                    <button type="button" class="btn btn-outline" id="toggleMaterialMode">
+                        <i class="fas fa-history"></i>
+                        <span id="materialModeText">查看记录</span>
+                    </button>
+                    <button class="modal-close" id="closeMaterialModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- 新增采购模式 -->
+                <div id="addMaterialMode" class="material-mode">
+                    <h4>新增采购模式</h4>
+                    <form id="materialForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="materialDate">采购日期 *</label>
+                                <input type="date" id="materialDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="materialQuantity">采购吨位 *</label>
+                                <input type="number" id="materialQuantity" min="0.1" step="0.1" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 历史记录模式 -->
+                <div id="materialHistoryMode" class="material-mode" style="display: none;">
+                    <h4>历史记录模式</h4>
+                    <p>这里应该显示历史记录表格</p>
+                    <div id="materialHistoryTableBody">
+                        <p>暂无采购记录</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" id="cancelMaterialBtn">取消</button>
+                <button type="button" class="btn" id="exportMaterialBtn" style="display: none;">
+                    <i class="fas fa-download"></i>
+                    导出记录
+                </button>
+                <button type="submit" class="btn" id="saveMaterialBtn">
+                    <span id="materialButtonText">保存采购</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据管理器
+        class TestMaterialManager {
+            constructor() {
+                this.isMaterialHistoryMode = false;
+                this.materialPurchases = [
+                    {
+                        id: 1,
+                        date: '2025-06-20',
+                        diameter: '8mm',
+                        supplier: '鸿穗',
+                        quantity: 10.5,
+                        price: 3500,
+                        totalAmount: 36750,
+                        batch: 'B001'
+                    },
+                    {
+                        id: 2,
+                        date: '2025-06-21',
+                        diameter: '6mm',
+                        supplier: '昊达鑫',
+                        quantity: 8.2,
+                        price: 3600,
+                        totalAmount: 29520,
+                        batch: 'B002'
+                    }
+                ];
+                this.setupEventListeners();
+            }
+
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logOutput = document.getElementById('logOutput');
+                logOutput.innerHTML += `[${timestamp}] ${message}\n`;
+                logOutput.scrollTop = logOutput.scrollHeight;
+                console.log(message);
+            }
+
+            setupEventListeners() {
+                this.log('🔄 设置事件监听器...');
+
+                // 查看记录按钮
+                const toggleMaterialMode = document.getElementById('toggleMaterialMode');
+                if (toggleMaterialMode) {
+                    this.log('✅ 找到toggleMaterialMode按钮，绑定事件');
+                    toggleMaterialMode.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.log('🖱️ toggleMaterialMode按钮被点击');
+                        this.toggleMaterialMode();
+                    });
+                } else {
+                    this.log('❌ 未找到toggleMaterialMode按钮');
+                }
+
+                // 关闭按钮
+                const closeMaterialModal = document.getElementById('closeMaterialModal');
+                if (closeMaterialModal) {
+                    closeMaterialModal.addEventListener('click', () => {
+                        this.log('🖱️ 关闭按钮被点击');
+                        this.closeMaterialModal();
+                    });
+                }
+
+                // 取消按钮
+                const cancelMaterialBtn = document.getElementById('cancelMaterialBtn');
+                if (cancelMaterialBtn) {
+                    cancelMaterialBtn.addEventListener('click', () => {
+                        this.log('🖱️ 取消按钮被点击');
+                        this.closeMaterialModal();
+                    });
+                }
+            }
+
+            openMaterialModal() {
+                this.log('📂 打开原材料模态框');
+                this.isMaterialHistoryMode = false;
+
+                const modal = document.getElementById('materialModal');
+                const addMode = document.getElementById('addMaterialMode');
+                const historyMode = document.getElementById('materialHistoryMode');
+                const materialModeText = document.getElementById('materialModeText');
+                const materialButtonText = document.getElementById('materialButtonText');
+                const exportBtn = document.getElementById('exportMaterialBtn');
+
+                // 重置模式显示
+                if (addMode && historyMode) {
+                    addMode.style.display = 'block';
+                    historyMode.style.display = 'none';
+                    if (materialModeText) materialModeText.textContent = '查看记录';
+                    if (materialButtonText) materialButtonText.textContent = '保存采购';
+                }
+
+                // 隐藏导出按钮
+                if (exportBtn) exportBtn.style.display = 'none';
+
+                // 设置默认日期
+                document.getElementById('materialDate').value = new Date().toISOString().split('T')[0];
+
+                modal.classList.add('active');
+                this.log('✅ 模态框已打开，当前模式：新增采购');
+            }
+
+            closeMaterialModal() {
+                this.log('❌ 关闭原材料模态框');
+                const modal = document.getElementById('materialModal');
+                modal.classList.remove('active');
+            }
+
+            toggleMaterialMode() {
+                this.log('🔄 toggleMaterialMode方法被调用');
+                
+                const addMode = document.getElementById('addMaterialMode');
+                const historyMode = document.getElementById('materialHistoryMode');
+                const materialModeText = document.getElementById('materialModeText');
+                const materialButtonText = document.getElementById('materialButtonText');
+                const exportBtn = document.getElementById('exportMaterialBtn');
+
+                this.log(`📊 当前状态检查:`);
+                this.log(`  - addMode存在: ${!!addMode}`);
+                this.log(`  - historyMode存在: ${!!historyMode}`);
+                this.log(`  - historyMode.style.display: ${historyMode ? historyMode.style.display : 'null'}`);
+                this.log(`  - isMaterialHistoryMode: ${this.isMaterialHistoryMode}`);
+
+                if (historyMode.style.display === 'none' || historyMode.style.display === '') {
+                    // 切换到历史记录模式
+                    this.log('🔄 切换到历史记录模式');
+                    addMode.style.display = 'none';
+                    historyMode.style.display = 'block';
+                    materialModeText.textContent = '新增采购';
+                    materialButtonText.textContent = '新增采购';
+                    this.isMaterialHistoryMode = true;
+
+                    // 显示导出按钮
+                    exportBtn.style.display = 'inline-block';
+
+                    // 加载历史记录
+                    this.loadMaterialHistory();
+                } else {
+                    // 切换到新增采购模式
+                    this.log('🔄 切换到新增采购模式');
+                    addMode.style.display = 'block';
+                    historyMode.style.display = 'none';
+                    materialModeText.textContent = '查看记录';
+                    materialButtonText.textContent = '保存采购';
+                    this.isMaterialHistoryMode = false;
+
+                    // 隐藏导出按钮
+                    exportBtn.style.display = 'none';
+                }
+
+                this.log(`✅ 模式切换完成，当前模式: ${this.isMaterialHistoryMode ? '历史记录' : '新增采购'}`);
+            }
+
+            loadMaterialHistory() {
+                this.log('📋 加载历史记录');
+                const tableBody = document.getElementById('materialHistoryTableBody');
+                
+                if (this.materialPurchases.length === 0) {
+                    tableBody.innerHTML = '<p>暂无采购记录</p>';
+                    return;
+                }
+
+                let html = '<table border="1" style="width: 100%; border-collapse: collapse;"><thead><tr><th>日期</th><th>直径</th><th>厂家</th><th>数量</th><th>单价</th></tr></thead><tbody>';
+                
+                this.materialPurchases.forEach(purchase => {
+                    html += `
+                        <tr>
+                            <td>${purchase.date}</td>
+                            <td>${purchase.diameter}</td>
+                            <td>${purchase.supplier}</td>
+                            <td>${purchase.quantity.toFixed(1)}吨</td>
+                            <td>${purchase.price.toFixed(2)}元/吨</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                tableBody.innerHTML = html;
+                
+                this.log(`✅ 历史记录加载完成，共${this.materialPurchases.length}条记录`);
+            }
+        }
+
+        // 创建测试实例
+        const testManager = new TestMaterialManager();
+
+        // 全局测试函数
+        function openMaterialModal() {
+            testManager.openMaterialModal();
+        }
+
+        function testToggleFunction() {
+            testManager.log('🧪 直接测试toggleMaterialMode函数');
+            testManager.toggleMaterialMode();
+        }
+
+        function checkElements() {
+            testManager.log('🔍 检查DOM元素状态:');
+            
+            const elements = [
+                'toggleMaterialMode',
+                'materialModeText', 
+                'addMaterialMode',
+                'materialHistoryMode',
+                'materialButtonText',
+                'exportMaterialBtn'
+            ];
+
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    testManager.log(`  ✅ ${id}: 存在`);
+                    if (element.style.display !== undefined) {
+                        testManager.log(`    - display: ${element.style.display || 'default'}`);
+                    }
+                    if (element.textContent !== undefined) {
+                        testManager.log(`    - textContent: "${element.textContent}"`);
+                    }
+                } else {
+                    testManager.log(`  ❌ ${id}: 不存在`);
+                }
+            });
+        }
+
+        // 页面加载完成后的初始化
+        window.addEventListener('load', () => {
+            testManager.log('🚀 页面加载完成，开始调试');
+            checkElements();
+        });
+    </script>
+</body>
+</html>

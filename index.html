@@ -7,11 +7,26 @@
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/responsive.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- 已发货量卡片样式 -->
+    <style>
+        /* 已发货量卡片 - 与其他卡片完全一致的样式 */
+        .metric-card.shipped-new {
+            cursor: pointer;
+        }
+
+        /* 已发货量卡片的绿色图标背景 */
+        .metric-card.shipped-new .metric-icon {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SheetJS for Excel reading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- 数据保护配置 -->
     <script src="data-protection-config.js"></script>
+    <!-- 已发货量卡片管理器 -->
+    <script src="shipped-card-manager.js"></script>
 </head>
 <body>
     <!-- 顶部导航栏 -->
@@ -30,6 +45,7 @@
                     <i class="fas fa-sync-alt"></i>
                     刷新数据
                 </button>
+
                 <div class="connection-status info" id="connectionStatus">
                     检查中...
                 </div>
@@ -109,15 +125,18 @@
 
                 <!-- 第二行：新增的四个卡片 -->
                 <div class="metrics-row">
-                    <div class="metric-card shipped">
+                    <!-- 已发货量卡片 -->
+                    <div class="metric-card shipped-new" id="shippedCard" title="点击查看发货明细">
                         <div class="metric-icon">
                             <i class="fas fa-truck"></i>
                         </div>
                         <div class="metric-content">
                             <h3>已发货量</h3>
-                            <div class="metric-value" id="totalShipped">0</div>
+                            <div class="metric-value" id="shippedMetersDisplay">0</div>
                             <div class="metric-unit">米 (m)</div>
-                            <div class="metric-subtitle">累计发货数量</div>
+                            <div class="metric-subtitle">
+                                <span id="shippedCustomersDisplay">0</span> 个客户已发货
+                            </div>
                         </div>
                     </div>
 
@@ -329,6 +348,10 @@
                                 <i class="fas fa-trash-alt"></i>
                                 清空所有数据
                             </button>
+                            <button class="action-btn warning" onclick="forceDashboardUpdate()" title="强制更新仪表板发货量显示">
+                                <i class="fas fa-wrench"></i>
+                                修复发货量
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -351,13 +374,7 @@
                                 </select>
                                 <select id="areaFilter" class="filter-select">
                                     <option value="">全部区域</option>
-                                    <option value="C1">C1区域</option>
-                                    <option value="C2">C2区域</option>
-                                    <option value="C3">C3区域</option>
-                                    <option value="E1">E1区域</option>
-                                    <option value="E3">E3区域</option>
-                                    <option value="D6">D6区域</option>
-                                    <option value="A14">A14区域</option>
+                                    <!-- 区域选项将由JavaScript动态生成 -->
                                 </select>
                             </div>
                         </div>
@@ -524,13 +541,7 @@
                             <label for="planAreaInput">工地区域 *</label>
                             <select id="planAreaInput" required>
                                 <option value="">请选择工地区域</option>
-                                <option value="C1">C1区域</option>
-                                <option value="C2">C2区域</option>
-                                <option value="C3">C3区域</option>
-                                <option value="E1">E1区域</option>
-                                <option value="E3">E3区域</option>
-                                <option value="D6">D6区域</option>
-                                <option value="A14">A14区域</option>
+                                <!-- 区域选项将由JavaScript动态生成 -->
                                 <option value="__add_new__">+ 新增区域</option>
                             </select>
                         </div>
@@ -601,13 +612,7 @@
                                 <label for="areaInput">工地区域 *</label>
                                 <select id="areaInput" required>
                                     <option value="">请选择区域</option>
-                                    <option value="C1">C1区域</option>
-                                    <option value="C2">C2区域</option>
-                                    <option value="C3">C3区域</option>
-                                    <option value="E1">E1区域</option>
-                                    <option value="E3">E3区域</option>
-                                    <option value="D6">D6区域</option>
-                                    <option value="A14">A14区域</option>
+                                    <!-- 区域选项将由JavaScript动态生成 -->
                                 </select>
                             </div>
                             <div class="form-group">
@@ -651,13 +656,7 @@
                                 <label for="batchArea">工地区域 <span style="color: #6b7280; font-size: 12px;">(可选，系统可智能分配)</span></label>
                                 <select id="batchArea">
                                     <option value="">智能分配到紧急区域</option>
-                                    <option value="C1">C1区域</option>
-                                    <option value="C2">C2区域</option>
-                                    <option value="C3">C3区域</option>
-                                    <option value="E1">E1区域</option>
-                                    <option value="E3">E3区域</option>
-                                    <option value="D6">D6区域</option>
-                                    <option value="A14">A14区域</option>
+                                    <!-- 区域选项将由JavaScript动态生成 -->
                                     <option value="__add_new__">+ 新增区域</option>
                                 </select>
                             </div>
@@ -1148,13 +1147,7 @@
                             <label for="importAreaSelect">工地区域 *</label>
                             <select id="importAreaSelect" required>
                                 <option value="">请选择工地区域</option>
-                                <option value="C1">C1区域</option>
-                                <option value="C2">C2区域</option>
-                                <option value="C3">C3区域</option>
-                                <option value="E1">E1区域</option>
-                                <option value="E3">E3区域</option>
-                                <option value="D6">D6区域</option>
-                                <option value="A14">A14区域</option>
+                                <!-- 区域选项将由JavaScript动态生成 -->
                             </select>
                         </div>
                     </div>
@@ -1725,14 +1718,38 @@
     <!-- Firebase 实时同步 -->
     <script src="scripts/firebase-sync.js?v=20241221-4"></script>
 
-    <!-- JavaScript -->
+    <!-- JavaScript - 模块化架构 -->
     <script src="scripts/performance.js"></script>
+
+    <!-- 核心数据模块 -->
+    <script src="scripts/data-core.js"></script>
+    <script src="scripts/production-manager.js"></script>
+    <script src="scripts/shipping-manager.js"></script>
+    <script src="scripts/ui-controller.js"></script>
+
+    <!-- 保留原有的data-management.js作为兼容层 -->
     <script src="scripts/data-management.js?v=20241221-4"></script>
+
+    <!-- 主控制器和图表 -->
     <script src="scripts/main.js"></script>
     <script src="scripts/charts.js"></script>
 
-    <!-- 系统诊断脚本 -->
-    <script src="system-diagnostic.js"></script>
+    <!-- 卡片联动修复脚本 -->
+    <script src="fix-dashboard-cards-linkage.js"></script>
+
+    <!-- 临时测试脚本 -->
+    <script src="test-clear-data.js"></script>
+    <script src="test-area-clear.js"></script>
+    <script src="test-supplier-management.js"></script>
+    <script src="test-local-mode.js"></script>
+    <script src="test-shipping-stats.js"></script>
+
+    <!-- 诊断功能 -->
+    <script>
+
+    </script>
+
+
 
     <!-- Firebase初始化脚本 -->
     <script>
@@ -2823,5 +2840,7 @@
             btn.onclick = toggleFirebaseSync;
         });
     </script>
+
+
 </body>
 </html>
