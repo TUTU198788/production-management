@@ -12,7 +12,10 @@ class DataManager {
         this.editingId = null;
         this.operationLogs = [];
         this.materialPurchases = []; // 原材料采购记录
-        this.customAreas = new Set(['C1', 'C2', 'C3', 'E1', 'E3', 'D6', 'A14']); // 默认区域
+        // 从各区域生产统计中获取实际使用的区域作为默认区域
+        // 这些区域将作为系统的标准区域配置
+        this.customAreas = new Set(['C1', 'C2', 'C3', 'E1', 'E3', 'D6', 'A14']); // 默认区域，将根据实际数据动态更新
+        this.customSuppliers = new Set(['鸿穗', '昊达鑫', '河北晟科']); // 默认供应厂家
         this.isMaterialHistoryMode = false;
         this.excelImportData = null; // Excel导入的原始数据
 
@@ -33,6 +36,9 @@ class DataManager {
 
         // 启动时清理测试数据
         this.cleanTestData();
+
+        // 启动时同步区域配置
+        this.syncAreaConfiguration();
 
         // 迁移现有发货数据到历史记录
         this.migrateShippingData();
@@ -180,11 +186,13 @@ class DataManager {
         // 从本地存储加载数据
         this.loadFromLocalStorage();
         this.loadCustomAreas();
+        this.loadCustomSuppliers();
 
         // 系统启动时为空白状态，等待用户导入数据
 
         this.setupEventListeners();
         this.updateAreaOptions();
+        this.updateSupplierOptions();
         this.renderTable();
         this.updateStats();
         this.renderAreaStats();
@@ -359,6 +367,9 @@ class DataManager {
 
         // 区域管理
         this.setupAreaManagement();
+
+        // 供应厂家管理
+        this.setupSupplierManagement();
 
         // 区域统计刷新按钮
         const refreshAreasBtn = document.getElementById('refreshAreasBtn');
@@ -595,13 +606,29 @@ class DataManager {
             });
         }
 
-        // 原材料模式切换
-        const toggleMaterialMode = document.getElementById('toggleMaterialMode');
-        if (toggleMaterialMode) {
-            toggleMaterialMode.addEventListener('click', () => {
-                this.toggleMaterialMode();
-            });
-        }
+        // 原材料模式切换 - 使用延迟绑定确保元素存在
+        setTimeout(() => {
+            const toggleMaterialMode = document.getElementById('toggleMaterialMode');
+            if (toggleMaterialMode) {
+                console.log('✅ 找到toggleMaterialMode按钮，绑定点击事件');
+
+                // 移除可能存在的旧事件监听器
+                const newButton = toggleMaterialMode.cloneNode(true);
+                toggleMaterialMode.parentNode.replaceChild(newButton, toggleMaterialMode);
+
+                // 绑定新的事件监听器
+                newButton.addEventListener('click', (e) => {
+                    console.log('🖱️ toggleMaterialMode按钮被点击');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.toggleMaterialMode();
+                });
+
+                console.log('✅ toggleMaterialMode事件绑定完成');
+            } else {
+                console.error('❌ 未找到toggleMaterialMode按钮');
+            }
+        }, 200);
 
         // 筛选历史记录
         const filterMaterialHistory = document.getElementById('filterMaterialHistory');
@@ -1287,12 +1314,42 @@ class DataManager {
         this.shippingHistory = enhancedShipping;
         this.materialPurchases = enhancedMaterials;
 
-        // 触发云端同步（优先使用 Firebase）
-        this.syncToCloud();
+        // 触发云端同步（仅在Firebase可用且未被禁用时）
+        this.triggerCloudSyncIfEnabled();
+    }
+
+    // 检查是否应该触发云端同步
+    triggerCloudSyncIfEnabled() {
+        // 检查用户是否禁用了Firebase
+        const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
+
+        if (userDisabledFirebase) {
+            console.log('💾 本地模式：跳过云端同步');
+            return;
+        }
+
+        // 检查Firebase是否可用
+        if (!window.firebaseSync || !window.firebaseSync.isConnected()) {
+            console.log('⚠️ Firebase未连接，跳过云端同步');
+            return;
+        }
+
+        // 执行云端同步
+        this.syncToCloud().catch(error => {
+            console.error('❌ 云端同步失败:', error);
+            // 同步失败不影响本地功能
+        });
     }
 
     // 同步数据到云端
     async syncToCloud() {
+        // 检查用户是否禁用了Firebase
+        const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
+        if (userDisabledFirebase) {
+            console.log('⚠️ 用户已禁用Firebase，跳过云端同步');
+            return;
+        }
+
         if (window.firebaseSync && window.firebaseSync.isConnected()) {
             console.log('🔄 开始同步数据到云端...');
 
@@ -1401,6 +1458,13 @@ class DataManager {
 
     // 执行手动同步（优先保护本地数据）
     async performManualSync() {
+        // 检查用户是否禁用了Firebase
+        const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
+        if (userDisabledFirebase) {
+            this.showNotification('⚠️ 本地模式下无法执行云端同步', 'warning');
+            return;
+        }
+
         if (!window.firebaseSync || !window.firebaseSync.isConnected()) {
             this.showNotification('❌ Firebase未连接，无法执行同步', 'error');
             return;
@@ -1498,6 +1562,13 @@ class DataManager {
 
     // 强制上传本地数据到云端（覆盖云端数据）
     async forceUploadToCloud() {
+        // 检查用户是否禁用了Firebase
+        const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
+        if (userDisabledFirebase) {
+            this.showNotification('⚠️ 本地模式下无法上传到云端', 'warning');
+            return;
+        }
+
         if (!window.firebaseSync || !window.firebaseSync.isConnected()) {
             this.showNotification('❌ Firebase未连接，无法上传数据', 'error');
             return;
@@ -1602,6 +1673,31 @@ class DataManager {
 
         // 更新产量统计
         this.updateProductionStats();
+
+        // 触发卡片联动更新
+        this.triggerCardLinkageUpdate();
+    }
+
+    // 触发卡片联动更新
+    triggerCardLinkageUpdate() {
+        console.log('🔗 触发卡片联动更新...');
+
+        // 延迟执行，确保其他更新完成
+        setTimeout(() => {
+            // 触发自定义事件
+            const event = new CustomEvent('dataUpdated', {
+                detail: {
+                    source: 'dataManager',
+                    timestamp: new Date(),
+                    dataLength: this.data.length,
+                    shippingLength: this.shippingHistory.length,
+                    materialLength: this.materialPurchases.length
+                }
+            });
+
+            document.dispatchEvent(event);
+            console.log('✅ 卡片联动更新事件已触发');
+        }, 100);
     }
     
     showNotification(message, type = 'info') {
@@ -2645,20 +2741,28 @@ class DataManager {
         // 创建完整的导出数据包
         const completeExportData = {
             exportTime: new Date().toISOString(),
-            exportVersion: '2.0',
+            exportVersion: '2.1', // 增加版本号，包含区域配置
             exportSource: 'production-management-system',
             summary: {
                 productionRecords: this.data.length,
                 operationLogs: this.operationLogs.length,
                 materialPurchases: this.materialPurchases.length,
+                shippingHistory: this.shippingHistory.length,
                 customAreas: this.customAreas.size,
-                dateRange: this.getDataDateRange()
+                dateRange: this.getDataDateRange(),
+                areaList: [...this.customAreas].sort() // 添加区域列表到摘要
             },
             data: {
                 productionData: this.data,
                 operationLogs: this.operationLogs,
                 materialPurchases: this.materialPurchases,
-                customAreas: [...this.customAreas]
+                shippingHistory: this.shippingHistory, // 添加发货历史
+                customAreas: [...this.customAreas].sort(), // 确保区域按字母排序
+                areaConfiguration: {
+                    standardAreas: this.getStandardAreas(),
+                    allAreas: [...this.customAreas].sort(),
+                    lastUpdated: new Date().toISOString()
+                }
             }
         };
 
@@ -2809,10 +2913,20 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                 console.log('导入原材料记录:', this.materialPurchases.length, '条');
             }
 
-            // 导入自定义区域
-            if (data.customAreas && Array.isArray(data.customAreas)) {
+            // 导入自定义区域（优先使用区域配置）
+            if (data.areaConfiguration && data.areaConfiguration.allAreas) {
+                this.customAreas = new Set(data.areaConfiguration.allAreas);
+                console.log('导入区域配置:', this.customAreas.size, '个区域');
+            } else if (data.customAreas && Array.isArray(data.customAreas)) {
                 this.customAreas = new Set(data.customAreas);
                 console.log('导入自定义区域:', this.customAreas.size, '个');
+            }
+
+            // 导入发货历史（如果存在）
+            if (data.shippingHistory && Array.isArray(data.shippingHistory)) {
+                this.shippingHistory = data.shippingHistory;
+                localStorage.setItem('shippingHistory', JSON.stringify(this.shippingHistory));
+                console.log('导入发货历史:', this.shippingHistory.length, '条');
             }
 
             // 清空选择
@@ -2880,7 +2994,10 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
 包括：
 • 所有生产数据记录
-• 所有发货记录
+• 所有发货历史记录
+• 所有原材料采购记录
+• 所有客户发货统计
+• 所有自定义区域配置
 • 所有操作日志
 
 此操作不可撤销！
@@ -2891,28 +3008,164 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             // 二次确认
             const secondConfirm = prompt('请输入 "确认清空" 来确认此操作：');
             if (secondConfirm === '确认清空') {
-                // 清空所有数据
+                console.log('🗑️ 开始清空所有数据...');
+
+                // 清空所有内存数据
                 this.data = [];
                 this.filteredData = [];
                 this.selectedItems.clear();
                 this.operationLogs = [];
+                this.shippingHistory = [];
+                this.materialPurchases = [];
+                this.customerShippingData = [];
 
-                // 清空本地存储
-                localStorage.removeItem('productionData');
-                localStorage.removeItem('operationLogs');
+                // 完全清空自定义区域和供应厂家
+                this.customAreas = new Set();
+                this.customSuppliers = new Set();
+
+                // 清空所有相关的本地存储
+                const keysToRemove = [
+                    'productionData',
+                    'operationLogs',
+                    'shippingHistory',
+                    'materialPurchases',
+                    'customerShippingData',
+                    'customAreas',
+                    'customSuppliers',
+                    'addedCustomers',
+                    'shippingPlans'
+                ];
+
+                keysToRemove.forEach(key => {
+                    localStorage.removeItem(key);
+                    console.log(`✅ 已清空 ${key}`);
+                });
+
+                // 完全清空区域配置和供应厂家配置
+                localStorage.setItem('customAreas', JSON.stringify([]));
+                localStorage.setItem('customSuppliers', JSON.stringify([]));
+
+                // 清空界面显示
+                this.clearAllDisplays();
+
+                // 强制重新加载默认区域配置
+                this.loadCustomAreas();
 
                 // 重新渲染界面
                 this.renderTable();
                 this.updateStats();
+                this.renderAreaStats();
+                this.renderUnproducedStats();
+                this.renderCustomerStats();
+                this.updateAreaOptions();
+                this.updateSupplierOptions();
 
-                // 记录清空操作
-                this.addLog('system', '清空所有数据', '用户手动清空了所有生产数据和操作日志');
+                // 强制清空客户统计显示和区域选项
+                setTimeout(() => {
+                    this.renderCustomerStats();
+                    this.updateAreaOptions();
+                    console.log('✅ 强制重新渲染客户统计和区域选项');
+                }, 100);
 
+                // 强制更新仪表板
+                if (window.dashboard) {
+                    window.dashboard.updateMetricsFromDataManager();
+                    window.dashboard.updateCharts();
+                }
+
+                // 触发数据清空事件
+                const clearEvent = new CustomEvent('dataCleared', {
+                    detail: {
+                        source: 'dataManager',
+                        timestamp: new Date(),
+                        clearedItems: keysToRemove
+                    }
+                });
+                document.dispatchEvent(clearEvent);
+
+                // 记录清空操作（在清空后记录）
+                this.addLog('system', '清空所有数据', '用户手动清空了所有系统数据');
+
+                console.log('✅ 所有数据清空完成');
                 this.showNotification('所有数据已清空，您现在可以导入新的数据', 'success');
             } else {
                 this.showNotification('操作已取消', 'info');
             }
         }
+    }
+
+    // 清空所有界面显示
+    clearAllDisplays() {
+        console.log('🧹 清空所有界面显示...');
+
+        // 清空区域统计卡片
+        const areaCardsContainer = document.getElementById('areaCardsContainer');
+        if (areaCardsContainer) {
+            areaCardsContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #6b7280;">
+                    <i class="fas fa-map-marker-alt" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                    <h3 style="margin: 0 0 0.5rem 0;">暂无区域数据</h3>
+                    <p style="margin: 0;">添加生产计划后，这里将显示各区域的统计信息</p>
+                </div>
+            `;
+        }
+
+        // 清空区域统计总计显示
+        const totalAreasSpan = document.getElementById('totalAreas');
+        if (totalAreasSpan) {
+            totalAreasSpan.textContent = '0';
+        }
+
+        // 清空未生产规格统计
+        const unproducedContainer = document.getElementById('unproducedContainer');
+        if (unproducedContainer) {
+            unproducedContainer.innerHTML = '<div class="no-data">暂无未生产规格</div>';
+        }
+
+        // 清空客户发货统计
+        const customerStatsContainer = document.getElementById('customerStatsContainer');
+        if (customerStatsContainer) {
+            customerStatsContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #6b7280;">
+                    <i class="fas fa-truck" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                    <h3 style="margin: 0 0 0.5rem 0;">暂无发货数据</h3>
+                    <p style="margin: 0;">完成生产并发货后，这里将显示各客户的发货统计</p>
+                </div>
+            `;
+        }
+
+        // 清空客户统计总计显示
+        const totalCustomersSpan = document.getElementById('totalCustomers');
+        const totalShippedMetersSpan = document.getElementById('totalShippedMeters');
+        if (totalCustomersSpan) {
+            totalCustomersSpan.textContent = '0';
+        }
+        if (totalShippedMetersSpan) {
+            totalShippedMetersSpan.textContent = '0';
+        }
+
+        // 清空原材料采购历史
+        const materialHistoryBody = document.getElementById('materialHistoryBody');
+        if (materialHistoryBody) {
+            materialHistoryBody.innerHTML = '<tr><td colspan="6" class="no-data">暂无采购记录</td></tr>';
+        }
+
+        // 重置产量统计显示
+        const productionStatsElements = [
+            'dailyProduction',
+            'monthlyProduction',
+            'quarterlyProduction',
+            'yearlyProduction'
+        ];
+
+        productionStatsElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = '0';
+            }
+        });
+
+        console.log('✅ 界面显示清空完成');
     }
 
     // Excel数据导入 - 新版本
@@ -5018,8 +5271,30 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             });
         }
 
+        // 为批量添加模式的区域选择添加事件监听
+        const batchAreaSelect = document.getElementById('batchArea');
+        if (batchAreaSelect) {
+            batchAreaSelect.addEventListener('change', (e) => {
+                if (e.target.value === '__add_new__') {
+                    this.addNewArea(batchAreaSelect);
+                }
+            });
+        }
+
         // 初始化区域统计
         this.renderAreaStats();
+    }
+
+    setupSupplierManagement() {
+        // 为原材料采购的供应厂家选择添加事件监听
+        const supplierSelect = document.getElementById('materialSupplier');
+        if (supplierSelect) {
+            supplierSelect.addEventListener('change', (e) => {
+                if (e.target.value === '__add_new__') {
+                    this.addNewSupplier(supplierSelect);
+                }
+            });
+        }
     }
 
     addNewArea(selectElement) {
@@ -5059,8 +5334,39 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         }
     }
 
+    addNewSupplier(selectElement) {
+        const newSupplier = prompt('请输入新的供应厂家名称：');
+
+        if (newSupplier && newSupplier.trim()) {
+            const supplierName = newSupplier.trim();
+
+            // 检查是否已存在
+            if (this.customSuppliers.has(supplierName)) {
+                this.showNotification('该供应厂家已存在', 'warning');
+                selectElement.value = supplierName;
+                return;
+            }
+
+            // 添加新供应厂家
+            this.customSuppliers.add(supplierName);
+            this.updateSupplierOptions();
+            selectElement.value = supplierName;
+
+            // 保存到本地存储
+            localStorage.setItem('customSuppliers', JSON.stringify([...this.customSuppliers]));
+
+            this.showNotification(`成功添加新供应厂家：${supplierName}`, 'success');
+
+            // 记录日志
+            this.addLog('system', '新增供应厂家', `添加了新的供应厂家：${supplierName}`);
+        } else {
+            selectElement.value = '';
+        }
+    }
+
     updateAreaOptions() {
-        const selects = ['planAreaInput', 'areaInput', 'areaFilter', 'importAreaSelect'];
+        // 包含所有需要更新的区域选择器
+        const selects = ['planAreaInput', 'areaInput', 'areaFilter', 'importAreaSelect', 'batchArea'];
 
         selects.forEach(selectId => {
             const select = document.getElementById(selectId);
@@ -5068,10 +5374,13 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                 const currentValue = select.value;
                 const isFilter = selectId === 'areaFilter';
                 const isImport = selectId === 'importAreaSelect';
+                const isBatch = selectId === 'batchArea';
 
                 // 清空现有选项（保留第一个默认选项）
                 if (isFilter) {
                     select.innerHTML = '<option value="">全部区域</option>';
+                } else if (isBatch) {
+                    select.innerHTML = '<option value="">智能分配到紧急区域</option>';
                 } else {
                     select.innerHTML = '<option value="">请选择工地区域</option>';
                 }
@@ -5111,6 +5420,49 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             }
         } catch (error) {
             console.error('加载自定义区域失败:', error);
+        }
+    }
+
+    loadCustomSuppliers() {
+        try {
+            const savedSuppliers = localStorage.getItem('customSuppliers');
+            if (savedSuppliers) {
+                this.customSuppliers = new Set(JSON.parse(savedSuppliers));
+            }
+        } catch (error) {
+            console.error('加载自定义供应厂家失败:', error);
+        }
+    }
+
+    updateSupplierOptions() {
+        const select = document.getElementById('materialSupplier');
+        if (select) {
+            const currentValue = select.value;
+
+            // 清空现有选项（保留第一个默认选项）
+            select.innerHTML = '<option value="">请选择厂家</option>';
+
+            // 添加所有供应厂家选项（按字母排序）
+            const sortedSuppliers = [...this.customSuppliers].sort();
+            sortedSuppliers.forEach(supplier => {
+                const option = document.createElement('option');
+                option.value = supplier;
+                option.textContent = supplier;
+                select.appendChild(option);
+            });
+
+            // 添加"新增厂家"选项
+            const addOption = document.createElement('option');
+            addOption.value = '__add_new__';
+            addOption.textContent = '+ 新增厂家';
+            addOption.style.color = '#059669';
+            addOption.style.fontWeight = 'bold';
+            select.appendChild(addOption);
+
+            // 恢复之前的选择
+            if (currentValue && currentValue !== '__add_new__') {
+                select.value = currentValue;
+            }
         }
     }
 
@@ -6642,6 +6994,7 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
     // 原材料采购管理方法
     openMaterialModal() {
+        console.log('📂 打开原材料模态框');
         this.isMaterialHistoryMode = false;
 
         const modal = document.getElementById('materialModal');
@@ -6673,6 +7026,38 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
         modal.classList.add('active');
         overlay.classList.add('active');
+
+        // 确保按钮事件绑定正确 - 延迟执行确保模态框完全显示
+        setTimeout(() => {
+            this.ensureMaterialButtonBinding();
+        }, 100);
+    }
+
+    // 确保原材料模态框按钮事件绑定正确
+    ensureMaterialButtonBinding() {
+        console.log('🔧 确保原材料模态框按钮事件绑定');
+
+        const toggleMaterialMode = document.getElementById('toggleMaterialMode');
+        if (toggleMaterialMode) {
+            console.log('✅ 找到toggleMaterialMode按钮');
+
+            // 检查按钮是否已经有正确的事件监听器
+            // 通过克隆节点的方式清除所有事件监听器，然后重新绑定
+            const newButton = toggleMaterialMode.cloneNode(true);
+            toggleMaterialMode.parentNode.replaceChild(newButton, toggleMaterialMode);
+
+            // 重新绑定事件
+            newButton.addEventListener('click', (e) => {
+                console.log('🖱️ toggleMaterialMode按钮被点击（模态框内绑定）');
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleMaterialMode();
+            });
+
+            console.log('✅ toggleMaterialMode按钮事件重新绑定完成');
+        } else {
+            console.error('❌ 未找到toggleMaterialMode按钮');
+        }
     }
 
     closeMaterialModal() {
@@ -6693,14 +7078,38 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
     }
 
     toggleMaterialMode() {
+        console.log('🔄 toggleMaterialMode 被调用');
+
         const addMode = document.getElementById('addMaterialMode');
         const historyMode = document.getElementById('materialHistoryMode');
         const materialModeText = document.getElementById('materialModeText');
         const materialButtonText = document.getElementById('materialButtonText');
         const exportBtn = document.getElementById('exportMaterialBtn');
 
-        if (historyMode.style.display === 'none') {
+        // 检查元素是否存在
+        if (!addMode || !historyMode || !materialModeText || !materialButtonText || !exportBtn) {
+            console.error('❌ 原材料模态框元素缺失:', {
+                addMode: !!addMode,
+                historyMode: !!historyMode,
+                materialModeText: !!materialModeText,
+                materialButtonText: !!materialButtonText,
+                exportBtn: !!exportBtn
+            });
+            this.showNotification('模态框元素加载失败，请刷新页面重试', 'error');
+            return;
+        }
+
+        console.log('📊 当前状态:', {
+            historyModeDisplay: historyMode.style.display,
+            isMaterialHistoryMode: this.isMaterialHistoryMode
+        });
+
+        // 修复判断逻辑：检查是否当前显示历史记录模式
+        const isCurrentlyShowingHistory = historyMode.style.display === 'block';
+
+        if (!isCurrentlyShowingHistory) {
             // 切换到历史记录模式
+            console.log('🔄 切换到历史记录模式');
             addMode.style.display = 'none';
             historyMode.style.display = 'block';
             materialModeText.textContent = '新增采购';
@@ -6712,8 +7121,11 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
             // 加载历史记录
             this.loadMaterialHistory();
+
+            console.log('✅ 已切换到历史记录模式');
         } else {
             // 切换到新增采购模式
+            console.log('🔄 切换到新增采购模式');
             addMode.style.display = 'block';
             historyMode.style.display = 'none';
             materialModeText.textContent = '查看记录';
@@ -6722,6 +7134,8 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
             // 隐藏导出按钮
             exportBtn.style.display = 'none';
+
+            console.log('✅ 已切换到新增采购模式');
         }
     }
 
@@ -8693,51 +9107,113 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
         // 获取今天的日期字符串（YYYY-MM-DD格式）
         const todayString = today.toISOString().split('T')[0];
+        const thisMonthString = thisMonth.toISOString().split('T')[0];
+        const thisQuarterString = thisQuarter.toISOString().split('T')[0];
+        const thisYearString = thisYear.toISOString().split('T')[0];
+
+        console.log('📊 计算产量统计，时间范围:', {
+            today: todayString,
+            thisMonth: thisMonthString,
+            thisQuarter: thisQuarterString,
+            thisYear: thisYearString
+        });
+
+        // 计算总已生产米数（用于基础计算）
+        let totalProducedMeters = 0;
+        let recordsWithDetails = 0;
+        let recordsWithoutDetails = 0;
+
+        this.data.forEach(item => {
+            const length = this.extractLengthFromSpec(item.spec);
+            const produced = item.produced || 0;
+            totalProducedMeters += (produced * length) / 1000;
+        });
 
         // 遍历所有生产记录
         this.data.forEach(item => {
-            if (item.productionRecords && Array.isArray(item.productionRecords)) {
-                // 获取规格长度（毫米）
-                const length = this.extractLengthFromSpec(item.spec);
+            const length = this.extractLengthFromSpec(item.spec);
+
+            if (item.productionRecords && Array.isArray(item.productionRecords) && item.productionRecords.length > 0) {
+                recordsWithDetails++;
 
                 item.productionRecords.forEach(record => {
-                    const recordDate = new Date(record.date);
+                    const recordDate = record.date;
                     const quantity = record.quantity || 0;
                     // 将根数转换为米数：根数 × 长度(mm) ÷ 1000
                     const meters = (quantity * length) / 1000;
 
-                    // 日产量（只统计今天新增的生产记录）
-                    // 检查记录的时间戳，只统计今天创建的记录
-                    if (record.date === todayString) {
-                        // 如果有时间戳，进一步检查是否为今天创建
-                        if (record.timestamp) {
-                            const recordTimestamp = new Date(record.timestamp);
-                            if (recordTimestamp >= today) {
-                                dailyProduction += meters;
-                            }
-                        } else {
-                            // 没有时间戳的记录，按日期判断
-                            dailyProduction += meters;
-                        }
+                    // 日产量（只统计今天的生产记录）
+                    if (recordDate === todayString) {
+                        dailyProduction += meters;
+                        console.log(`📅 今日生产: ${item.spec} - ${quantity}根 = ${meters.toFixed(1)}米`);
                     }
 
                     // 月产量（本月）
-                    if (recordDate >= thisMonth) {
+                    if (recordDate >= thisMonthString) {
                         monthlyProduction += meters;
                     }
 
                     // 季度产量（本季度）
-                    if (recordDate >= thisQuarter) {
+                    if (recordDate >= thisQuarterString) {
                         quarterlyProduction += meters;
                     }
 
                     // 年产量（本年）
-                    if (recordDate >= thisYear) {
+                    if (recordDate >= thisYearString) {
                         yearlyProduction += meters;
                     }
                 });
+            } else {
+                recordsWithoutDetails++;
             }
         });
+
+        console.log('📊 生产记录分析:', {
+            recordsWithDetails,
+            recordsWithoutDetails,
+            totalProducedMeters: totalProducedMeters.toFixed(1)
+        });
+
+        // 如果没有详细的生产记录，基于总产量进行更合理的估算
+        if (totalProducedMeters > 0 && recordsWithDetails === 0) {
+            console.log('📊 没有详细生产记录，基于总产量进行智能估算...');
+
+            // 使用更合理的分配策略
+            const currentDate = now.getDate();
+            const currentMonth = now.getMonth() + 1;
+            const currentQuarter = Math.floor(now.getMonth() / 3) + 1;
+            const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const monthsInCurrentQuarter = (now.getMonth() % 3) + 1;
+
+            // 年产量 = 总产量（假设所有生产都在本年）
+            yearlyProduction = totalProducedMeters;
+
+            // 季度产量：基于当前季度的进度，假设生产均匀分布
+            quarterlyProduction = yearlyProduction * (currentQuarter / 4);
+
+            // 月产量：基于当前月份在季度中的位置
+            monthlyProduction = quarterlyProduction * (monthsInCurrentQuarter / 3);
+
+            // 日产量：基于当前日期在月份中的位置，但设置合理上限
+            const dailyEstimate = monthlyProduction * (currentDate / daysInCurrentMonth);
+            dailyProduction = Math.min(dailyEstimate, monthlyProduction * 0.2); // 日产量不超过月产量的20%
+
+            console.log('📈 智能估算结果:', {
+                daily: dailyProduction.toFixed(1),
+                monthly: monthlyProduction.toFixed(1),
+                quarterly: quarterlyProduction.toFixed(1),
+                yearly: yearlyProduction.toFixed(1),
+                estimationBasis: '基于总产量均匀分布假设'
+            });
+        } else if (recordsWithDetails > 0) {
+            console.log('📈 基于详细记录的统计结果:', {
+                daily: dailyProduction.toFixed(1),
+                monthly: monthlyProduction.toFixed(1),
+                quarterly: quarterlyProduction.toFixed(1),
+                yearly: yearlyProduction.toFixed(1),
+                recordsWithDetails
+            });
+        }
 
         return {
             daily: Math.round(dailyProduction * 10) / 10, // 保留1位小数
@@ -10445,6 +10921,93 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                 });
             }
         });
+    }
+
+    // 同步区域配置 - 确保所有功能使用一致的区域列表
+    syncAreaConfiguration() {
+        console.log('🔄 开始同步区域配置...');
+
+        try {
+            // 1. 从实际数据中提取所有使用的区域
+            const dataAreas = new Set();
+            this.data.forEach(item => {
+                if (item.area) {
+                    dataAreas.add(item.area);
+                }
+            });
+
+            // 2. 从发货历史中提取区域
+            if (this.shippingHistory && this.shippingHistory.length > 0) {
+                this.shippingHistory.forEach(shipment => {
+                    if (shipment.items) {
+                        shipment.items.forEach(item => {
+                            if (item.area) {
+                                dataAreas.add(item.area);
+                            }
+                        });
+                    }
+                });
+            }
+
+            // 3. 合并配置中的区域和实际使用的区域
+            const allAreas = new Set([...this.customAreas, ...dataAreas]);
+
+            // 4. 更新自定义区域配置
+            this.customAreas = allAreas;
+
+            // 5. 保存到本地存储
+            localStorage.setItem('customAreas', JSON.stringify([...allAreas].sort()));
+
+            // 6. 更新所有区域选择器
+            this.updateAreaOptions();
+
+            console.log(`✅ 区域配置同步完成，共 ${allAreas.size} 个区域:`, [...allAreas].sort().join(', '));
+
+        } catch (error) {
+            console.error('❌ 区域配置同步失败:', error);
+        }
+    }
+
+    // 获取标准区域列表（以各区域生产统计为准）
+    getStandardAreas() {
+        // 从实际数据中提取区域作为标准
+        const standardAreas = new Set();
+        this.data.forEach(item => {
+            if (item.area) {
+                standardAreas.add(item.area);
+            }
+        });
+
+        // 如果没有数据，使用默认区域
+        if (standardAreas.size === 0) {
+            return ['C1', 'C2', 'C3', 'E1', 'E3', 'D6', 'A14'];
+        }
+
+        return [...standardAreas].sort();
+    }
+
+    // 强制统一所有区域配置
+    unifyAreaConfiguration() {
+        console.log('🎯 强制统一区域配置...');
+
+        const standardAreas = this.getStandardAreas();
+        console.log('标准区域列表:', standardAreas);
+
+        // 更新自定义区域
+        this.customAreas = new Set(standardAreas);
+
+        // 保存到本地存储
+        localStorage.setItem('customAreas', JSON.stringify(standardAreas));
+
+        // 更新所有选择器
+        this.updateAreaOptions();
+
+        // 记录日志
+        this.addLog('system', '区域配置统一', `统一了 ${standardAreas.length} 个区域: ${standardAreas.join(', ')}`);
+
+        this.showNotification(`区域配置已统一，共 ${standardAreas.length} 个区域`, 'success');
+
+        console.log('✅ 区域配置统一完成');
     }
 }
 

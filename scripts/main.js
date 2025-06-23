@@ -41,6 +41,14 @@ class SteelProductionDashboard {
     updateMetricsFromDataManager() {
         console.log('=== 数据源检查 ===');
         console.log('window.dataManager 存在:', !!window.dataManager);
+        console.log('window.dataCore 存在:', !!window.dataCore);
+
+        // 优先使用新的模块化架构
+        if (window.dataCore && window.productionManager && window.shippingManager) {
+            console.log('✅ 使用新的模块化架构更新数据');
+            this.updateMetricsFromModules();
+            return;
+        }
 
         if (!window.dataManager) {
             console.error('❌ window.dataManager 不存在！');
@@ -230,21 +238,100 @@ class SteelProductionDashboard {
             return sum + meters;
         }, 0);
 
-        // 计算已发货量（米）
+        // 计算已发货量（米）- 使用多种数据源确保准确性
+        let calculatedShippedMeters = 0;
         let shippedValidRecords = 0;
-        this.data.shippedMeters = data.reduce((sum, item) => {
-            const length = this.extractLengthFromSpec(item.spec);
-            const shipped = item.shipped || 0;
-            const meters = shipped * length / 1000;
 
-            if (shipped > 0) {
-                shippedValidRecords++;
-                if (shippedValidRecords <= 3) { // 只显示前3条
-                    console.log(`✅ 已发货 ${item.spec}: ${shipped}根 × ${length}mm = ${meters.toFixed(1)}米`);
-                }
+        // 方法1：优先从发货历史直接计算
+        if (window.dataManager && window.dataManager.shippingHistory && window.dataManager.shippingHistory.length > 0) {
+            console.log(`📦 方法1: 从发货历史直接计算 (${window.dataManager.shippingHistory.length} 条记录)`);
+
+            calculatedShippedMeters = window.dataManager.shippingHistory.reduce((sum, record) => {
+                const recordMeters = record.totalMeters || 0;
+                return sum + recordMeters;
+            }, 0);
+
+            if (calculatedShippedMeters > 0) {
+                console.log(`📦 从发货历史计算发货量: ${calculatedShippedMeters.toFixed(1)}米`);
+
+                // 显示前几条发货记录
+                window.dataManager.shippingHistory.slice(0, 3).forEach(record => {
+                    if (record.totalMeters > 0) {
+                        console.log(`  ${record.customerName}: ${record.totalMeters.toFixed(1)}米 (${record.date})`);
+                    }
+                });
             }
-            return sum + meters;
-        }, 0);
+        }
+
+        // 方法2：使用客户发货统计
+        if (calculatedShippedMeters === 0 && window.dataManager && typeof window.dataManager.calculateCustomerStats === 'function') {
+            console.log(`📦 方法2: 使用客户发货统计`);
+            try {
+                const customerStats = window.dataManager.calculateCustomerStats();
+                const customerShippedMeters = customerStats.reduce((sum, customer) => {
+                    return sum + (customer.totalMeters || 0);
+                }, 0);
+
+                if (customerShippedMeters > 0) {
+                    calculatedShippedMeters = customerShippedMeters;
+                    console.log(`📦 客户发货统计详情:`);
+                    customerStats.forEach(customer => {
+                        if (customer.totalMeters > 0) {
+                            console.log(`  ${customer.customerName}: ${customer.totalMeters.toFixed(1)}米`);
+                        }
+                    });
+                    console.log(`📦 从客户统计计算发货量: ${calculatedShippedMeters.toFixed(1)}米`);
+                } else {
+                    console.log(`⚠️ 客户统计返回0米，检查发货历史数据...`);
+
+                    // 检查发货历史数据
+                    if (window.dataManager.shippingHistory) {
+                        console.log(`📋 发货历史记录数: ${window.dataManager.shippingHistory.length}`);
+                        if (window.dataManager.shippingHistory.length > 0) {
+                            console.log(`📋 发货历史示例:`, window.dataManager.shippingHistory[0]);
+                        }
+                    } else {
+                        console.log(`❌ 发货历史数据不存在`);
+                    }
+
+                    // 检查生产数据中的发货记录
+                    if (window.dataManager.data) {
+                        const itemsWithShipping = window.dataManager.data.filter(item =>
+                            item.shippingRecords && item.shippingRecords.length > 0
+                        );
+                        console.log(`📋 生产数据中有发货记录的项目数: ${itemsWithShipping.length}`);
+                        if (itemsWithShipping.length > 0) {
+                            console.log(`📋 发货记录示例:`, itemsWithShipping[0].shippingRecords[0]);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('❌ 客户统计计算失败:', error);
+            }
+        }
+
+        // 方法3：如果前两种方法都没有数据，使用生产数据中的shipped字段
+        if (calculatedShippedMeters === 0) {
+            console.log(`📦 方法3: 使用生产数据中的shipped字段计算发货量`);
+            calculatedShippedMeters = data.reduce((sum, item) => {
+                const length = this.extractLengthFromSpec(item.spec);
+                const shipped = item.shipped || 0;
+                const meters = shipped * length / 1000;
+
+                if (shipped > 0) {
+                    shippedValidRecords++;
+                    if (shippedValidRecords <= 3) { // 只显示前3条
+                        console.log(`✅ 已发货 ${item.spec}: ${shipped}根 × ${length}mm = ${meters.toFixed(1)}米`);
+                    }
+                }
+                return sum + meters;
+            }, 0);
+            console.log(`📦 从生产数据计算发货量: ${calculatedShippedMeters.toFixed(1)}米`);
+        }
+
+
+
+        this.data.shippedMeters = calculatedShippedMeters;
 
         console.log(`📊 生产统计:`);
         console.log(`   已生产记录: ${producedValidRecords} 条`);
@@ -362,10 +449,27 @@ class SteelProductionDashboard {
     }
     
     setupEventListeners() {
-        // 刷新按钮
+        // 刷新按钮 - 防止页面刷新
         const refreshBtn = document.getElementById('refreshBtn');
         if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => this.refreshData());
+            refreshBtn.addEventListener('click', (event) => {
+                // 明确阻止任何默认行为和事件冒泡
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+
+                console.log('🔄 刷新按钮被点击，阻止页面刷新');
+
+                // 调用数据刷新方法
+                this.refreshData();
+            });
+
+            // 额外保护：阻止右键菜单可能的刷新操作
+            refreshBtn.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+            });
+
+            console.log('✅ 刷新按钮事件监听器已设置（防页面刷新）');
         }
 
         // 数据保护配置按钮
@@ -391,6 +495,9 @@ class SteelProductionDashboard {
 
         // 图表操作按钮
         this.setupChartActions();
+
+        // 设置卡片点击事件
+        this.setupCardClickEvents();
 
         // 窗口大小变化时重新调整图表
         window.addEventListener('resize', this.debounce(() => {
@@ -745,7 +852,25 @@ class SteelProductionDashboard {
         // 更新统计数据
         this.data.totalDemandMeters = totalDemandMeters;
         this.data.producedMeters = producedMeters;
-        this.data.shippedMeters = shippedMeters;
+
+        // 优先从客户发货统计获取发货量
+        let finalShippedMeters = shippedMeters;
+        if (window.dataManager && typeof window.dataManager.calculateCustomerStats === 'function') {
+            try {
+                const customerStats = window.dataManager.calculateCustomerStats();
+                const customerShippedMeters = customerStats.reduce((sum, customer) => {
+                    return sum + (customer.totalMeters || 0);
+                }, 0);
+                if (customerShippedMeters > 0) {
+                    finalShippedMeters = customerShippedMeters;
+                    console.log(`📦 强化计算使用客户统计发货量: ${finalShippedMeters.toFixed(1)}米`);
+                }
+            } catch (error) {
+                console.warn('⚠️ 强化计算中客户统计失败，使用原计算结果:', error);
+            }
+        }
+
+        this.data.shippedMeters = finalShippedMeters;
         this.data.pendingMeters = totalDemandMeters - producedMeters;
         this.data.unshippedMeters = producedMeters - shippedMeters;
 
@@ -821,10 +946,15 @@ class SteelProductionDashboard {
             progressElement.textContent = `${this.data.completionRate}%`;
         }
 
-        // 第二行卡片：更新已发货量（米制）
-        const shippedElement = document.querySelector('.metric-card.shipped .metric-value');
-        if (shippedElement) {
-            this.animateNumber(shippedElement, this.data.shippedMeters || 0, 1);
+        // 第二行卡片：更新已发货量（米制）- 使用新的卡片管理器
+        if (window.shippedCardManager && typeof window.shippedCardManager.forceUpdate === 'function') {
+            window.shippedCardManager.forceUpdate();
+        } else {
+            // 兼容旧的更新方式
+            const shippedElement = document.querySelector('.metric-card.shipped .metric-value');
+            if (shippedElement) {
+                this.animateNumber(shippedElement, this.data.shippedMeters || 0, 1);
+            }
         }
 
         // 更新未发货量（米制）
@@ -928,36 +1058,68 @@ class SteelProductionDashboard {
     }
     
     refreshData() {
+        console.log('🔄 开始手动刷新数据（不刷新页面）...');
+
         const refreshBtn = document.getElementById('refreshBtn');
+        if (!refreshBtn) {
+            console.error('❌ 未找到刷新按钮');
+            return;
+        }
+
         const icon = refreshBtn.querySelector('i');
+        if (!icon) {
+            console.error('❌ 未找到刷新按钮图标');
+            return;
+        }
+
+        // 防止页面刷新 - 确保没有任何可能触发页面刷新的代码
+        console.log('🛡️ 防止页面刷新保护已激活');
 
         // 添加加载状态
         icon.classList.add('fa-spin');
         refreshBtn.disabled = true;
+        refreshBtn.style.opacity = '0.7';
 
-        console.log('🔄 手动刷新数据...');
+        console.log('🔄 手动刷新数据（仅更新数据，不刷新页面）...');
 
         // 强制重新加载数据
         if (window.dataManager) {
-            console.log('重新加载本地存储数据...');
-            window.dataManager.loadFromLocalStorage();
-            console.log('重新加载后数据条数:', window.dataManager.data.length);
+            console.log('📊 重新加载本地存储数据...');
+            try {
+                window.dataManager.loadFromLocalStorage();
+                console.log('✅ 重新加载后数据条数:', window.dataManager.data?.length || 0);
+            } catch (error) {
+                console.error('❌ 重新加载数据失败:', error);
+            }
+        } else {
+            console.warn('⚠️ dataManager 不存在');
         }
 
         // 从数据管理器刷新真实数据
         setTimeout(() => {
-            // 从数据管理器获取最新数据
-            this.updateMetricsFromDataManager();
-            this.updateLastUpdateTime();
-            this.updateCharts();
+            try {
+                console.log('📈 更新界面数据...');
 
-            // 移除加载状态
-            icon.classList.remove('fa-spin');
-            refreshBtn.disabled = false;
+                // 从数据管理器获取最新数据
+                this.updateMetricsFromDataManager();
+                this.updateLastUpdateTime();
+                this.updateCharts();
 
-            // 显示成功提示
-            this.showNotification('数据已更新', 'success');
-        }, 1500);
+                console.log('✅ 数据刷新完成（页面未刷新）');
+            } catch (error) {
+                console.error('❌ 更新界面数据失败:', error);
+            } finally {
+                // 移除加载状态
+                icon.classList.remove('fa-spin');
+                refreshBtn.disabled = false;
+                refreshBtn.style.opacity = '1';
+
+                // 显示成功提示
+                this.showNotification('数据已更新（页面未刷新）', 'success');
+
+                console.log('🎉 刷新数据操作完成，页面保持不变');
+            }
+        }, 1000); // 减少延迟时间
     }
     
     applyFilters() {
@@ -1042,7 +1204,7 @@ class SteelProductionDashboard {
         }, 10 * 1000);
     }
 
-    // 检查数据状态（增强版本）
+    // 检查数据状态（增强版本）- 修复发货量重置问题
     checkDataStatus() {
         if (!window.dataManager) return;
 
@@ -1053,11 +1215,12 @@ class SteelProductionDashboard {
 
         // 详细的数据状态检查
         const hasData = currentDataLength > 0;
-        const hasMetrics = currentMetrics > 0 || currentProduced > 0 || currentShipped > 0;
+        const hasMetrics = currentMetrics > 0 || currentProduced > 0;
 
-        // 如果有数据但统计为0，强制更新
-        if (hasData && !hasMetrics) {
-            console.log('🔍 检测到数据不同步，强制更新...');
+        // 修复：不要因为发货量为0就强制更新，发货量可能确实为0
+        // 只有当总需求量和已生产量都为0但有数据时才强制更新
+        if (hasData && currentMetrics === 0 && currentProduced === 0) {
+            console.log('🔍 检测到生产数据不同步，强制更新...');
             console.log('数据状态:', {
                 dataLength: currentDataLength,
                 totalDemandMeters: currentMetrics,
@@ -1071,12 +1234,720 @@ class SteelProductionDashboard {
             // 如果还是0，再次尝试
             setTimeout(() => {
                 const newMetrics = this.data.totalDemandMeters || 0;
-                if (currentDataLength > 0 && newMetrics === 0) {
+                const newProduced = this.data.producedMeters || 0;
+                if (currentDataLength > 0 && newMetrics === 0 && newProduced === 0) {
                     console.log('⚠️ 第二次检查仍然不同步，深度修复...');
                     this.deepDataSync();
                 }
             }, 2000);
         }
+
+        // 单独检查发货量异常情况（发货量大于已生产量）
+        if (currentShipped > currentProduced && currentProduced > 0) {
+            console.log('⚠️ 检测到发货量异常（大于已生产量），重新计算发货量...');
+            this.recalculateShippingOnly();
+        }
+    }
+
+    // 仅重新计算发货量，不影响其他数据
+    recalculateShippingOnly() {
+        console.log('🔄 仅重新计算发货量...');
+
+        let shippedMeters = 0;
+
+        // 方法1：从客户统计计算
+        if (window.dataManager && typeof window.dataManager.calculateCustomerStats === 'function') {
+            try {
+                const customerStats = window.dataManager.calculateCustomerStats();
+                shippedMeters = customerStats.reduce((sum, customer) => {
+                    return sum + (customer.totalMeters || 0);
+                }, 0);
+
+                if (shippedMeters > 0) {
+                    console.log(`📦 从客户统计重新计算发货量: ${shippedMeters.toFixed(1)}米`);
+                }
+            } catch (error) {
+                console.error('❌ 客户统计计算失败:', error);
+            }
+        }
+
+        // 方法2：如果客户统计为0，从生产数据计算
+        if (shippedMeters === 0 && window.dataManager && window.dataManager.data) {
+            shippedMeters = window.dataManager.data.reduce((sum, item) => {
+                const length = this.extractLengthFromSpec(item.spec);
+                const shipped = item.shipped || 0;
+                return sum + (shipped * length / 1000);
+            }, 0);
+            console.log(`📦 从生产数据重新计算发货量: ${shippedMeters.toFixed(1)}米`);
+        }
+
+        // 更新发货量和未发货量
+        this.data.shippedMeters = shippedMeters;
+        this.data.unshippedMeters = Math.max(0, this.data.producedMeters - shippedMeters);
+
+        // 仅更新发货相关的界面元素
+        const shippedElement = document.querySelector('.metric-card.shipped .metric-value');
+        if (shippedElement) {
+            this.animateNumber(shippedElement, shippedMeters, 1);
+        }
+
+        const unshippedElement = document.querySelector('.metric-card.unshipped .metric-value');
+        if (unshippedElement) {
+            this.animateNumber(unshippedElement, this.data.unshippedMeters, 1);
+        }
+
+        console.log(`✅ 发货量重新计算完成: ${shippedMeters.toFixed(1)}米`);
+    }
+
+    // 设置卡片点击事件
+    setupCardClickEvents() {
+        console.log('🖱️ 设置卡片点击事件...');
+
+        // 已发货量卡片点击事件
+        const shippedCard = document.querySelector('.metric-card.shipped');
+        if (shippedCard) {
+            shippedCard.style.cursor = 'pointer';
+            shippedCard.title = '点击查看客户发货明细';
+
+            shippedCard.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('🖱️ 已发货量卡片被点击');
+                this.openShippingDetailsModal();
+            });
+
+            console.log('✅ 已发货量卡片点击事件已绑定');
+        } else {
+            console.error('❌ 未找到已发货量卡片');
+        }
+    }
+
+    // 专门更新已发货量卡片
+    updateShippedMetersCard() {
+        console.log('🚚 更新已发货量卡片...');
+
+        let shippedMeters = 0;
+        let customerCount = 0;
+        let dataSource = '';
+
+        // 方法1：从客户统计获取
+        if (window.dataManager && typeof window.dataManager.calculateCustomerStats === 'function') {
+            try {
+                const customerStats = window.dataManager.calculateCustomerStats();
+                const customersWithShipping = customerStats.filter(c => c.totalMeters > 0);
+
+                shippedMeters = customerStats.reduce((sum, customer) => {
+                    return sum + (customer.totalMeters || 0);
+                }, 0);
+
+                customerCount = customersWithShipping.length;
+                dataSource = '客户统计';
+
+                console.log(`📦 从客户统计获取: ${shippedMeters.toFixed(1)}米, ${customerCount}个客户`);
+
+                if (shippedMeters > 0) {
+                    console.log('📦 客户发货详情:');
+                    customersWithShipping.slice(0, 3).forEach(customer => {
+                        console.log(`  - ${customer.customerName}: ${customer.totalMeters.toFixed(1)}米`);
+                    });
+                }
+            } catch (error) {
+                console.error('❌ 客户统计计算失败:', error);
+            }
+        }
+
+        // 方法2：从发货历史获取
+        if (shippedMeters === 0 && window.dataManager?.shippingHistory) {
+            const shippingHistory = window.dataManager.shippingHistory;
+            if (shippingHistory.length > 0) {
+                shippedMeters = shippingHistory.reduce((sum, record) => {
+                    return sum + (record.totalMeters || 0);
+                }, 0);
+
+                const uniqueCustomers = new Set(shippingHistory.map(r => r.customerName));
+                customerCount = uniqueCustomers.size;
+                dataSource = '发货历史';
+
+                console.log(`📦 从发货历史获取: ${shippedMeters.toFixed(1)}米, ${customerCount}个客户`);
+            }
+        }
+
+        // 更新卡片显示
+        const shippedValueElement = document.getElementById('shippedMetersValue');
+        const customerCountElement = document.getElementById('shippedCustomerCount');
+
+        if (shippedValueElement) {
+            // 使用动画更新数字
+            this.animateNumber(shippedValueElement, shippedMeters, 1);
+        }
+
+        if (customerCountElement) {
+            customerCountElement.textContent = customerCount;
+        }
+
+        // 更新内部数据
+        this.data.shippedMeters = shippedMeters;
+
+        console.log(`✅ 已发货量卡片更新完成: ${shippedMeters.toFixed(1)}米 (${dataSource})`);
+
+        return shippedMeters;
+    }
+
+    // 打开发货明细模态框
+    openShippingDetailsModal() {
+        console.log('📊 打开发货明细模态框...');
+
+        // 计算各厂家发货统计
+        const manufacturerStats = this.calculateManufacturerShippingStats();
+
+        // 创建模态框
+        this.createShippingDetailsModal(manufacturerStats);
+    }
+
+    // 计算客户发货统计 - 简化版本
+    calculateManufacturerShippingStats() {
+        console.log('📊 计算客户发货统计（简化版）...');
+
+        let totalShippedMeters = 0;
+        const customers = [];
+
+        // 直接从客户统计获取数据
+        if (window.dataManager && typeof window.dataManager.calculateCustomerStats === 'function') {
+            try {
+                const customerStats = window.dataManager.calculateCustomerStats();
+
+                customerStats.forEach(customer => {
+                    if (customer.totalMeters > 0) {
+                        customers.push({
+                            name: customer.customerName,
+                            totalMeters: customer.totalMeters,
+                            percentage: 0 // 稍后计算
+                        });
+                        totalShippedMeters += customer.totalMeters;
+                    }
+                });
+
+                // 计算占比
+                customers.forEach(customer => {
+                    customer.percentage = totalShippedMeters > 0 ? (customer.totalMeters / totalShippedMeters * 100) : 0;
+                });
+
+                // 按发货量排序
+                customers.sort((a, b) => b.totalMeters - a.totalMeters);
+
+                console.log('📊 客户发货统计结果:', {
+                    客户数量: customers.length,
+                    总发货量: `${totalShippedMeters.toFixed(1)}米`
+                });
+
+            } catch (error) {
+                console.error('❌ 客户统计计算失败:', error);
+            }
+        }
+
+        return {
+            customers: customers,
+            totalMeters: totalShippedMeters
+        };
+    }
+
+    // 从规格中提取厂家信息
+    extractManufacturerFromSpec(spec) {
+        if (!spec) return null;
+
+        // 常见的厂家标识模式
+        const patterns = [
+            /厂家[：:]\s*([^，,\s]+)/,     // 厂家：XXX
+            /生产厂家[：:]\s*([^，,\s]+)/, // 生产厂家：XXX
+            /制造商[：:]\s*([^，,\s]+)/,   // 制造商：XXX
+            /供应商[：:]\s*([^，,\s]+)/,   // 供应商：XXX
+            /([^-\s]+)厂/,                // XXX厂
+            /([^-\s]+)公司/,              // XXX公司
+            /([^-\s]+)集团/               // XXX集团
+        ];
+
+        for (let pattern of patterns) {
+            const match = spec.match(pattern);
+            if (match) {
+                return match[1].trim();
+            }
+        }
+
+        return null;
+    }
+
+    // 创建发货明细模态框 - 简洁版本
+    createShippingDetailsModal(stats) {
+        console.log('🎨 创建发货明细模态框（简洁版）...');
+
+        // 移除已存在的模态框
+        const existingModal = document.getElementById('shippingDetailsModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // 创建简洁的模态框HTML
+        const modalHTML = `
+            <div class="modal" id="shippingDetailsModal">
+                <div class="modal-content" style="max-width: 700px; width: 90%;">
+                    <div class="modal-header">
+                        <h3>
+                            <i class="fas fa-truck"></i>
+                            客户发货明细
+                        </h3>
+                        <button class="modal-close" id="closeShippingDetailsModal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- 简洁的总体统计 -->
+                        <div class="shipping-summary-simple">
+                            <div class="summary-item">
+                                <span class="label">总发货量:</span>
+                                <span class="value">${stats.totalMeters.toFixed(1)} 米</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">客户数量:</span>
+                                <span class="value">${stats.customers.length} 家</span>
+                            </div>
+                        </div>
+
+                        <!-- 客户发货明细表格 -->
+                        <div class="customer-details">
+                            <div class="table-container">
+                                <table class="customer-table">
+                                    <thead>
+                                        <tr>
+                                            <th>排名</th>
+                                            <th>客户名称</th>
+                                            <th>发货量(米)</th>
+                                            <th>占比</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${this.generateCustomerTableRows(stats.customers)}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="exportShippingDetails">
+                            <i class="fas fa-download"></i>
+                            导出明细
+                        </button>
+                        <button type="button" class="btn btn-primary" id="closeShippingDetailsBtn">
+                            关闭
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 添加样式
+        const modalStyles = `
+            <style id="shippingDetailsModalStyles">
+                #shippingDetailsModal .modal-content {
+                    max-height: 90vh;
+                    overflow-y: auto;
+                }
+
+                .shipping-summary {
+                    display: flex;
+                    gap: 20px;
+                    margin-bottom: 30px;
+                    flex-wrap: wrap;
+                }
+
+                .summary-card {
+                    flex: 1;
+                    min-width: 150px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 12px;
+                    text-align: center;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                }
+
+                .summary-label {
+                    font-size: 14px;
+                    opacity: 0.9;
+                    margin-bottom: 8px;
+                }
+
+                .summary-value {
+                    font-size: 24px;
+                    font-weight: bold;
+                }
+
+                .manufacturer-details {
+                    margin-bottom: 30px;
+                }
+
+                .manufacturer-details h4 {
+                    margin-bottom: 15px;
+                    color: #333;
+                    border-bottom: 2px solid #e5e7eb;
+                    padding-bottom: 8px;
+                }
+
+                .table-container {
+                    max-height: 400px;
+                    overflow-y: auto;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                }
+
+                .customer-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 14px;
+                }
+
+                .customer-table th {
+                    background: #f8fafc;
+                    padding: 12px;
+                    text-align: left;
+                    font-weight: 600;
+                    border-bottom: 2px solid #e5e7eb;
+                    position: sticky;
+                    top: 0;
+                    z-index: 10;
+                }
+
+                .customer-table td {
+                    padding: 12px;
+                    border-bottom: 1px solid #f1f5f9;
+                }
+
+                .customer-table tbody tr:hover {
+                    background: #f8fafc;
+                }
+
+                .shipping-summary-simple {
+                    display: flex;
+                    justify-content: space-around;
+                    background: #f8f9fa;
+                    padding: 16px;
+                    border-radius: 8px;
+                    margin-bottom: 20px;
+                }
+
+                .summary-item {
+                    text-align: center;
+                }
+
+                .summary-item .label {
+                    font-size: 14px;
+                    color: #666;
+                    display: block;
+                    margin-bottom: 5px;
+                }
+
+                .summary-item .value {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #333;
+                }
+
+                .customer-details {
+                    margin-top: 20px;
+                }
+
+                .rank-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    color: white;
+                    font-weight: bold;
+                    font-size: 12px;
+                }
+
+                .rank-1 { background: #ffd700; color: #333; }
+                .rank-2 { background: #c0c0c0; color: #333; }
+                .rank-3 { background: #cd7f32; color: white; }
+                .rank-other { background: #6b7280; }
+
+                .percentage-bar {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .percentage-fill {
+                    height: 6px;
+                    background: #3b82f6;
+                    border-radius: 3px;
+                    min-width: 2px;
+                }
+
+                .percentage-bg {
+                    width: 60px;
+                    height: 6px;
+                    background: #e5e7eb;
+                    border-radius: 3px;
+                    overflow: hidden;
+                }
+
+                .manufacturer-chart {
+                    margin-top: 20px;
+                }
+
+                .manufacturer-chart h4 {
+                    margin-bottom: 15px;
+                    color: #333;
+                }
+
+                .detail-btn {
+                    background: #3b82f6;
+                    color: white;
+                    border: none;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                }
+
+                .detail-btn:hover {
+                    background: #2563eb;
+                }
+
+                @media (max-width: 768px) {
+                    .shipping-summary-simple {
+                        flex-direction: column;
+                        gap: 10px;
+                    }
+
+                    .customer-table {
+                        font-size: 12px;
+                    }
+
+                    .customer-table th,
+                    .customer-table td {
+                        padding: 8px;
+                    }
+                }
+            </style>
+        `;
+
+        // 添加到页面
+        document.head.insertAdjacentHTML('beforeend', modalStyles);
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // 显示模态框
+        const modal = document.getElementById('shippingDetailsModal');
+        modal.classList.add('active');
+
+        // 绑定事件
+        this.bindShippingDetailsEvents(stats);
+
+        console.log('✅ 发货明细模态框创建完成');
+    }
+
+    // 生成客户表格行 - 简洁版本
+    generateCustomerTableRows(customers) {
+        return customers.map((customer, index) => {
+            const rank = index + 1;
+            const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+
+            return `
+                <tr>
+                    <td>
+                        <span class="rank-badge ${rankClass}">${rank}</span>
+                    </td>
+                    <td>
+                        <strong>${customer.name}</strong>
+                    </td>
+                    <td>
+                        <strong>${customer.totalMeters.toFixed(1)}</strong> 米
+                    </td>
+                    <td>
+                        <div class="percentage-bar">
+                            <div class="percentage-bg">
+                                <div class="percentage-fill" style="width: ${customer.percentage}%"></div>
+                            </div>
+                            <span>${customer.percentage.toFixed(1)}%</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // 绑定发货明细模态框事件
+    bindShippingDetailsEvents(stats) {
+        // 关闭按钮
+        const closeBtn = document.getElementById('closeShippingDetailsModal');
+        const closeBtn2 = document.getElementById('closeShippingDetailsBtn');
+
+        const closeModal = () => {
+            const modal = document.getElementById('shippingDetailsModal');
+            const styles = document.getElementById('shippingDetailsModalStyles');
+            if (modal) modal.remove();
+            if (styles) styles.remove();
+        };
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (closeBtn2) closeBtn2.addEventListener('click', closeModal);
+
+        // 点击背景关闭
+        const modal = document.getElementById('shippingDetailsModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+        }
+
+        // 导出按钮
+        const exportBtn = document.getElementById('exportShippingDetails');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                this.exportShippingDetails(stats);
+            });
+        }
+
+        // ESC键关闭
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+    }
+
+    // 显示厂家详细信息
+    showManufacturerDetails(manufacturerName) {
+        console.log(`📊 显示厂家详细信息: ${manufacturerName}`);
+
+        // 这里可以实现显示特定厂家的详细发货记录
+        // 暂时显示一个简单的提示
+        this.showNotification(`正在加载 ${manufacturerName} 的详细信息...`, 'info');
+
+        // TODO: 实现详细信息展示
+    }
+
+    // 导出发货明细 - 客户版本
+    exportShippingDetails(stats) {
+        console.log('📥 导出客户发货明细...');
+
+        try {
+            // 准备导出数据
+            const exportData = [
+                ['客户发货明细报表'],
+                ['生成时间:', new Date().toLocaleString()],
+                [''],
+                ['总体统计'],
+                ['总发货量(米)', stats.totalMeters.toFixed(1)],
+                ['客户数量', stats.customers.length],
+                [''],
+                ['客户明细'],
+                ['排名', '客户名称', '发货量(米)', '占比(%)']
+            ];
+
+            // 添加客户数据
+            stats.customers.forEach((customer, index) => {
+                exportData.push([
+                    index + 1,
+                    customer.name,
+                    customer.totalMeters.toFixed(1),
+                    customer.percentage.toFixed(1)
+                ]);
+            });
+
+            // 转换为CSV格式
+            const csvContent = exportData.map(row =>
+                row.map(cell => `"${cell}"`).join(',')
+            ).join('\n');
+
+            // 创建下载链接
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `客户发货明细_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            this.showNotification('客户发货明细已导出', 'success');
+
+        } catch (error) {
+            console.error('❌ 导出失败:', error);
+            this.showNotification('导出失败，请重试', 'error');
+        }
+    }
+
+    // 创建厂家发货量图表
+    createManufacturerChart(manufacturers) {
+        const canvas = document.getElementById('manufacturerChart');
+        if (!canvas || manufacturers.length === 0) return;
+
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // 清空画布
+        ctx.clearRect(0, 0, width, height);
+
+        // 取前8个厂家数据
+        const topManufacturers = manufacturers.slice(0, 8);
+        const maxValue = Math.max(...topManufacturers.map(m => m.totalMeters));
+
+        // 设置样式
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+
+        // 绘制柱状图
+        const barWidth = (width - 80) / topManufacturers.length;
+        const chartHeight = height - 60;
+
+        topManufacturers.forEach((manufacturer, index) => {
+            const x = 40 + index * barWidth;
+            const barHeight = (manufacturer.totalMeters / maxValue) * chartHeight;
+            const y = height - 40 - barHeight;
+
+            // 绘制柱子
+            const gradient = ctx.createLinearGradient(0, y, 0, y + barHeight);
+            gradient.addColorStop(0, '#3b82f6');
+            gradient.addColorStop(1, '#1d4ed8');
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(x, y, barWidth - 10, barHeight);
+
+            // 绘制数值
+            ctx.fillStyle = '#333';
+            ctx.fillText(
+                manufacturer.totalMeters.toFixed(0),
+                x + (barWidth - 10) / 2,
+                y - 5
+            );
+
+            // 绘制厂家名称（旋转）
+            ctx.save();
+            ctx.translate(x + (barWidth - 10) / 2, height - 10);
+            ctx.rotate(-Math.PI / 4);
+            ctx.textAlign = 'right';
+            ctx.fillText(
+                manufacturer.name.length > 8 ?
+                manufacturer.name.substring(0, 8) + '...' :
+                manufacturer.name,
+                0, 0
+            );
+            ctx.restore();
+        });
+
+        // 绘制Y轴标签
+        ctx.fillStyle = '#666';
+        ctx.textAlign = 'right';
+        ctx.fillText('发货量(米)', 35, 20);
+
+        console.log('✅ 厂家发货量图表创建完成');
     }
 
     // 深度数据同步修复
@@ -1209,11 +2080,163 @@ class SteelProductionDashboard {
             window.updateAreaChart(this.charts.areaChart, window.dataManager.data);
         }
     }
+
+    // 使用新模块化架构更新数据
+    updateMetricsFromModules() {
+        console.log('=== 🆕 使用模块化架构更新数据 ===');
+
+        try {
+            // 1. 从DataCore获取基础统计
+            const productionStats = window.dataCore.getProductionStats();
+            const shippingStats = window.dataCore.getShippingStats();
+
+            console.log('📊 生产统计:', productionStats);
+            console.log('🚚 发货统计:', shippingStats);
+
+            // 2. 计算米制数据
+            const totalDemandMeters = this.calculateMetersFromData(window.dataCore.data, 'planned');
+            const producedMeters = this.calculateMetersFromData(window.dataCore.data, 'produced');
+
+            // 3. 发货量计算 - 使用多种数据源确保准确性
+            let shippedMeters = shippingStats.totalMeters;
+
+            // 如果DataCore的发货统计为0，尝试从DataManager获取
+            if (shippedMeters === 0 && window.dataManager && typeof window.dataManager.calculateCustomerStats === 'function') {
+                console.log('🔄 DataCore发货统计为0，尝试从DataManager计算...');
+                try {
+                    const customerStats = window.dataManager.calculateCustomerStats();
+                    const customerShippedMeters = customerStats.reduce((sum, customer) => {
+                        return sum + (customer.totalMeters || 0);
+                    }, 0);
+
+                    if (customerShippedMeters > 0) {
+                        shippedMeters = customerShippedMeters;
+                        console.log(`📦 从DataManager客户统计获取发货量: ${shippedMeters.toFixed(1)}米`);
+                    }
+                } catch (error) {
+                    console.error('❌ DataManager客户统计计算失败:', error);
+                }
+            }
+
+            // 如果仍然为0，从生产数据的shipped字段计算
+            if (shippedMeters === 0) {
+                console.log('🔄 尝试从生产数据shipped字段计算...');
+                shippedMeters = this.calculateMetersFromData(window.dataCore.data, 'shipped');
+                console.log(`📦 从生产数据shipped字段计算: ${shippedMeters.toFixed(1)}米`);
+            }
+
+            // 4. 计算派生数据
+            const pendingMeters = Math.max(0, totalDemandMeters - producedMeters);
+            const unshippedMeters = Math.max(0, producedMeters - shippedMeters);
+            const completionRate = totalDemandMeters > 0 ? (producedMeters / totalDemandMeters * 100) : 0;
+
+            // 5. 更新内部数据
+            this.data = {
+                ...this.data,
+                totalDemandMeters: totalDemandMeters,
+                producedMeters: producedMeters,
+                pendingMeters: pendingMeters,
+                shippedMeters: shippedMeters,
+                unshippedMeters: unshippedMeters,
+                completionRate: Math.round(completionRate * 10) / 10,
+                materialTons: this.calculateMaterialTons(),
+                inventoryStatus: this.calculateInventoryStatus(unshippedMeters),
+                lastUpdate: new Date()
+            };
+
+            console.log('✅ 模块化数据更新完成:', {
+                总需求量: `${totalDemandMeters.toFixed(1)}米`,
+                已生产量: `${producedMeters.toFixed(1)}米`,
+                待生产量: `${pendingMeters.toFixed(1)}米`,
+                已发货量: `${shippedMeters.toFixed(1)}米`,
+                未发货量: `${unshippedMeters.toFixed(1)}米`,
+                完成率: `${completionRate.toFixed(1)}%`
+            });
+
+            // 6. 更新界面
+            this.updateMetrics();
+
+        } catch (error) {
+            console.error('❌ 模块化数据更新失败:', error);
+            // 回退到原有方法
+            this.updateMetricsFromDataManagerLegacy();
+        }
+    }
+
+    // 计算米制数据的通用方法
+    calculateMetersFromData(data, field) {
+        return data.reduce((sum, item) => {
+            const length = this.extractLengthFromSpec(item.spec);
+            const quantity = item[field] || 0;
+            return sum + (quantity * length / 1000);
+        }, 0);
+    }
+
+    // 计算原材料吨数
+    calculateMaterialTons() {
+        if (!window.dataCore || !window.dataCore.materialPurchases) return 0;
+
+        return window.dataCore.materialPurchases.reduce((sum, purchase) => {
+            return sum + (purchase.quantity || 0);
+        }, 0);
+    }
+
+    // 计算库存状态
+    calculateInventoryStatus(unshippedMeters) {
+        if (unshippedMeters > 10000) {
+            return { status: '充足', level: 'high' };
+        } else if (unshippedMeters > 5000) {
+            return { status: '正常', level: 'normal' };
+        } else if (unshippedMeters > 1000) {
+            return { status: '偏低', level: 'low' };
+        } else {
+            return { status: '不足', level: 'critical' };
+        }
+    }
 }
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
+    // 注释掉强制启用云同步的代码，允许用户自主选择
+    /*
+    // 强制启用云同步以解决数据同步问题
+    if (localStorage.getItem('disableFirebase') === 'true') {
+        localStorage.removeItem('disableFirebase');
+        console.log('Firebase sync was disabled. Re-enabling for data consistency.');
+        alert('为了解决多客户端数据同步问题，云同步功能已自动重新启用。页面将刷新以应用更改。');
+        location.reload();
+        return; // 重新加载页面，后续代码无需执行
+    }
+    */
+
+    console.log('🚀 初始化系统架构...');
+
+    // 初始化新的模块化架构
+    if (typeof DataCore !== 'undefined' &&
+        typeof ProductionManager !== 'undefined' &&
+        typeof ShippingManager !== 'undefined' &&
+        typeof UIController !== 'undefined') {
+
+        console.log('✅ 使用新的模块化架构');
+
+        // 初始化核心模块
+        window.dataCore = new DataCore();
+        window.productionManager = new ProductionManager(window.dataCore);
+        window.shippingManager = new ShippingManager(window.dataCore, window.productionManager);
+        window.uiController = new UIController(window.dataCore, window.productionManager, window.shippingManager);
+
+        console.log('🎯 模块化架构初始化完成');
+    } else {
+        console.log('⚠️ 模块化架构不完整，使用传统架构');
+    }
+
+    // 初始化传统数据管理器（兼容层）
+    window.dataManager = new DataManager();
+
+    // 绑定事件
     window.dashboard = new SteelProductionDashboard();
+
+    console.log('✅ 系统初始化完成');
 });
 
 // 页面卸载时清理
@@ -1222,3 +2245,12 @@ window.addEventListener('beforeunload', () => {
         window.dashboard.stopAutoRefresh();
     }
 });
+
+// 全局函数：显示发货明细
+function showShippingDetails() {
+    if (window.dashboard && typeof window.dashboard.openShippingDetailsModal === 'function') {
+        window.dashboard.openShippingDetailsModal();
+    } else {
+        console.error('❌ Dashboard未初始化或方法不存在');
+    }
+}

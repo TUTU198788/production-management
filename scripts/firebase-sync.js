@@ -34,6 +34,14 @@ class FirebaseSyncManager {
     // 初始化 Firebase
     async initialize(config) {
         try {
+            // 检查用户是否禁用了Firebase
+            const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
+            if (userDisabledFirebase) {
+                console.log('⚠️ 用户已禁用Firebase，跳过初始化');
+                this.isInitialized = false;
+                return false;
+            }
+
             console.log('开始初始化Firebase，配置:', config);
 
             // 等待Firebase SDK加载
@@ -238,6 +246,13 @@ class FirebaseSyncManager {
     // 开始实时同步
     startRealtimeSync() {
         if (!this.isInitialized) return;
+
+        // 检查用户是否禁用了Firebase
+        const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
+        if (userDisabledFirebase) {
+            console.log('⚠️ 用户已禁用Firebase，跳过实时同步');
+            return;
+        }
 
         // 监听生产数据变化
         this.listenToCollection('productionData', (data) => {
@@ -858,6 +873,13 @@ class FirebaseSyncManager {
     
     // 同步数据到云端
     async syncToCloud(collectionName, data, operation = 'update') {
+        // 检查用户是否禁用了Firebase
+        const userDisabledFirebase = localStorage.getItem('disableFirebase') === 'true';
+        if (userDisabledFirebase) {
+            console.log('⚠️ 用户已禁用Firebase，跳过云端同步');
+            return false;
+        }
+
         if (!this.isInitialized) {
             // 添加到同步队列
             this.syncQueue.push({ collectionName, data, operation });
