@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>团队协作配置向导</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .wizard-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .wizard-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .wizard-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .wizard-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .wizard-content {
+            padding: 40px;
+        }
+        
+        .step {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .step-number {
+            background: #4f46e5;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .step-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .info-box {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .success-box {
+            background: #f0fdf4;
+            border: 1px solid #22c55e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .form-group textarea {
+            height: 120px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #4338ca;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            height: 6px;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+        }
+        
+        .feature-list li:before {
+            content: '✅';
+            margin-right: 10px;
+        }
+        
+        .option-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .option-card:hover {
+            border-color: #4f46e5;
+            background: #f8fafc;
+        }
+        
+        .option-card.selected {
+            border-color: #4f46e5;
+            background: #f0f9ff;
+        }
+        
+        .option-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .option-description {
+            color: #6b7280;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wizard-container">
+        <div class="wizard-header">
+            <h1>🚀 团队协作配置向导</h1>
+            <p>让您的团队成员看到相同的生产数据</p>
+        </div>
+        
+        <div class="wizard-content">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 20%"></div>
+            </div>
+            
+            <!-- 步骤1：问题诊断 -->
+            <div class="step active" id="step1">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title">问题诊断</div>
+                </div>
+                
+                <div class="warning-box">
+                    <h4>⚠️ 当前问题</h4>
+                    <p>如果您直接将文件夹复制到服务器，团队成员看到的数据<strong>不会</strong>是一样的，因为：</p>
+                    <ul>
+                        <li>数据存储在每个用户的浏览器本地存储中</li>
+                        <li>用户A添加的数据，用户B看不到</li>
+                        <li>每个人都有自己独立的数据副本</li>
+                    </ul>
+                </div>
+                
+                <div class="info-box">
+                    <h4>💡 解决方案</h4>
+                    <p>系统已经内置了云端同步功能，只需要简单配置即可实现：</p>
+                    <ul class="feature-list">
+                        <li>实时数据同步</li>
+                        <li>多用户协作</li>
+                        <li>数据一致性保证</li>
+                        <li>在线用户显示</li>
+                        <li>冲突自动解决</li>
+                    </ul>
+                </div>
+                
+                <div class="button-group">
+                    <div></div>
+                    <button class="btn btn-primary" onclick="nextStep()">开始配置</button>
+                </div>
+            </div>
+            
+            <!-- 步骤2：选择方案 -->
+            <div class="step" id="step2">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title">选择同步方案</div>
+                </div>
+                
+                <div class="option-card" onclick="selectOption('firebase')" id="option-firebase">
+                    <div class="option-title">🔥 Firebase实时同步 (推荐)</div>
+                    <div class="option-description">
+                        • 免费额度充足 (每日5万次读取)<br>
+                        • 实时同步，无延迟<br>
+                        • 配置简单，5分钟完成<br>
+                        • Google提供的稳定服务
+                    </div>
+                </div>
+                
+                <div class="option-card" onclick="selectOption('github')" id="option-github">
+                    <div class="option-title">📁 GitHub云端备份</div>
+                    <div class="option-description">
+                        • 完全免费<br>
+                        • 定时同步 (非实时)<br>
+                        • 适合小团队<br>
+                        • 需要GitHub账号
+                    </div>
+                </div>
+                
+                <div class="option-card" onclick="selectOption('custom')" id="option-custom">
+                    <div class="option-title">🛠️ 自定义服务器</div>
+                    <div class="option-description">
+                        • 完全控制数据<br>
+                        • 需要技术开发<br>
+                        • 适合有开发能力的团队<br>
+                        • 成本较高
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="nextBtn2" disabled>下一步</button>
+                </div>
+            </div>
+            
+            <!-- 步骤3：Firebase配置 -->
+            <div class="step" id="step3">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Firebase配置</div>
+                </div>
+                
+                <div class="info-box">
+                    <h4>📋 配置步骤</h4>
+                    <ol>
+                        <li>访问 <a href="https://console.firebase.google.com/" target="_blank">Firebase控制台</a></li>
+                        <li>点击"创建项目"，输入项目名称</li>
+                        <li>启用Firestore数据库（选择测试模式）</li>
+                        <li>在项目设置中获取Web应用配置</li>
+                        <li>将配置信息粘贴到下方</li>
+                    </ol>
+                </div>
+                
+                <div class="form-group">
+                    <label>Firebase配置 (JSON格式)</label>
+                    <textarea id="firebaseConfig" placeholder='粘贴您的Firebase配置，格式如下：
+{
+  "apiKey": "您的API密钥",
+  "authDomain": "项目ID.firebaseapp.com",
+  "projectId": "您的项目ID",
+  "storageBucket": "项目ID.firebasestorage.app",
+  "messagingSenderId": "发送者ID",
+  "appId": "应用ID"
+}'></textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                    <button class="btn btn-primary" onclick="validateAndNext()">验证配置</button>
+                </div>
+            </div>
+            
+            <!-- 步骤4：生成配置文件 -->
+            <div class="step" id="step4">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <div class="step-title">生成配置文件</div>
+                </div>
+                
+                <div class="success-box">
+                    <h4>✅ 配置验证成功</h4>
+                    <p>请将以下内容保存为 <code>firebase-config.js</code> 文件，替换项目中的原文件：</p>
+                </div>
+                
+                <div class="code-block" id="generatedConfig">
+                    <!-- 生成的配置内容将在这里显示 -->
+                </div>
+                
+                <div class="info-box">
+                    <h4>📝 部署步骤</h4>
+                    <ol>
+                        <li>复制上方的配置内容</li>
+                        <li>保存为 <code>firebase-config.js</code> 文件</li>
+                        <li>替换项目中的原配置文件</li>
+                        <li>将整个项目上传到服务器</li>
+                        <li>团队成员通过服务器地址访问</li>
+                    </ol>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                    <button class="btn btn-success" onclick="downloadConfig()">下载配置文件</button>
+                </div>
+            </div>
+            
+            <!-- 步骤5：完成 -->
+            <div class="step" id="step5">
+                <div class="step-header">
+                    <div class="step-number">5</div>
+                    <div class="step-title">配置完成</div>
+                </div>
+                
+                <div class="success-box">
+                    <h4>🎉 恭喜！团队协作已配置完成</h4>
+                    <p>现在您的团队成员可以看到相同的数据了！</p>
+                </div>
+                
+                <div class="info-box">
+                    <h4>🔍 验证方法</h4>
+                    <ul>
+                        <li>用户A添加一条生产记录</li>
+                        <li>用户B刷新页面，应该能看到用户A的数据</li>
+                        <li>页面右上角显示在线用户数量</li>
+                        <li>浏览器控制台显示"Firebase 实时同步已启用"</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h4>⚠️ 注意事项</h4>
+                    <ul>
+                        <li>Firebase免费额度：每日50,000次读取，20,000次写入</li>
+                        <li>测试模式仅适用于开发环境</li>
+                        <li>生产环境建议配置安全规则</li>
+                        <li>定期备份数据到本地</li>
+                    </ul>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="window.open('index.html', '_blank')">打开系统</button>
+                    <button class="btn btn-success" onclick="window.open('team-deployment-guide.md', '_blank')">查看详细文档</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedOption = '';
+        let firebaseConfigData = null;
+        
+        function nextStep() {
+            if (currentStep < 5) {
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                currentStep++;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                updateProgress();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 1) {
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                currentStep--;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                updateProgress();
+            }
+        }
+        
+        function updateProgress() {
+            const progress = (currentStep / 5) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+        
+        function selectOption(option) {
+            selectedOption = option;
+            
+            // 清除所有选中状态
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // 选中当前选项
+            document.getElementById(`option-${option}`).classList.add('selected');
+            
+            // 启用下一步按钮
+            document.getElementById('nextBtn2').disabled = false;
+            
+            // 根据选择跳转到不同步骤
+            if (option === 'firebase') {
+                // Firebase配置步骤
+            } else if (option === 'github') {
+                alert('GitHub同步功能正在开发中，请选择Firebase方案');
+                return;
+            } else if (option === 'custom') {
+                alert('自定义服务器需要额外开发，建议选择Firebase方案');
+                return;
+            }
+        }
+        
+        function validateAndNext() {
+            const configText = document.getElementById('firebaseConfig').value.trim();
+            
+            if (!configText) {
+                alert('请输入Firebase配置信息');
+                return;
+            }
+            
+            try {
+                firebaseConfigData = JSON.parse(configText);
+                
+                // 验证必要字段
+                const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+                const missingFields = requiredFields.filter(field => !firebaseConfigData[field]);
+                
+                if (missingFields.length > 0) {
+                    alert(`缺少必要字段: ${missingFields.join(', ')}`);
+                    return;
+                }
+                
+                generateConfigFile();
+                nextStep();
+                
+            } catch (error) {
+                alert('配置格式错误，请检查JSON格式是否正确');
+            }
+        }
+        
+        function generateConfigFile() {
+            const configContent = `/**
+ * Firebase 配置文件
+ * 团队协作配置 - 自动生成
+ */
+
+// Firebase 项目配置
+const firebaseConfig = ${JSON.stringify(firebaseConfigData, null, 4)};
+
+// 系统配置选项
+const systemConfig = {
+    // 启用Firebase实时同步
+    disableFirebase: false,
+    
+    // Firebase连接超时时间（毫秒）
+    firebaseTimeout: 8000,
+    
+    // 是否显示详细的连接日志
+    enableDebugLogs: true
+};
+
+// 自动初始化Firebase
+window.addEventListener('DOMContentLoaded', async function() {
+    console.log('🔄 正在初始化团队协作功能...');
+    
+    if (systemConfig.disableFirebase) {
+        console.log('⚠️ Firebase已禁用，使用本地存储模式');
+        return;
+    }
+    
+    try {
+        // 动态加载Firebase SDK
+        if (!window.firebase) {
+            console.log('📦 正在加载Firebase SDK...');
+            
+            const scripts = [
+                'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
+                'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js'
+            ];
+            
+            for (const src of scripts) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
+        }
+        
+        console.log('📦 Firebase SDK已加载');
+        
+        // 初始化 Firebase 同步
+        if (window.firebaseSync) {
+            console.log('🔄 正在初始化Firebase同步...');
+            
+            const initPromise = window.firebaseSync.initialize(firebaseConfig);
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Firebase连接超时')), systemConfig.firebaseTimeout);
+            });
+            
+            const success = await Promise.race([initPromise, timeoutPromise]);
+            
+            if (success) {
+                console.log('✅ Firebase 实时同步已启用');
+                showNotification('🎉 团队协作功能已启用！数据将实时同步', 'success');
+            } else {
+                console.log('❌ Firebase 初始化失败，使用本地存储');
+                showNotification('⚠️ 云端同步不可用，使用本地存储模式', 'warning');
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Firebase初始化失败:', error);
+        showNotification('❌ 团队协作功能初始化失败，使用本地存储模式', 'error');
+    }
+});
+
+// 显示通知的辅助函数
+function showNotification(message, type = 'info') {
+    if (window.dataManager && window.dataManager.showNotification) {
+        window.dataManager.showNotification(message, type);
+    } else {
+        console.log(message);
+    }
+}`;
+            
+            document.getElementById('generatedConfig').textContent = configContent;
+        }
+        
+        function downloadConfig() {
+            const content = document.getElementById('generatedConfig').textContent;
+            const blob = new Blob([content], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'firebase-config.js';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            nextStep();
+        }
+    </script>
+</body>
+</html>

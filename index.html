@@ -2,7 +2,35 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#3b82f6">
+
+    <!-- PWA配置 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="application-name" content="生产管理系统">
+    <meta name="msapplication-TileColor" content="#3b82f6">
+    <meta name="msapplication-config" content="browserconfig.xml">
+
+    <!-- iOS特定配置 -->
+    <meta name="apple-mobile-web-app-title" content="生产管理">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="icons/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="icons/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="icons/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="icons/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="icons/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="icons/apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="57x57" href="icons/apple-touch-icon-57x57.png">
+
+    <!-- 标准图标 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="favicon.ico">
+
     <title>梯桁筋与组合肋可视化管理系统</title>
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/responsive.css">
@@ -27,6 +55,127 @@
     <script src="data-protection-config.js"></script>
     <!-- 已发货量卡片管理器 -->
     <script src="shipped-card-manager.js"></script>
+    <!-- 移动端优化脚本 -->
+    <script src="scripts/mobile-optimization.js"></script>
+
+    <!-- 新同步系统脚本 -->
+    <script src="scripts/vector-clock.js"></script>
+    <script src="scripts/operation-queue.js"></script>
+    <script src="scripts/operation-transform.js"></script>
+    <script src="scripts/sync-coordinator.js"></script>
+    <script src="scripts/sync-ui.js"></script>
+    <script src="scripts/sync-system.js"></script>
+
+    <!-- PWA和Service Worker注册 -->
+    <script>
+        // 注册Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker 注册成功:', registration.scope);
+
+                        // 检查更新
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // 有新版本可用
+                                    showUpdateNotification();
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.log('❌ Service Worker 注册失败:', error);
+                    });
+            });
+        }
+
+        // 显示更新通知
+        function showUpdateNotification() {
+            if (confirm('发现新版本，是否立即更新？')) {
+                window.location.reload();
+            }
+        }
+
+        // PWA安装提示
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // 显示安装按钮
+            showInstallButton();
+        });
+
+        function showInstallButton() {
+            const installBtn = document.createElement('button');
+            installBtn.textContent = '📱 安装到桌面';
+            installBtn.className = 'install-btn';
+            installBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                padding: 12px 20px;
+                background: #10b981;
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-weight: 600;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            `;
+
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+
+                    if (outcome === 'accepted') {
+                        console.log('用户接受了安装提示');
+                    }
+
+                    deferredPrompt = null;
+                    installBtn.remove();
+                }
+            });
+
+            document.body.appendChild(installBtn);
+
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                if (installBtn.parentNode) {
+                    installBtn.style.opacity = '0';
+                    setTimeout(() => installBtn.remove(), 300);
+                }
+            }, 10000);
+        }
+
+        // 处理URL参数（快捷方式）
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+
+            if (action) {
+                setTimeout(() => {
+                    switch (action) {
+                        case 'add-production':
+                            document.getElementById('addProductionBtn')?.click();
+                            break;
+                        case 'production-data':
+                            document.getElementById('productionManagementBtn')?.click();
+                            break;
+                        case 'shipping':
+                            document.getElementById('batchShippingBtn')?.click();
+                            break;
+                    }
+                }, 1000);
+            }
+        });
+    </script>
 </head>
 <body>
     <!-- 顶部导航栏 -->
@@ -53,6 +202,13 @@
                     <i class="fas fa-cloud"></i>
                     云端同步
                 </button>
+
+                <!-- 新同步系统状态指示器将在这里动态插入 -->
+
+                <button class="sync-panel-btn" id="syncPanelBtn" title="同步状态面板 (Ctrl+Shift+S)" onclick="window.syncSystem?.showSyncPanel()" style="display: none;">
+                    <i class="fas fa-cogs"></i>
+                    同步状态
+                </button>
                 <div class="last-update">
                     最后更新: <span id="lastUpdate">2024-01-15 14:30:25</span>
                 </div>
@@ -62,8 +218,18 @@
 
     <!-- 主要内容区域 -->
     <main class="main-content">
+        <!-- 移动端状态横幅 -->
+        <div class="mobile-banner" id="mobileBanner" style="display: none;">
+            <i class="fas fa-info-circle"></i>
+            <span>系统运行正常，数据已同步</span>
+            <button class="mobile-banner-close" onclick="this.parentElement.style.display='none'">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
         <!-- 关键指标卡片区 -->
-        <section class="metrics-section">
+        <section class="metrics-section content-section">
+            <h2 class="section-title">生产概览</h2>
             <div class="metrics-container">
                 <!-- 第一行：原有的四个卡片 -->
                 <div class="metrics-row">
@@ -297,7 +463,8 @@
         </section>
 
         <!-- 生产数据管理区域 -->
-        <section class="data-management-section">
+        <section class="data-management-section content-section">
+            <h2 class="section-title">操作中心</h2>
             <div class="management-container">
                 <!-- 操作工具栏 -->
                 <div class="toolbar-card">
@@ -347,10 +514,6 @@
                             <button class="action-btn danger" id="clearAllDataBtn">
                                 <i class="fas fa-trash-alt"></i>
                                 清空所有数据
-                            </button>
-                            <button class="action-btn warning" onclick="forceDashboardUpdate()" title="强制更新仪表板发货量显示">
-                                <i class="fas fa-wrench"></i>
-                                修复发货量
                             </button>
                         </div>
                     </div>
@@ -525,10 +688,8 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="planLengthInput">长度 *</label>
-                            <select id="planLengthInput" required disabled>
-                                <option value="">请先选择型号</option>
-                            </select>
+                            <label for="planLengthInput">长度 (mm) *</label>
+                            <input type="number" id="planLengthInput" min="1" max="50000" step="1" required placeholder="请输入长度，如：6000">
                         </div>
                     </div>
 
@@ -539,11 +700,7 @@
                         </div>
                         <div class="form-group">
                             <label for="planAreaInput">工地区域 *</label>
-                            <select id="planAreaInput" required>
-                                <option value="">请选择工地区域</option>
-                                <!-- 区域选项将由JavaScript动态生成 -->
-                                <option value="__add_new__">+ 新增区域</option>
-                            </select>
+                            <input type="text" id="planAreaInput" required placeholder="请输入工地区域名称，支持中英文数字符号，如：D53F、C4、E2、浦东T3等">
                         </div>
                     </div>
 
@@ -596,10 +753,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="lengthInput">长度 *</label>
-                                <select id="lengthInput" disabled required>
-                                    <option value="">请先选择型号</option>
-                                </select>
+                                <label for="lengthInput">长度 (mm) *</label>
+                                <input type="number" id="lengthInput" min="1" max="50000" step="1" required placeholder="请输入长度，如：6000">
                             </div>
                             <div class="form-group">
                                 <label for="specDisplay">完整规格</label>
@@ -610,10 +765,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="areaInput">工地区域 *</label>
-                                <select id="areaInput" required>
-                                    <option value="">请选择区域</option>
-                                    <!-- 区域选项将由JavaScript动态生成 -->
-                                </select>
+                                <input type="text" id="areaInput" required placeholder="请输入工地区域名称，支持中英文数字符号">
                             </div>
                             <div class="form-group">
                                 <label for="plannedInput">计划数量 (根) *</label>
@@ -653,12 +805,8 @@
                     <div class="batch-header">
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="batchArea">工地区域 <span style="color: #6b7280; font-size: 12px;">(可选，系统可智能分配)</span></label>
-                                <select id="batchArea">
-                                    <option value="">智能分配到紧急区域</option>
-                                    <!-- 区域选项将由JavaScript动态生成 -->
-                                    <option value="__add_new__">+ 新增区域</option>
-                                </select>
+                                <label for="batchArea">工地区域 <span style="color: #6b7280; font-size: 12px;">(可选，留空则智能分配)</span></label>
+                                <input type="text" id="batchArea" placeholder="请输入工地区域名称，留空则智能分配到紧急区域">
                             </div>
                             <div class="form-group">
                                 <label for="batchProductionDate">生产日期 *</label>
@@ -1206,7 +1354,7 @@
     </div>
 
     <!-- 原材料采购管理模态框 -->
-    <div class="modal" id="materialModal">
+    <div class="modal material-modal" id="materialModal">
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h3 id="materialModalTitle">原材料采购管理</h3>
@@ -1463,12 +1611,12 @@
     </div>
 
     <!-- 生产数据管理模态框 -->
-    <div class="modal" id="productionManagementModal">
+    <div class="modal production-modal" id="productionManagementModal">
         <div class="modal-content large">
             <div class="modal-header">
                 <h3>生产数据管理</h3>
                 <div class="modal-header-actions">
-                    <button class="btn btn-outline" id="refreshProductionDataBtn">
+                    <button class="refresh-stats-btn" id="refreshProductionDataBtn">
                         <i class="fas fa-sync-alt"></i>
                         刷新数据
                     </button>
@@ -1543,7 +1691,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn secondary" id="cancelProductionManagementBtn">关闭</button>
-                <button type="button" class="btn primary" id="exportProductionDataBtn">
+                <button type="button" class="btn export" id="exportProductionDataBtn">
                     <i class="fas fa-download"></i>
                     导出生产数据
                 </button>
@@ -2839,8 +2987,234 @@
             btn.textContent = isDisabled ? '启用云同步' : '禁用云同步（仅本地）';
             btn.onclick = toggleFirebaseSync;
         });
+
+
     </script>
 
+    <!-- 移动端底部导航栏 -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav" style="display: none;">
+        <div class="bottom-nav-items">
+            <div class="bottom-nav-item active" data-action="home">
+                <i class="fas fa-home"></i>
+                <span>首页</span>
+            </div>
+            <div class="bottom-nav-item" data-action="production">
+                <i class="fas fa-industry"></i>
+                <span>生产</span>
+            </div>
+            <div class="bottom-nav-item" data-action="shipping">
+                <i class="fas fa-truck"></i>
+                <span>发货</span>
+            </div>
+            <div class="bottom-nav-item" data-action="data">
+                <i class="fas fa-chart-bar"></i>
+                <span>数据</span>
+            </div>
+            <div class="bottom-nav-item" data-action="more">
+                <i class="fas fa-ellipsis-h"></i>
+                <span>更多</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 移动端快速操作浮动按钮 -->
+    <div class="fab-container" id="fabContainer" style="display: none;">
+        <button class="fab-main" id="fabMain">
+            <i class="fas fa-plus"></i>
+        </button>
+        <div class="fab-menu" id="fabMenu">
+            <button class="fab-item" data-action="add-production" title="新增生产">
+                <i class="fas fa-plus"></i>
+            </button>
+            <button class="fab-item" data-action="add-plan" title="新增计划">
+                <i class="fas fa-clipboard-list"></i>
+            </button>
+            <button class="fab-item" data-action="batch-shipping" title="批量发货">
+                <i class="fas fa-truck"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 移动端UI控制脚本
+        document.addEventListener('DOMContentLoaded', function() {
+            const isMobile = window.innerWidth <= 768;
+
+            if (isMobile) {
+                // 显示移动端元素
+                document.getElementById('mobileBottomNav').style.display = 'block';
+                document.getElementById('fabContainer').style.display = 'block';
+                document.getElementById('mobileBanner').style.display = 'flex';
+
+                // 为主内容添加底部间距
+                document.querySelector('.main-content').style.paddingBottom = '100px';
+
+                // 底部导航点击事件
+                document.querySelectorAll('.bottom-nav-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        // 移除所有active类
+                        document.querySelectorAll('.bottom-nav-item').forEach(i => i.classList.remove('active'));
+                        // 添加active类到当前项
+                        this.classList.add('active');
+
+                        const action = this.dataset.action;
+                        handleBottomNavAction(action);
+                    });
+                });
+
+                // FAB按钮事件
+                const fabMain = document.getElementById('fabMain');
+                const fabContainer = document.getElementById('fabContainer');
+
+                fabMain.addEventListener('click', function() {
+                    fabContainer.classList.toggle('open');
+                });
+
+                // FAB菜单项点击事件
+                document.querySelectorAll('.fab-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const action = this.dataset.action;
+                        handleFabAction(action);
+                        fabContainer.classList.remove('open');
+                    });
+                });
+
+                // 点击其他地方关闭FAB菜单
+                document.addEventListener('click', function(e) {
+                    if (!fabContainer.contains(e.target)) {
+                        fabContainer.classList.remove('open');
+                    }
+                });
+            }
+        });
+
+        function handleBottomNavAction(action) {
+            switch(action) {
+                case 'home':
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    break;
+                case 'production':
+                    document.getElementById('productionManagementBtn')?.click();
+                    break;
+                case 'shipping':
+                    document.getElementById('batchShippingBtn')?.click();
+                    break;
+                case 'data':
+                    // 滚动到数据区域
+                    document.querySelector('.metrics-section')?.scrollIntoView({ behavior: 'smooth' });
+                    break;
+                case 'more':
+                    // 显示更多选项
+                    showMoreOptions();
+                    break;
+            }
+        }
+
+        function handleFabAction(action) {
+            switch(action) {
+                case 'add-production':
+                    document.getElementById('addProductionBtn')?.click();
+                    break;
+                case 'add-plan':
+                    document.getElementById('addPlanBtn')?.click();
+                    break;
+                case 'batch-shipping':
+                    document.getElementById('batchShippingBtn')?.click();
+                    break;
+            }
+        }
+
+        function showMoreOptions() {
+            const options = [
+                { text: '原材料管理', action: () => document.getElementById('materialCard')?.click() },
+                { text: '导出数据', action: () => document.getElementById('exportDataBtn')?.click() },
+                { text: '操作日志', action: () => document.getElementById('operationLogBtn')?.click() },
+                { text: '云端同步', action: () => document.getElementById('cloudSyncBtn')?.click() }
+            ];
+
+            const menu = document.createElement('div');
+            menu.className = 'mobile-options-menu';
+            menu.style.cssText = `
+                position: fixed;
+                bottom: 80px;
+                left: 20px;
+                right: 20px;
+                background: white;
+                border-radius: 16px;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                z-index: 1001;
+                padding: 16px;
+                animation: slideUp 0.3s ease;
+            `;
+
+            options.forEach(option => {
+                const item = document.createElement('button');
+                item.textContent = option.text;
+                item.style.cssText = `
+                    width: 100%;
+                    padding: 16px;
+                    border: none;
+                    background: none;
+                    text-align: left;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #374151;
+                    border-radius: 12px;
+                    margin-bottom: 8px;
+                    cursor: pointer;
+                    transition: background 0.2s ease;
+                `;
+
+                item.addEventListener('click', () => {
+                    option.action();
+                    document.body.removeChild(menu);
+                });
+
+                item.addEventListener('touchstart', () => {
+                    item.style.background = '#f3f4f6';
+                });
+
+                item.addEventListener('touchend', () => {
+                    item.style.background = 'none';
+                });
+
+                menu.appendChild(item);
+            });
+
+            // 添加关闭按钮
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '关闭';
+            closeBtn.style.cssText = `
+                width: 100%;
+                padding: 16px;
+                border: 2px solid #e5e7eb;
+                background: #f9fafb;
+                text-align: center;
+                font-size: 16px;
+                font-weight: 600;
+                color: #6b7280;
+                border-radius: 12px;
+                cursor: pointer;
+            `;
+
+            closeBtn.addEventListener('click', () => {
+                document.body.removeChild(menu);
+            });
+
+            menu.appendChild(closeBtn);
+            document.body.appendChild(menu);
+
+            // 添加动画样式
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideUp {
+                    from { transform: translateY(100%); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    </script>
 
 </body>
 </html>
