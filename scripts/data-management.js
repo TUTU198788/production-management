@@ -937,33 +937,25 @@ class DataManager {
 
     updateLengthOptions() {
         const typeSelect = document.getElementById('typeInput');
-        const lengthSelect = document.getElementById('lengthInput');
+        const lengthInput = document.getElementById('lengthInput');
 
         if (!typeSelect.value) {
-            lengthSelect.disabled = true;
-            lengthSelect.innerHTML = '<option value="">请先选择型号</option>';
+            lengthInput.disabled = true;
+            lengthInput.placeholder = '请先选择型号';
             return;
         }
 
-        lengthSelect.disabled = false;
-        lengthSelect.innerHTML = '<option value="">请选择长度</option>';
-
-        // 生成长度选项：200mm到11800mm，以200mm为模数
-        for (let length = 200; length <= 11800; length += 200) {
-            const option = document.createElement('option');
-            option.value = length;
-            option.textContent = `${length}mm`;
-            lengthSelect.appendChild(option);
-        }
+        lengthInput.disabled = false;
+        lengthInput.placeholder = '请输入长度，如：6000';
     }
 
     updateSpecDisplay() {
         const typeSelect = document.getElementById('typeInput');
-        const lengthSelect = document.getElementById('lengthInput');
+        const lengthInput = document.getElementById('lengthInput');
         const specDisplay = document.getElementById('specDisplay');
 
-        if (typeSelect.value && lengthSelect.value) {
-            const spec = `${typeSelect.value}-${lengthSelect.value}mm`;
+        if (typeSelect.value && lengthInput.value) {
+            const spec = `${typeSelect.value}-${lengthInput.value}mm`;
             specDisplay.value = spec;
         } else {
             specDisplay.value = '';
@@ -972,24 +964,24 @@ class DataManager {
 
     getSpecFromInputs() {
         const typeSelect = document.getElementById('typeInput');
-        const lengthSelect = document.getElementById('lengthInput');
+        const lengthInput = document.getElementById('lengthInput');
 
-        if (typeSelect.value && lengthSelect.value) {
-            return `${typeSelect.value}-${lengthSelect.value}mm`;
+        if (typeSelect.value && lengthInput.value) {
+            return `${typeSelect.value}-${lengthInput.value}mm`;
         }
         return '';
     }
 
     setSpecInputs(spec) {
         const typeSelect = document.getElementById('typeInput');
-        const lengthSelect = document.getElementById('lengthInput');
+        const lengthInput = document.getElementById('lengthInput');
         const specDisplay = document.getElementById('specDisplay');
 
         if (!spec) {
             typeSelect.value = '';
-            lengthSelect.value = '';
-            lengthSelect.disabled = true;
-            lengthSelect.innerHTML = '<option value="">请先选择型号</option>';
+            lengthInput.value = '';
+            lengthInput.disabled = true;
+            lengthInput.placeholder = '请先选择型号';
             specDisplay.value = '';
             return;
         }
@@ -1000,7 +992,7 @@ class DataManager {
             const [, type, length] = match;
             typeSelect.value = type;
             this.updateLengthOptions();
-            lengthSelect.value = length;
+            lengthInput.value = length;
             specDisplay.value = spec;
         }
     }
@@ -1089,6 +1081,16 @@ class DataManager {
     
     formatNumber(num) {
         return new Intl.NumberFormat('zh-CN').format(num);
+    }
+
+    // HTML转义函数，防止XSS攻击
+    escapeHtml(text) {
+        if (typeof text !== 'string') {
+            return text;
+        }
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     
     toggleSelection(id, checked) {
@@ -2447,50 +2449,42 @@ class DataManager {
     // 计划管理相关方法
     setupPlanSpecSelection() {
         const typeSelect = document.getElementById('planTypeInput');
-        const lengthSelect = document.getElementById('planLengthInput');
+        const lengthInput = document.getElementById('planLengthInput');
         const specDisplay = document.getElementById('planSpecDisplay');
 
-        // 型号选择变化时更新长度选项
+        // 型号选择变化时更新长度选项和完整规格显示
         typeSelect.addEventListener('change', () => {
             this.updatePlanLengthOptions();
             this.updatePlanSpecDisplay();
         });
 
-        // 长度选择变化时更新完整规格显示
-        lengthSelect.addEventListener('change', () => {
+        // 长度输入变化时更新完整规格显示
+        lengthInput.addEventListener('input', () => {
             this.updatePlanSpecDisplay();
         });
     }
 
     updatePlanLengthOptions() {
         const typeSelect = document.getElementById('planTypeInput');
-        const lengthSelect = document.getElementById('planLengthInput');
+        const lengthInput = document.getElementById('planLengthInput');
 
         if (!typeSelect.value) {
-            lengthSelect.disabled = true;
-            lengthSelect.innerHTML = '<option value="">请先选择型号</option>';
+            lengthInput.disabled = true;
+            lengthInput.placeholder = '请先选择型号';
             return;
         }
 
-        lengthSelect.disabled = false;
-        lengthSelect.innerHTML = '<option value="">请选择长度</option>';
-
-        // 生成长度选项：200mm到11800mm，以200mm为模数
-        for (let length = 200; length <= 11800; length += 200) {
-            const option = document.createElement('option');
-            option.value = length;
-            option.textContent = `${length}mm`;
-            lengthSelect.appendChild(option);
-        }
+        lengthInput.disabled = false;
+        lengthInput.placeholder = '请输入长度，如：6000';
     }
 
     updatePlanSpecDisplay() {
         const typeSelect = document.getElementById('planTypeInput');
-        const lengthSelect = document.getElementById('planLengthInput');
+        const lengthInput = document.getElementById('planLengthInput');
         const specDisplay = document.getElementById('planSpecDisplay');
 
-        if (typeSelect.value && lengthSelect.value) {
-            const spec = `${typeSelect.value}-${lengthSelect.value}mm`;
+        if (typeSelect.value && lengthInput.value) {
+            const spec = `${typeSelect.value}-${lengthInput.value}mm`;
             specDisplay.value = spec;
         } else {
             specDisplay.value = '';
@@ -2499,10 +2493,10 @@ class DataManager {
 
     getPlanSpecFromInputs() {
         const typeSelect = document.getElementById('planTypeInput');
-        const lengthSelect = document.getElementById('planLengthInput');
+        const lengthInput = document.getElementById('planLengthInput');
 
-        if (typeSelect.value && lengthSelect.value) {
-            return `${typeSelect.value}-${lengthSelect.value}mm`;
+        if (typeSelect.value && lengthInput.value) {
+            return `${typeSelect.value}-${lengthInput.value}mm`;
         }
         return '';
     }
@@ -2526,9 +2520,9 @@ class DataManager {
 
     clearPlanForm() {
         document.getElementById('planForm').reset();
-        const lengthSelect = document.getElementById('planLengthInput');
-        lengthSelect.disabled = true;
-        lengthSelect.innerHTML = '<option value="">请先选择型号</option>';
+        const lengthInput = document.getElementById('planLengthInput');
+        lengthInput.disabled = true;
+        lengthInput.placeholder = '请先选择型号';
         document.getElementById('planSpecDisplay').value = '';
     }
 
@@ -5301,11 +5295,24 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         const newArea = prompt('请输入新的工地区域名称（例如：D8、F1等）：');
 
         if (newArea && newArea.trim()) {
-            const areaName = newArea.trim().toUpperCase();
+            const areaName = newArea.trim();
 
-            // 验证区域名称格式（字母+数字）
-            if (!/^[A-Z]\d+$/.test(areaName)) {
-                this.showNotification('区域名称格式不正确，请使用字母+数字格式（如C1、E3）', 'error');
+            // 验证区域名称格式（支持中英文、数字、符号等）
+            if (areaName.length === 0) {
+                this.showNotification('区域名称不能为空', 'error');
+                selectElement.value = '';
+                return;
+            }
+
+            if (areaName.length > 50) {
+                this.showNotification('区域名称长度不能超过50个字符', 'error');
+                selectElement.value = '';
+                return;
+            }
+
+            // 检查是否包含不安全的字符（避免XSS等安全问题）
+            if (/<|>|&|"|'/.test(areaName)) {
+                this.showNotification('区域名称不能包含特殊字符 < > & " \'', 'error');
                 selectElement.value = '';
                 return;
             }
@@ -5623,12 +5630,13 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                 <div class="area-card-title-wrapper">
                     <i class="fas fa-grip-vertical area-drag-handle" title="拖拽排序 - 当前优先级: ${priority}"></i>
                     <h4 class="area-name editable-area-name"
-                        onclick="dataManager.editAreaName('${areaStat.area}', this)"
-                        title="点击编辑区域名称"
+                        onclick="dataManager.editAreaName(this.dataset.areaName, this)"
+                        data-area-name="${this.escapeHtml(areaStat.area)}"
+                        title="点击编辑区域名称 - 支持中英文、数字、符号"
                         style="cursor: pointer; border: 1px solid transparent; padding: 2px 4px; border-radius: 4px;"
-                        onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'; this.style.borderColor='#3b82f6'"
-                        onmouseout="this.style.backgroundColor=''; this.style.borderColor='transparent'"
-                    >${areaStat.area}区域</h4>
+                        onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'; this.style.borderColor='#3b82f6'; this.innerHTML='${this.escapeHtml(areaStat.area)}区域 ✏️'"
+                        onmouseout="this.style.backgroundColor=''; this.style.borderColor='transparent'; this.innerHTML='${this.escapeHtml(areaStat.area)}区域'"
+                    >${this.escapeHtml(areaStat.area)}区域</h4>
                     <span class="priority-badge" title="优先级排序">#${priority}</span>
                 </div>
                 <span class="area-status ${areaStat.status}">${statusText[areaStat.status]}</span>
@@ -5788,17 +5796,28 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         }
 
         const currentName = currentArea;
-        const newName = prompt(`请输入新的区域名称：\n\n当前名称：${currentName}\n\n注意：修改后将在整个系统内联动更新`, currentName);
+        const newName = prompt(`请输入新的区域名称：\n\n当前名称：${currentName}\n\n支持：中英文、数字、符号等（长度不超过50字符）\n注意：修改后将在整个系统内联动更新`, currentName);
 
         if (!newName || newName.trim() === '') {
             return;
         }
 
-        const trimmedName = newName.trim().toUpperCase();
+        const trimmedName = newName.trim();
 
-        // 验证新名称格式（可以是字母+数字，或者更灵活的格式）
-        if (!/^[A-Z0-9]+[A-Z0-9]*$/.test(trimmedName)) {
-            this.showNotification('区域名称格式不正确，请使用字母和数字组合（如D53F、C1、E3等）', 'error');
+        // 验证新名称格式（支持中英文、数字、符号等）
+        if (trimmedName.length === 0) {
+            this.showNotification('区域名称不能为空', 'error');
+            return;
+        }
+
+        if (trimmedName.length > 50) {
+            this.showNotification('区域名称长度不能超过50个字符', 'error');
+            return;
+        }
+
+        // 检查是否包含不安全的字符（避免XSS等安全问题）
+        if (/<|>|&|"|'/.test(trimmedName)) {
+            this.showNotification('区域名称不能包含特殊字符 < > & " \'', 'error');
             return;
         }
 
@@ -5931,9 +5950,7 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                 </select>
             </td>
             <td>
-                <select class="batch-length" data-row="${rowIndex}" required disabled>
-                    <option value="">请先选择型号</option>
-                </select>
+                <input type="number" class="batch-length" data-row="${rowIndex}" min="1" max="50000" step="1" placeholder="请先选择型号" required disabled>
             </td>
             <td>
                 <input type="number" class="batch-quantity" data-row="${rowIndex}" min="1" placeholder="生产根数" required>
@@ -5954,12 +5971,12 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
     setupBatchRowEvents(row, rowIndex) {
         const typeSelect = row.querySelector('.batch-type');
-        const lengthSelect = row.querySelector('.batch-length');
+        const lengthInput = row.querySelector('.batch-length');
         const quantityInput = row.querySelector('.batch-quantity');
 
         // 型号选择事件
         typeSelect.addEventListener('change', () => {
-            this.updateBatchLengthOptions(typeSelect.value, lengthSelect);
+            this.updateBatchLengthOptions(typeSelect.value, lengthInput);
         });
 
         // 数量输入事件
@@ -5967,36 +5984,25 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
             this.updateBatchSummary();
         });
 
-        // 长度选择事件
-        lengthSelect.addEventListener('change', () => {
+        // 长度输入事件
+        lengthInput.addEventListener('input', () => {
             this.updateBatchSummary();
         });
     }
 
-    updateBatchLengthOptions(type, lengthSelect) {
-        lengthSelect.innerHTML = '<option value="">请选择长度</option>';
-
+    updateBatchLengthOptions(type, lengthInput) {
         if (type) {
-            const lengths = this.getLengthsByType(type);
-            lengths.forEach(length => {
-                const option = document.createElement('option');
-                option.value = length;
-                option.textContent = `${length}mm`;
-                lengthSelect.appendChild(option);
-            });
-            lengthSelect.disabled = false;
+            lengthInput.disabled = false;
+            lengthInput.placeholder = '请输入长度，如：6000';
         } else {
-            lengthSelect.disabled = true;
+            lengthInput.disabled = true;
+            lengthInput.placeholder = '请先选择型号';
         }
     }
 
     getLengthsByType(type) {
-        // 生成长度选项：200mm到11800mm，以200mm为模数
-        const lengths = [];
-        for (let length = 200; length <= 11800; length += 200) {
-            lengths.push(length);
-        }
-        return lengths;
+        // 不再返回预设长度，用户可以自由输入
+        return [];
     }
 
     removeBatchRow(rowIndex) {
@@ -6031,13 +6037,13 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
 
         rows.forEach(row => {
             const typeSelect = row.querySelector('.batch-type');
-            const lengthSelect = row.querySelector('.batch-length');
+            const lengthInput = row.querySelector('.batch-length');
             const quantityInput = row.querySelector('.batch-quantity');
 
-            if (typeSelect.value && lengthSelect.value && quantityInput.value) {
+            if (typeSelect.value && lengthInput.value && quantityInput.value) {
                 totalSpecs++;
                 const quantity = parseInt(quantityInput.value) || 0;
-                const length = parseInt(lengthSelect.value) || 0;
+                const length = parseInt(lengthInput.value) || 0;
 
                 totalQuantity += quantity;
                 totalMeters += (quantity * length / 1000);
@@ -9101,18 +9107,23 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         const thisYear = new Date(now.getFullYear(), 0, 1);
 
         let dailyProduction = 0;
+        let yesterdayProduction = 0;
         let monthlyProduction = 0;
         let quarterlyProduction = 0;
         let yearlyProduction = 0;
 
-        // 获取今天的日期字符串（YYYY-MM-DD格式）
+        // 获取今天和昨天的日期字符串（YYYY-MM-DD格式）
         const todayString = today.toISOString().split('T')[0];
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayString = yesterday.toISOString().split('T')[0];
         const thisMonthString = thisMonth.toISOString().split('T')[0];
         const thisQuarterString = thisQuarter.toISOString().split('T')[0];
         const thisYearString = thisYear.toISOString().split('T')[0];
 
         console.log('📊 计算产量统计，时间范围:', {
             today: todayString,
+            yesterday: yesterdayString,
             thisMonth: thisMonthString,
             thisQuarter: thisQuarterString,
             thisYear: thisYearString
@@ -9142,10 +9153,16 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
                     // 将根数转换为米数：根数 × 长度(mm) ÷ 1000
                     const meters = (quantity * length) / 1000;
 
-                    // 日产量（只统计今天的生产记录）
+                    // 日产量（统计今天的生产记录）
                     if (recordDate === todayString) {
                         dailyProduction += meters;
                         console.log(`📅 今日生产: ${item.spec} - ${quantity}根 = ${meters.toFixed(1)}米`);
+                    }
+
+                    // 昨日产量（统计昨天的生产记录）
+                    if (recordDate === yesterdayString) {
+                        yesterdayProduction += meters;
+                        console.log(`📅 昨日生产: ${item.spec} - ${quantity}根 = ${meters.toFixed(1)}米`);
                     }
 
                     // 月产量（本月）
@@ -9208,11 +9225,50 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
         } else if (recordsWithDetails > 0) {
             console.log('📈 基于详细记录的统计结果:', {
                 daily: dailyProduction.toFixed(1),
+                yesterday: yesterdayProduction.toFixed(1),
                 monthly: monthlyProduction.toFixed(1),
                 quarterly: quarterlyProduction.toFixed(1),
                 yearly: yearlyProduction.toFixed(1),
                 recordsWithDetails
             });
+        }
+
+        // 如果当日没有生产记录，则使用昨日的生产记录
+        if (dailyProduction === 0 && yesterdayProduction > 0) {
+            dailyProduction = yesterdayProduction;
+            console.log(`📅 当日无生产记录，使用昨日产量: ${yesterdayProduction.toFixed(1)}米`);
+        } else if (dailyProduction === 0 && yesterdayProduction === 0 && recordsWithDetails > 0) {
+            // 如果当日和昨日都没有记录，查找最近的生产记录
+            let latestProduction = 0;
+            let latestDate = '';
+
+            this.data.forEach(item => {
+                const length = this.extractLengthFromSpec(item.spec);
+
+                if (item.productionRecords && Array.isArray(item.productionRecords)) {
+                    item.productionRecords.forEach(record => {
+                        const recordDate = record.date;
+                        const quantity = record.quantity || 0;
+                        const meters = (quantity * length) / 1000;
+
+                        // 找到最近的生产记录
+                        if (recordDate > latestDate) {
+                            latestDate = recordDate;
+                            latestProduction = 0; // 重置，重新计算这一天的总产量
+                        }
+
+                        // 如果是最近的日期，累加产量
+                        if (recordDate === latestDate) {
+                            latestProduction += meters;
+                        }
+                    });
+                }
+            });
+
+            if (latestProduction > 0) {
+                dailyProduction = latestProduction;
+                console.log(`📅 当日和昨日均无生产记录，使用最近生产记录 (${latestDate}): ${latestProduction.toFixed(1)}米`);
+            }
         }
 
         return {
@@ -9261,7 +9317,7 @@ ${summary.dateRange ? `• 数据时间范围：${summary.dateRange}` : ''}
     createShippingPlanModal() {
         const modalHTML = `
             <div id="shippingPlanModal" class="modal">
-                <div class="modal-content large-modal">
+                <div class="modal-content modal-large">
                     <div class="modal-header">
                         <h3>📦 批次发货需求 - <span id="planCustomerName"></span></h3>
                         <button class="modal-close" onclick="dataManager.closeShippingPlanModal()">
